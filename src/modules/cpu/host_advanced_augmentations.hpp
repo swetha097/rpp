@@ -2009,9 +2009,9 @@ RppStatus crop_and_patch_host_batch(T* srcPtr1, RppiSize *batch_srcSize1, RppiSi
             Rpp32u loc2 = 0;
             compute_image_location_host(batch_srcSizeMax1, batchCount, &loc1, channel);
             compute_image_location_host(batch_srcSizeMax2, batchCount, &loc2, channel);
-            src1PtrImage = srcPtr1 + loc1;
-            dstPtrImage = dstPtr + loc1;
-            src2PtrImage = srcPtr2 + loc2;
+            src1PtrImage = srcPtr1 + loc1; // Pointer points to the Image start pos
+            dstPtrImage = dstPtr + loc1; // Pointer points to the Image start pos
+            src2PtrImage = srcPtr2 + loc2; // Pointer points to the Image start pos
 
             Rpp32u elementsInRow1 = batch_srcSize1[batchCount].width;
             Rpp32u elementsInRowMax1 = batch_srcSizeMax1[batchCount].width;
@@ -2620,4 +2620,122 @@ RppStatus glitch_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_
     return RPP_SUCCESS;
 }
 
+
+/**************** ricap - random image crop and patch ***************/
+
+template <typename T>
+RppStatus ricap_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, T* dstPtr,
+                                    Rpp32u *permutedIndices1, Rpp32u *permutedIndices2, Rpp32u *permutedIndices3, Rpp32u *permutedIndices4,
+                                    Rpp32u *cropRegion1, Rpp32u *cropRegion2, Rpp32u *cropRegion3, Rpp32u *cropRegion4,
+                                    Rpp32u outputFormatToggle, Rpp32u nbatchSize,
+                                    RppiChnFormat chnFormat, Rpp32u channel)
+{
+    if(chnFormat == RPPI_CHN_PLANAR)
+    {
+        omp_set_dynamic(0);
+        #pragma omp parallel for num_threads(nbatchSize)
+        for(int batchCount = 0; batchCount < nbatchSize; batchCount ++)
+        {
+            Rpp32u srcImage1DimMax = batch_srcSizeMax[permutedIndices1[batchCount]].height * batch_srcSizeMax[permutedIndices1[batchCount]].width;
+            Rpp32u srcImage2DimMax = batch_srcSizeMax[permutedIndices2[batchCount]].height * batch_srcSizeMax[permutedIndices2[batchCount]].width;
+            Rpp32u srcImage3DimMax = batch_srcSizeMax[permutedIndices3[batchCount]].height * batch_srcSizeMax[permutedIndices3[batchCount]].width;
+            Rpp32u srcImage4DimMax = batch_srcSizeMax[permutedIndices4[batchCount]].height * batch_srcSizeMax[permutedIndices4[batchCount]].width;
+            Rpp32u dstImageDimMax = batch_srcSizeMax[batchCount].height * batch_srcSizeMax[batchCount].width;
+
+            T *srcPtrImage1,*srcPtrImage2,*srcPtrImage3,*srcPtrImage4, *dstPtrImage;
+            Rpp32u srcLoc1 = 0,srcLoc2 = 0,srcLoc3 = 0,srcLoc4 = 0, dstLoc = 0;
+            compute_image_location_host(batch_srcSizeMax, permutedIndices1[batchCount], &srcLoc1, channel);
+            compute_image_location_host(batch_srcSizeMax, permutedIndices2[batchCount], &srcLoc2, channel);
+            compute_image_location_host(batch_srcSizeMax, permutedIndices3[batchCount], &srcLoc3, channel);
+            compute_image_location_host(batch_srcSizeMax, permutedIndices4[batchCount], &srcLoc4, channel);
+            compute_image_location_host(batch_srcSizeMax, batchCount, &dstLoc, channel);
+            srcPtrImage1 = srcPtr + srcLoc1;
+            srcPtrImage2 = srcPtr + srcLoc2;
+            srcPtrImage3 = srcPtr + srcLoc3;
+            srcPtrImage4 = srcPtr + srcLoc4;
+            dstPtrImage = dstPtr + dstLoc;
+
+            for(int c = 0; c < channel; c++)
+            {
+                T *dstPtrChannel, *srcPtrChannelROI1, *srcPtrChannelROI2, *srcPtrChannelROI3, *srcPtrChannelROI4;
+                dstPtrChannel = dstPtrImage + (c * dstImageDimMax);
+                srcPtrChannelROI1 = srcPtrImage1 + (c * srcImage1DimMax) + (cropRegion1[1] * batch_srcSizeMax[permutedIndices1[batchCount]].width) + cropRegion1[0];
+                srcPtrChannelROI2 = srcPtrImage2 + (c * srcImage2DimMax) + (cropRegion2[1] * batch_srcSizeMax[permutedIndices2[batchCount]].width) + cropRegion2[0];
+                srcPtrChannelROI3 = srcPtrImage3 + (c * srcImage3DimMax) + (cropRegion3[1] * batch_srcSizeMax[permutedIndices3[batchCount]].width) + cropRegion3[0];
+                srcPtrChannelROI4 = srcPtrImage4 + (c * srcImage4DimMax) + (cropRegion4[1] * batch_srcSizeMax[permutedIndices4[batchCount]].width) + cropRegion4[0];
+
+                for(int i = 0; i < cropRegion1[3]; i++)
+                {
+                    memcpy(dstPtrChannel, srcPtrChannelROI1, cropRegion1[2] * sizeof(T));
+                    dstPtrChannel += cropRegion1[2];
+                    srcPtrChannelROI1 += batch_srcSizeMax[permutedIndices1[batchCount]].width;
+                    memcpy(dstPtrChannel, srcPtrChannelROI2, cropRegion2[2] * sizeof(T));
+                    dstPtrChannel += cropRegion2[2];
+                    srcPtrChannelROI2 += batch_srcSizeMax[permutedIndices2[batchCount]].width;
+                }
+
+                for(int i = 0; i < cropRegion3[3]; i++)
+                {
+                    memcpy(dstPtrChannel, srcPtrChannelROI3, cropRegion3[2] * sizeof(T));
+                    dstPtrChannel += cropRegion3[2];
+                    srcPtrChannelROI3 += batch_srcSizeMax[permutedIndices3[batchCount]].width;
+                    memcpy(dstPtrChannel, srcPtrChannelROI4, cropRegion4[2] * sizeof(T));
+                    dstPtrChannel += cropRegion4[2];
+                    srcPtrChannelROI4 += batch_srcSizeMax[permutedIndices4[batchCount]].width;
+                }
+                
+            }
+        }
+    }
+    else if (chnFormat == RPPI_CHN_PACKED)
+    {
+        omp_set_dynamic(0);
+        #pragma omp parallel for num_threads(nbatchSize)
+        for(int batchCount = 0; batchCount < nbatchSize; batchCount ++)
+        {
+            
+            T *srcPtrImage1,*srcPtrImage2,*srcPtrImage3,*srcPtrImage4, *dstPtrImage;
+            Rpp32u srcLoc1 = 0,srcLoc2 = 0,srcLoc3 = 0,srcLoc4 = 0, dstLoc = 0;
+            compute_image_location_host(batch_srcSizeMax, permutedIndices1[batchCount], &srcLoc1, channel);
+            compute_image_location_host(batch_srcSizeMax, permutedIndices2[batchCount], &srcLoc2, channel);
+            compute_image_location_host(batch_srcSizeMax, permutedIndices3[batchCount], &srcLoc3, channel);
+            compute_image_location_host(batch_srcSizeMax, permutedIndices4[batchCount], &srcLoc4, channel);
+            compute_image_location_host(batch_srcSizeMax, batchCount, &dstLoc, channel);
+            srcPtrImage1 = srcPtr + srcLoc1;
+            srcPtrImage2 = srcPtr + srcLoc2;
+            srcPtrImage3 = srcPtr + srcLoc3;
+            srcPtrImage4 = srcPtr + srcLoc4;
+            dstPtrImage = dstPtr + dstLoc;
+
+            T *dstPtrImageTemp, *srcPtrImageROI1, *srcPtrImageROI2, *srcPtrImageROI3, *srcPtrImageROI4;
+            dstPtrImageTemp = dstPtrImage ;
+            srcPtrImageROI1 = srcPtrImage1  + (cropRegion1[1] * batch_srcSizeMax[permutedIndices1[batchCount]].width * channel) + (cropRegion1[0] * channel);
+            srcPtrImageROI2 = srcPtrImage2  + (cropRegion2[1] * batch_srcSizeMax[permutedIndices2[batchCount]].width * channel) + (cropRegion2[0] * channel);
+            srcPtrImageROI3 = srcPtrImage3  + (cropRegion3[1] * batch_srcSizeMax[permutedIndices3[batchCount]].width * channel) + (cropRegion3[0] * channel);
+            srcPtrImageROI4 = srcPtrImage4  + (cropRegion4[1] * batch_srcSizeMax[permutedIndices4[batchCount]].width * channel) + (cropRegion4[0] * channel);
+
+                
+            for(int i = 0; i < cropRegion1[3]; i++)
+            {
+                memcpy(dstPtrImageTemp, srcPtrImageROI1, ( cropRegion1[2] * channel) * sizeof(T));
+                dstPtrImageTemp += (cropRegion1[2] * channel);
+                srcPtrImageROI1 += (batch_srcSizeMax[permutedIndices1[batchCount]].width * channel);
+                memcpy(dstPtrImageTemp, srcPtrImageROI2, ( cropRegion2[2] * channel) * sizeof(T));
+                dstPtrImageTemp += (cropRegion2[2] * channel);
+                srcPtrImageROI2 += (batch_srcSizeMax[permutedIndices2[batchCount]].width * channel);
+            }
+
+            for(int i = 0; i < cropRegion3[3]; i++)
+            {
+                memcpy(dstPtrImageTemp, srcPtrImageROI3, ( cropRegion3[2] * channel) * sizeof(T));
+                dstPtrImageTemp += (cropRegion3[2] * channel);
+                srcPtrImageROI3 += (batch_srcSizeMax[permutedIndices3[batchCount]].width * channel);
+                memcpy(dstPtrImageTemp, srcPtrImageROI4, ( cropRegion4[2] * channel) * sizeof(T));
+                dstPtrImageTemp += (cropRegion4[2] * channel);
+                srcPtrImageROI4 += (batch_srcSizeMax[permutedIndices4[batchCount]].width * channel);
+            }
+        }
+    }
+    return RPP_SUCCESS;
+}
 #endif

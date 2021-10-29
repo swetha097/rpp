@@ -22,6 +22,27 @@ typedef half Rpp16f;
 
 #define RPPPIXELCHECK(pixel) (pixel < (Rpp32f)0) ? ((Rpp32f)0) : ((pixel < (Rpp32f)255) ? pixel : ((Rpp32f)255))
 
+void swap (unsigned int *a, unsigned int *b)
+{
+    unsigned int temp = *a;
+    *a = *b;
+    *b = temp;
+}
+
+void randomize (unsigned int arr[], unsigned int n)
+{
+    // Use a different seed value so that
+    // we don't get same result each time
+    // we run this program
+    srand (time(NULL));
+    for (unsigned int i = n - 1; i > 0; i--)
+    {
+        // Pick a random index from 0 to i
+        unsigned int j = rand() % (i + 1);
+        swap(&arr[i], &arr[j]);
+    }
+}
+
 int main(int argc, char **argv)
 {
     const int MIN_ARG_COUNT = 8;
@@ -368,6 +389,10 @@ int main(int argc, char **argv)
         break;
     case 81:
         strcpy(funcName, "color_jitter");
+        break;
+    case 82:
+        strcpy(funcName, "ricap");
+        outputFormatToggle = 0;
         break;
     default:
         strcpy(funcName, "test_case");
@@ -3560,6 +3585,89 @@ int main(int argc, char **argv)
     {
         // test_case_name = "color_jitter";
         missingFuncFlag = 1;
+
+        break;
+    }
+    case 82:
+    {
+        test_case_name = "ricap";
+        unsigned int initial_permute_array[images];
+        Rpp32u permutedArray1[images] ;
+        Rpp32u permutedArray2[images] ;
+        Rpp32u permutedArray3[images] ;
+        Rpp32u permutedArray4[images] ;
+
+        Rpp32u cropRegion1[images] ;
+        Rpp32u cropRegion2[images] ;
+        Rpp32u cropRegion3[images] ;
+        Rpp32u cropRegion4[images] ;
+
+         
+        for (uint i = 0; i < images; i++ )
+        {
+            initial_permute_array[i] = i;
+        }
+        randomize(initial_permute_array, images);
+        for (uint i=0;i<images;i++)
+        {
+        permutedArray1[i] = (Rpp32u) initial_permute_array[i];
+        }
+        randomize(initial_permute_array, images);
+        for (uint i=0;i<images;i++)
+        {
+        permutedArray2[i] = (Rpp32u) initial_permute_array[i];
+        }
+        randomize(initial_permute_array, images);
+        for (uint i=0;i<images;i++)
+        {
+        permutedArray3[i] = (Rpp32u) initial_permute_array[i];
+        }
+        randomize(initial_permute_array, images);
+        for (uint i=0;i<images;i++)
+        {
+        permutedArray4[i] = (Rpp32u) initial_permute_array[i];
+        }
+
+        cropRegion1[0] = (Rpp32u) ((Rpp32f) 1) ; //x1
+        cropRegion1[1] = (Rpp32u) ((Rpp32f) 2) ; //y1
+        cropRegion1[2] = (Rpp32u) ((Rpp32f) 50); //w1
+        cropRegion1[3] = (Rpp32u) ((Rpp32f) 174) ; //h1
+
+        cropRegion2[0] = (Rpp32u) ((Rpp32f) 0) ; //x2
+        cropRegion2[1] = (Rpp32u) ((Rpp32f) 0) ; //y2
+        cropRegion2[2] = (Rpp32u) ((Rpp32f)174); //w2
+        cropRegion2[3] = (Rpp32u) ((Rpp32f)174) ; //h2
+
+        cropRegion3[0] = (Rpp32u) ((Rpp32f) 9) ; //x3
+        cropRegion3[1] = (Rpp32u) ((Rpp32f) 10) ; //y3
+        cropRegion3[2] = (Rpp32u) ((Rpp32f) 50) ; //w3
+        cropRegion3[3] = (Rpp32u) ((Rpp32f) 50) ; //h3
+
+        cropRegion4[0] = (Rpp32u) ((Rpp32f) 13) ; //x4
+        cropRegion4[1] = (Rpp32u) ((Rpp32f) 15) ; //y4
+        cropRegion4[2] = (Rpp32u) ((Rpp32f) 174); //w4
+        cropRegion4[3] = (Rpp32u) ((Rpp32f) 50) ; //h4
+        
+        start_omp = omp_get_wtime();
+        start = clock();
+        if (ip_bitDepth == 0)
+            rppi_ricap_u8_pkd3_batchPD_host(input, srcSize, maxSize, output, permutedArray1, permutedArray2, permutedArray3, permutedArray4, cropRegion1, cropRegion2, cropRegion3, cropRegion4, outputFormatToggle, noOfImages, handle);
+        else if (ip_bitDepth == 1)
+            missingFuncFlag = 1; // rppi_ricap_f16_pkd3_batchPD_host(inputf16, inputf16_second, srcSize, maxSize, outputf16, x11, y11, x12, y12, x21, y21, x22, y22, outputFormatToggle, noOfImages, handle);
+        else if (ip_bitDepth == 2)
+            missingFuncFlag = 1; // rppi_ricap_f32_pkd3_batchPD_host(inputf32, inputf32_second, srcSize, maxSize, outputf32, x11, y11, x12, y12, x21, y21, x22, y22, outputFormatToggle, noOfImages, handle);
+        else if (ip_bitDepth == 3)
+            missingFuncFlag = 1;
+        else if (ip_bitDepth == 4)
+            missingFuncFlag = 1;
+        else if (ip_bitDepth == 5)
+            missingFuncFlag = 1; //rppi_ricap_i8_pkd3_batchPD_host(inputi8, inputi8_second, srcSize, maxSize, outputi8, x11, y11, x12, y12, x21, y21, x22, y22, outputFormatToggle, noOfImages, handle);
+        else if (ip_bitDepth == 6)
+            missingFuncFlag = 1;
+        else
+            missingFuncFlag = 1;
+        end = clock();
+        end_omp = omp_get_wtime();
 
         break;
     }

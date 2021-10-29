@@ -98,7 +98,7 @@ directory_name_generator() {
     DST_FOLDER_TEMP="$DST_FOLDER""/rpp_""$AFFINITY""_""$TYPE""_""$FUNCTIONALITY_GROUP"
 }
 
-if [[ "$1" -lt 0 ]] | [[ "$1" -gt 81 ]]; then
+if [[ "$1" -lt 0 ]] | [[ "$1" -gt 82 ]]; then
     echo "The starting case# must be in the 0-81 range!"
     echo
     echo "The rawLogsGenScript.sh bash script runs the RPP performance testsuite for AMDRPP functionalities in HOST/OCL/HIP backends."
@@ -110,7 +110,7 @@ if [[ "$1" -lt 0 ]] | [[ "$1" -gt 81 ]]; then
     exit 1
 fi
 
-if [[ "$2" -lt 0 ]] | [[ "$2" -gt 81 ]]; then
+if [[ "$2" -lt 0 ]] | [[ "$2" -gt 82 ]]; then
     echo "The ending case# must be in the 0-81 range!"
     echo
     echo "The rawLogsGenScript.sh bash script runs the RPP performance testsuite for AMDRPP functionalities in HOST/OCL/HIP backends."

@@ -1955,3 +1955,329 @@ rppi_glitch_i8_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize ma
 {
     return (glitch_host_helper(RPPI_CHN_PACKED, 3, RPPTensorDataType::I8, RPPTensorDataType::I8, outputFormatToggle, srcPtr, srcSize, maxSrcSize, dstPtr, x_offset_r, y_offset_r, x_offset_g, y_offset_g, x_offset_b, y_offset_b, nbatchSize, rppHandle));
 }
+
+
+/******************** ricap ********************/
+
+// RppStatus ricap_helper(RppiChnFormat chn_format,
+//                                 Rpp32u num_of_channels,
+//                                 RPPTensorDataType in_tensor_type,
+//                                 RPPTensorDataType out_tensor_type,
+//                                 Rpp8u outputFormatToggle,
+//                                 RppPtr_t srcPtr1,
+//                                 RppiSize *srcSize,
+//                                 RppiSize maxSrcSize,
+//                                 RppPtr_t dstPtr,
+//                                 Rpp32u *permutedIndices1,
+//                                 Rpp32u *permutedIndices2,
+//                                 Rpp32u *permutedIndices3,
+//                                 Rpp32u *permutedIndices4,
+//                                 Rpp32u *cropRegion1,
+//                                 Rpp32u *cropRegion2,
+//                                 Rpp32u *cropRegion3,
+//                                 Rpp32u *cropRegion4,
+//                                 Rpp32u nbatchSize,
+//                                 rppHandle_t rppHandle)
+// {
+//     RppiROI roiPoints;
+//     bool is_padded = true;
+//     RPPTensorFunctionMetaData tensor_info(chn_format, in_tensor_type, out_tensor_type, num_of_channels,
+//                                           (bool)outputFormatToggle);
+//     roiPoints.x = 0;
+//     roiPoints.y = 0;
+//     roiPoints.roiHeight = 0;
+//     roiPoints.roiWidth = 0;
+//     Rpp32u paramIndex = 0;
+//     copy_srcSize(srcSize, rpp::deref(rppHandle));
+//     copy_srcMaxSize(maxSrcSize, rpp::deref(rppHandle));
+//     copy_dstMaxSize(maxSrcSize, rpp::deref(rppHandle));
+//     copy_roi(roiPoints, rpp::deref(rppHandle));
+//     get_srcBatchIndex(rpp::deref(rppHandle), num_of_channels, tensor_info._in_format, is_padded);
+//     get_dstBatchIndex(rpp::deref(rppHandle), num_of_channels, tensor_info._out_format, is_padded);
+//     copy_param_uint(permutedIndices1, rpp::deref(rppHandle), paramIndex++);
+//     copy_param_uint(permutedIndices2, rpp::deref(rppHandle), paramIndex++);
+//     copy_param_uint(permutedIndices3, rpp::deref(rppHandle), paramIndex++);
+//     copy_param_uint(permutedIndices4, rpp::deref(rppHandle), paramIndex++);
+//     copy_param_uint(cropRegion1, rpp::deref(rppHandle), paramIndex++);
+//     copy_param_uint(cropRegion2, rpp::deref(rppHandle), paramIndex++);
+//     copy_param_uint(cropRegion3, rpp::deref(rppHandle), paramIndex++);
+//     copy_param_uint(cropRegion4, rpp::deref(rppHandle), paramIndex++);
+
+// #ifdef OCL_COMPILE
+//     {
+//         ricap_cl_batch(static_cast<cl_mem>(srcPtr1),
+//                                 static_cast<cl_mem>(dstPtr),
+//                                 rpp::deref(rppHandle),
+//                                 tensor_info);
+//     }
+
+// #elif defined(HIP_COMPILE)
+//     {
+//         if (in_tensor_type == RPPTensorDataType::U8)
+//         {
+//             ricap_hip_batch_tensor(static_cast<Rpp8u *>(srcPtr1),
+//                                             static_cast<Rpp8u *>(dstPtr),
+//                                             rpp::deref(rppHandle),
+//                                             tensor_info);
+//         }
+//         else if (in_tensor_type == RPPTensorDataType::FP16)
+//         {
+//             ricap_hip_batch_tensor_fp16(static_cast<Rpp16f *>(srcPtr1),
+//                                                  static_cast<Rpp16f *>(dstPtr),
+//                                                  rpp::deref(rppHandle),
+//                                                  tensor_info);
+//         }
+//         else if (in_tensor_type == RPPTensorDataType::FP32)
+//         {
+//             ricap_hip_batch_tensor_fp32(static_cast<Rpp32f *>(srcPtr1),
+//                                                  static_cast<Rpp32f *>(dstPtr),
+//                                                  rpp::deref(rppHandle),
+//                                                  tensor_info);
+//         }
+//         else if (in_tensor_type == RPPTensorDataType::I8)
+//         {
+//             ricap_hip_batch_tensor_int8(static_cast<Rpp8s *>(srcPtr1),
+//                                                  static_cast<Rpp8s *>(dstPtr),
+//                                                  rpp::deref(rppHandle),
+//                                                  tensor_info);
+//         }
+//     }
+// #endif //BACKEND
+
+//     return RPP_SUCCESS;
+// }
+
+RppStatus ricap_host_helper(RppiChnFormat chn_format,
+                                     Rpp32u num_of_channels,
+                                     RPPTensorDataType in_tensor_type,
+                                     RPPTensorDataType out_tensor_type,
+                                     Rpp8u outputFormatToggle,
+                                     RppPtr_t srcPtr1,
+                                     RppiSize *srcSize,
+                                     RppiSize maxSrcSize,
+                                     RppPtr_t dstPtr,
+                                     Rpp32u *permutedIndices1,
+                                     Rpp32u *permutedIndices2,
+                                     Rpp32u *permutedIndices3,
+                                     Rpp32u *permutedIndices4,
+                                     Rpp32u *cropRegion1,
+                                     Rpp32u *cropRegion2,
+                                     Rpp32u *cropRegion3,
+                                     Rpp32u *cropRegion4,
+                                     Rpp32u nbatchSize,
+                                     rppHandle_t rppHandle)
+{
+    copy_host_maxSrcSize(maxSrcSize, rpp::deref(rppHandle));
+
+    if (in_tensor_type == RPPTensorDataType::U8)
+    {
+        if (out_tensor_type == RPPTensorDataType::U8)
+        {
+            ricap_host_batch<Rpp8u>(static_cast<Rpp8u *>(srcPtr1),
+                                             srcSize,
+                                             rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.maxSrcSize,
+                                             static_cast<Rpp8u *>(dstPtr),
+                                             permutedIndices1,
+                                             permutedIndices2,
+                                             permutedIndices3,
+                                             permutedIndices4,
+                                             cropRegion1,
+                                             cropRegion2,
+                                             cropRegion3,
+                                             cropRegion4,
+                                             outputFormatToggle,
+                                             rpp::deref(rppHandle).GetBatchSize(),
+                                             chn_format,
+                                             num_of_channels);
+        }
+    }
+    else if (in_tensor_type == RPPTensorDataType::FP16)
+    {
+        if (out_tensor_type == RPPTensorDataType::FP16)
+        {
+            ricap_host_batch<Rpp16f>(static_cast<Rpp16f *>(srcPtr1),
+                                              srcSize,
+                                              rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.maxSrcSize,
+                                              static_cast<Rpp16f *>(dstPtr),
+                                              permutedIndices1,
+                                              permutedIndices2,
+                                              permutedIndices3,
+                                              permutedIndices4,
+                                              cropRegion1,
+                                              cropRegion2,
+                                              cropRegion3,
+                                              cropRegion4,
+                                              outputFormatToggle,
+                                              rpp::deref(rppHandle).GetBatchSize(),
+                                              chn_format,
+                                              num_of_channels);
+        }
+    }
+    else if (in_tensor_type == RPPTensorDataType::FP32)
+    {
+        if (out_tensor_type == RPPTensorDataType::FP32)
+        {
+            ricap_host_batch<Rpp32f>(static_cast<Rpp32f *>(srcPtr1),
+                                              srcSize,
+                                              rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.maxSrcSize,
+                                              static_cast<Rpp32f *>(dstPtr),
+                                              permutedIndices1,
+                                              permutedIndices2,
+                                              permutedIndices3,
+                                              permutedIndices4,
+                                              cropRegion1,
+                                              cropRegion2,
+                                              cropRegion3,
+                                              cropRegion4,
+                                              outputFormatToggle,
+                                              rpp::deref(rppHandle).GetBatchSize(),
+                                              chn_format,
+                                              num_of_channels);
+        }
+    }
+    else if (in_tensor_type == RPPTensorDataType::I8)
+    {
+        if (out_tensor_type == RPPTensorDataType::I8)
+        {
+            ricap_host_batch<Rpp8s>(static_cast<Rpp8s *>(srcPtr1),
+                                             srcSize,
+                                             rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.maxSrcSize,
+                                             static_cast<Rpp8s *>(dstPtr),
+                                             permutedIndices1,
+                                             permutedIndices2,
+                                             permutedIndices3,
+                                             permutedIndices4,
+                                             cropRegion1,
+                                             cropRegion2,
+                                             cropRegion3,
+                                             cropRegion4,
+                                             outputFormatToggle,
+                                             rpp::deref(rppHandle).GetBatchSize(),
+                                             chn_format,
+                                             num_of_channels);
+        }
+    }
+
+    return RPP_SUCCESS;
+}
+
+// RppStatus
+// rppi_ricap_u8_pln1_batchPD_gpu(RppPtr_t srcPtr1, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u *permutedIndices1, Rpp32u *permutedIndices2, Rpp32u *permutedIndices3, Rpp32u *permutedIndices4, Rpp32u *cropRegion1, Rpp32u *cropRegion2, Rpp32u *cropRegion3, Rpp32u *cropRegion4, Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle)
+// {
+//     return (ricap_helper(RPPI_CHN_PLANAR,1, RPPTensorDataType::U8, RPPTensorDataType::U8, outputFormatToggle, srcPtr1, srcSize, maxSrcSize, dstPtr, permutedIndices1, permutedIndices2, permutedIndices3, permutedIndices4, cropRegion1, cropRegion2, cropRegion3, cropRegion4, nbatchSize, rppHandle));
+// }
+// RppStatus
+// rppi_ricap_f16_pln1_batchPD_gpu(RppPtr_t srcPtr1, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u *permutedIndices1, Rpp32u *permutedIndices2, Rpp32u *permutedIndices3, Rpp32u *permutedIndices4, Rpp32u *cropRegion1, Rpp32u *cropRegion2, Rpp32u *cropRegion3, Rpp32u *cropRegion4, Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle)
+// {
+//     return (ricap_helper(RPPI_CHN_PLANAR, 1, RPPTensorDataType::FP16, RPPTensorDataType::FP16, outputFormatToggle, srcPtr1, srcSize, maxSrcSize, dstPtr, permutedIndices1, permutedIndices2, permutedIndices3, permutedIndices4, cropRegion1, cropRegion2, cropRegion3, cropRegion4, nbatchSize, rppHandle));
+// }
+// RppStatus
+// rppi_ricap_f32_pln1_batchPD_gpu(RppPtr_t srcPtr1, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u *permutedIndices1, Rpp32u *permutedIndices2, Rpp32u *permutedIndices3, Rpp32u *permutedIndices4, Rpp32u *cropRegion1, Rpp32u *cropRegion2, Rpp32u *cropRegion3, Rpp32u *cropRegion4, Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle)
+// {
+//     return (ricap_helper(RPPI_CHN_PLANAR, 1, RPPTensorDataType::FP32, RPPTensorDataType::FP32, outputFormatToggle, srcPtr1, srcSize, maxSrcSize, dstPtr, permutedIndices1, permutedIndices2, permutedIndices3, permutedIndices4, cropRegion1, cropRegion2, cropRegion3, cropRegion4, nbatchSize, rppHandle));
+// }
+// RppStatus
+// rppi_ricap_i8_pln1_batchPD_gpu(RppPtr_t srcPtr1, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u *permutedIndices1, Rpp32u *permutedIndices2, Rpp32u *permutedIndices3, Rpp32u *permutedIndices4, Rpp32u *cropRegion1, Rpp32u *cropRegion2, Rpp32u *cropRegion3, Rpp32u *cropRegion4, Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle)
+// {
+//     return (ricap_helper(RPPI_CHN_PLANAR,1, RPPTensorDataType::I8, RPPTensorDataType::I8, outputFormatToggle, srcPtr1, srcSize, maxSrcSize, dstPtr, permutedIndices1, permutedIndices2, permutedIndices3, permutedIndices4, cropRegion1, cropRegion2, cropRegion3, cropRegion4, nbatchSize, rppHandle));
+// }
+// RppStatus
+// rppi_ricap_u8_pln3_batchPD_gpu(RppPtr_t srcPtr1, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u *permutedIndices1, Rpp32u *permutedIndices2, Rpp32u *permutedIndices3, Rpp32u *permutedIndices4, Rpp32u *cropRegion1, Rpp32u *cropRegion2, Rpp32u *cropRegion3, Rpp32u *cropRegion4, Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle)
+// {
+//     return (ricap_helper(RPPI_CHN_PLANAR, 3, RPPTensorDataType::U8, RPPTensorDataType::U8, outputFormatToggle, srcPtr1, srcSize, maxSrcSize, dstPtr, permutedIndices1, permutedIndices2, permutedIndices3, permutedIndices4, cropRegion1, cropRegion2, cropRegion3, cropRegion4, nbatchSize, rppHandle));
+// }
+// RppStatus
+// rppi_ricap_f16_pln3_batchPD_gpu(RppPtr_t srcPtr1, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u *permutedIndices1, Rpp32u *permutedIndices2, Rpp32u *permutedIndices3, Rpp32u *permutedIndices4, Rpp32u *cropRegion1, Rpp32u *cropRegion2, Rpp32u *cropRegion3, Rpp32u *cropRegion4, Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle)
+// {
+//     return (ricap_helper(RPPI_CHN_PLANAR, 3, RPPTensorDataType::FP16, RPPTensorDataType::FP16, outputFormatToggle, srcPtr1, srcSize, maxSrcSize, dstPtr, permutedIndices1, permutedIndices2, permutedIndices3, permutedIndices4, cropRegion1, cropRegion2, cropRegion3, cropRegion4, nbatchSize, rppHandle));
+// }
+// RppStatus
+// rppi_ricap_f32_pln3_batchPD_gpu(RppPtr_t srcPtr1, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u *permutedIndices1, Rpp32u *permutedIndices2, Rpp32u *permutedIndices3, Rpp32u *permutedIndices4, Rpp32u *cropRegion1, Rpp32u *cropRegion2, Rpp32u *cropRegion3, Rpp32u *cropRegion4, Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle)
+// {
+//     return (ricap_helper(RPPI_CHN_PLANAR, 3, RPPTensorDataType::FP32, RPPTensorDataType::FP32, outputFormatToggle, srcPtr1, srcSize, maxSrcSize, dstPtr, permutedIndices1, permutedIndices2, permutedIndices3, permutedIndices4, cropRegion1, cropRegion2, cropRegion3, cropRegion4, nbatchSize, rppHandle));
+// }
+// RppStatus
+// rppi_ricap_i8_pln3_batchPD_gpu(RppPtr_t srcPtr1, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u *permutedIndices1, Rpp32u *permutedIndices2, Rpp32u *permutedIndices3, Rpp32u *permutedIndices4, Rpp32u *cropRegion1, Rpp32u *cropRegion2, Rpp32u *cropRegion3, Rpp32u *cropRegion4, Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle)
+// {
+//     return (ricap_helper(RPPI_CHN_PLANAR, 3, RPPTensorDataType::I8, RPPTensorDataType::I8, outputFormatToggle, srcPtr1, srcSize, maxSrcSize, dstPtr, permutedIndices1, permutedIndices2, permutedIndices3, permutedIndices4, cropRegion1, cropRegion2, cropRegion3, cropRegion4, nbatchSize, rppHandle));
+// }
+// RppStatus
+// rppi_ricap_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr1,  RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u *permutedIndices1, Rpp32u *permutedIndices2, Rpp32u *permutedIndices3, Rpp32u *permutedIndices4, Rpp32u *cropRegion1, Rpp32u *cropRegion2, Rpp32u *cropRegion3, Rpp32u *cropRegion4, Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle)
+// {
+//     return (ricap_helper(RPPI_CHN_PACKED, 3, RPPTensorDataType::U8, RPPTensorDataType::U8, outputFormatToggle, srcPtr1, srcSize, maxSrcSize, dstPtr, permutedIndices1, permutedIndices2, permutedIndices3, permutedIndices4, cropRegion1, cropRegion2, cropRegion3, cropRegion4, nbatchSize, rppHandle));
+// }
+// RppStatus
+// rppi_ricap_f16_pkd3_batchPD_gpu(RppPtr_t srcPtr1, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u *permutedIndices1, Rpp32u *permutedIndices2, Rpp32u *permutedIndices3, Rpp32u *permutedIndices4, Rpp32u *cropRegion1, Rpp32u *cropRegion2, Rpp32u *cropRegion3, Rpp32u *cropRegion4, Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle)
+// {
+//     return (ricap_helper(RPPI_CHN_PACKED, 3, RPPTensorDataType::FP16, RPPTensorDataType::FP16, outputFormatToggle, srcPtr1, srcSize, maxSrcSize, dstPtr, permutedIndices1, permutedIndices2, permutedIndices3, permutedIndices4, cropRegion1, cropRegion2, cropRegion3, cropRegion4, nbatchSize, rppHandle));
+// }
+// RppStatus
+// rppi_ricap_f32_pkd3_batchPD_gpu(RppPtr_t srcPtr1, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u *permutedIndices1, Rpp32u *permutedIndices2, Rpp32u *permutedIndices3, Rpp32u *permutedIndices4, Rpp32u *cropRegion1, Rpp32u *cropRegion2, Rpp32u *cropRegion3, Rpp32u *cropRegion4, Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle)
+// {
+//     return (ricap_helper(RPPI_CHN_PACKED, 3, RPPTensorDataType::FP32, RPPTensorDataType::FP32, outputFormatToggle, srcPtr1, srcSize, maxSrcSize, dstPtr, permutedIndices1, permutedIndices2, permutedIndices3, permutedIndices4, cropRegion1, cropRegion2, cropRegion3, cropRegion4, nbatchSize, rppHandle));
+// }
+// RppStatus
+// rppi_ricap_i8_pkd3_batchPD_gpu(RppPtr_t srcPtr1, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u *permutedIndices1, Rpp32u *permutedIndices2, Rpp32u *permutedIndices3, Rpp32u *permutedIndices4, Rpp32u *cropRegion1, Rpp32u *cropRegion2, Rpp32u *cropRegion3, Rpp32u *cropRegion4, Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle)
+// {
+//     return (ricap_helper(RPPI_CHN_PACKED, 3, RPPTensorDataType::I8, RPPTensorDataType::I8, outputFormatToggle, srcPtr1, srcSize, maxSrcSize, dstPtr, permutedIndices1, permutedIndices2, permutedIndices3, permutedIndices4, cropRegion1, cropRegion2, cropRegion3, cropRegion4, nbatchSize, rppHandle));
+// }
+RppStatus
+rppi_ricap_u8_pln1_batchPD_host(RppPtr_t srcPtr1, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u *permutedIndices1, Rpp32u *permutedIndices2, Rpp32u *permutedIndices3, Rpp32u *permutedIndices4, Rpp32u *cropRegion1, Rpp32u *cropRegion2, Rpp32u *cropRegion3, Rpp32u *cropRegion4, Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+    return (ricap_host_helper(RPPI_CHN_PLANAR,1, RPPTensorDataType::U8, RPPTensorDataType::U8, outputFormatToggle, srcPtr1, srcSize, maxSrcSize, dstPtr, permutedIndices1, permutedIndices2, permutedIndices3, permutedIndices4, cropRegion1, cropRegion2, cropRegion3, cropRegion4, nbatchSize, rppHandle));
+}
+RppStatus
+rppi_ricap_f16_pln1_batchPD_host(RppPtr_t srcPtr1, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u *permutedIndices1, Rpp32u *permutedIndices2, Rpp32u *permutedIndices3, Rpp32u *permutedIndices4, Rpp32u *cropRegion1, Rpp32u *cropRegion2, Rpp32u *cropRegion3, Rpp32u *cropRegion4, Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+    return (ricap_host_helper(RPPI_CHN_PLANAR, 1, RPPTensorDataType::FP16, RPPTensorDataType::FP16, outputFormatToggle, srcPtr1, srcSize, maxSrcSize, dstPtr, permutedIndices1, permutedIndices2, permutedIndices3, permutedIndices4, cropRegion1, cropRegion2, cropRegion3, cropRegion4, nbatchSize, rppHandle));
+}
+RppStatus
+rppi_ricap_f32_pln1_batchPD_host(RppPtr_t srcPtr1, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u *permutedIndices1, Rpp32u *permutedIndices2, Rpp32u *permutedIndices3, Rpp32u *permutedIndices4, Rpp32u *cropRegion1, Rpp32u *cropRegion2, Rpp32u *cropRegion3, Rpp32u *cropRegion4, Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+    return (ricap_host_helper(RPPI_CHN_PLANAR, 1, RPPTensorDataType::FP32, RPPTensorDataType::FP32, outputFormatToggle, srcPtr1, srcSize, maxSrcSize, dstPtr, permutedIndices1, permutedIndices2, permutedIndices3, permutedIndices4, cropRegion1, cropRegion2, cropRegion3, cropRegion4, nbatchSize, rppHandle));
+}
+RppStatus
+rppi_ricap_i8_pln1_batchPD_host(RppPtr_t srcPtr1, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u *permutedIndices1, Rpp32u *permutedIndices2, Rpp32u *permutedIndices3, Rpp32u *permutedIndices4, Rpp32u *cropRegion1, Rpp32u *cropRegion2, Rpp32u *cropRegion3, Rpp32u *cropRegion4, Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+    return (ricap_host_helper(RPPI_CHN_PLANAR,1, RPPTensorDataType::I8, RPPTensorDataType::I8, outputFormatToggle, srcPtr1, srcSize, maxSrcSize, dstPtr, permutedIndices1, permutedIndices2, permutedIndices3, permutedIndices4, cropRegion1, cropRegion2, cropRegion3, cropRegion4, nbatchSize, rppHandle));
+}
+RppStatus
+rppi_ricap_u8_pln3_batchPD_host(RppPtr_t srcPtr1, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u *permutedIndices1, Rpp32u *permutedIndices2, Rpp32u *permutedIndices3, Rpp32u *permutedIndices4, Rpp32u *cropRegion1, Rpp32u *cropRegion2, Rpp32u *cropRegion3, Rpp32u *cropRegion4, Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+    return (ricap_host_helper(RPPI_CHN_PLANAR, 3, RPPTensorDataType::U8, RPPTensorDataType::U8, outputFormatToggle, srcPtr1, srcSize, maxSrcSize, dstPtr, permutedIndices1, permutedIndices2, permutedIndices3, permutedIndices4, cropRegion1, cropRegion2, cropRegion3, cropRegion4, nbatchSize, rppHandle));
+}
+RppStatus
+rppi_ricap_f16_pln3_batchPD_host(RppPtr_t srcPtr1, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u *permutedIndices1, Rpp32u *permutedIndices2, Rpp32u *permutedIndices3, Rpp32u *permutedIndices4, Rpp32u *cropRegion1, Rpp32u *cropRegion2, Rpp32u *cropRegion3, Rpp32u *cropRegion4, Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+    return (ricap_host_helper(RPPI_CHN_PLANAR, 3, RPPTensorDataType::FP16, RPPTensorDataType::FP16, outputFormatToggle, srcPtr1, srcSize, maxSrcSize, dstPtr, permutedIndices1, permutedIndices2, permutedIndices3, permutedIndices4, cropRegion1, cropRegion2, cropRegion3, cropRegion4, nbatchSize, rppHandle));
+}
+RppStatus
+rppi_ricap_f32_pln3_batchPD_host(RppPtr_t srcPtr1, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u *permutedIndices1, Rpp32u *permutedIndices2, Rpp32u *permutedIndices3, Rpp32u *permutedIndices4, Rpp32u *cropRegion1, Rpp32u *cropRegion2, Rpp32u *cropRegion3, Rpp32u *cropRegion4, Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+    return (ricap_host_helper(RPPI_CHN_PLANAR, 3, RPPTensorDataType::FP32, RPPTensorDataType::FP32, outputFormatToggle, srcPtr1, srcSize, maxSrcSize, dstPtr, permutedIndices1, permutedIndices2, permutedIndices3, permutedIndices4, cropRegion1, cropRegion2, cropRegion3, cropRegion4, nbatchSize, rppHandle));
+}
+RppStatus
+rppi_ricap_i8_pln3_batchPD_host(RppPtr_t srcPtr1, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u *permutedIndices1, Rpp32u *permutedIndices2, Rpp32u *permutedIndices3, Rpp32u *permutedIndices4, Rpp32u *cropRegion1, Rpp32u *cropRegion2, Rpp32u *cropRegion3, Rpp32u *cropRegion4, Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+    return (ricap_host_helper(RPPI_CHN_PLANAR, 3, RPPTensorDataType::I8, RPPTensorDataType::I8, outputFormatToggle, srcPtr1, srcSize, maxSrcSize, dstPtr, permutedIndices1, permutedIndices2, permutedIndices3, permutedIndices4, cropRegion1, cropRegion2, cropRegion3, cropRegion4, nbatchSize, rppHandle));
+}
+RppStatus
+rppi_ricap_u8_pkd3_batchPD_host(RppPtr_t srcPtr1,  RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u *permutedIndices1, Rpp32u *permutedIndices2, Rpp32u *permutedIndices3, Rpp32u *permutedIndices4, Rpp32u *cropRegion1, Rpp32u *cropRegion2, Rpp32u *cropRegion3, Rpp32u *cropRegion4, Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+    return (ricap_host_helper(RPPI_CHN_PACKED, 3, RPPTensorDataType::U8, RPPTensorDataType::U8, outputFormatToggle, srcPtr1, srcSize, maxSrcSize, dstPtr, permutedIndices1, permutedIndices2, permutedIndices3, permutedIndices4, cropRegion1, cropRegion2, cropRegion3, cropRegion4, nbatchSize, rppHandle));
+}
+RppStatus
+rppi_ricap_f16_pkd3_batchPD_host(RppPtr_t srcPtr1, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u *permutedIndices1, Rpp32u *permutedIndices2, Rpp32u *permutedIndices3, Rpp32u *permutedIndices4, Rpp32u *cropRegion1, Rpp32u *cropRegion2, Rpp32u *cropRegion3, Rpp32u *cropRegion4, Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+    return (ricap_host_helper(RPPI_CHN_PACKED, 3, RPPTensorDataType::FP16, RPPTensorDataType::FP16, outputFormatToggle, srcPtr1, srcSize, maxSrcSize, dstPtr, permutedIndices1, permutedIndices2, permutedIndices3, permutedIndices4, cropRegion1, cropRegion2, cropRegion3, cropRegion4, nbatchSize, rppHandle));
+}
+RppStatus
+rppi_ricap_f32_pkd3_batchPD_host(RppPtr_t srcPtr1, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u *permutedIndices1, Rpp32u *permutedIndices2, Rpp32u *permutedIndices3, Rpp32u *permutedIndices4, Rpp32u *cropRegion1, Rpp32u *cropRegion2, Rpp32u *cropRegion3, Rpp32u *cropRegion4, Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+    return (ricap_host_helper(RPPI_CHN_PACKED, 3, RPPTensorDataType::FP32, RPPTensorDataType::FP32, outputFormatToggle, srcPtr1, srcSize, maxSrcSize, dstPtr, permutedIndices1, permutedIndices2, permutedIndices3, permutedIndices4, cropRegion1, cropRegion2, cropRegion3, cropRegion4, nbatchSize, rppHandle));
+}
+RppStatus
+rppi_ricap_i8_pkd3_batchPD_host(RppPtr_t srcPtr1, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u *permutedIndices1, Rpp32u *permutedIndices2, Rpp32u *permutedIndices3, Rpp32u *permutedIndices4, Rpp32u *cropRegion1, Rpp32u *cropRegion2, Rpp32u *cropRegion3, Rpp32u *cropRegion4, Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle)
+{
+    return (ricap_host_helper(RPPI_CHN_PACKED, 3, RPPTensorDataType::I8, RPPTensorDataType::I8, outputFormatToggle, srcPtr1, srcSize, maxSrcSize, dstPtr, permutedIndices1, permutedIndices2, permutedIndices3, permutedIndices4, cropRegion1, cropRegion2, cropRegion3, cropRegion4, nbatchSize, rppHandle));
+}
