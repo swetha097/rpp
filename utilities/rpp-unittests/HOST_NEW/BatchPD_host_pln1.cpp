@@ -3511,7 +3511,7 @@ int main(int argc, char **argv)
     {
         test_case_name = "ricap";
 
-         unsigned int initial_permute_array[images];
+        Rpp32u initial_permute_array[images];
         Rpp32u permutedArray1[images] ;
         Rpp32u permutedArray2[images] ;
         Rpp32u permutedArray3[images] ;
@@ -3528,47 +3528,33 @@ int main(int argc, char **argv)
             initial_permute_array[i] = i;
         }
         randomize(initial_permute_array, images);
-        for (uint i=0;i<images;i++)
-        {
-        permutedArray1[i] = (Rpp32u) initial_permute_array[i];
-        }
+        memcpy(permutedArray1, initial_permute_array, images * sizeof(Rpp32u));
         randomize(initial_permute_array, images);
-        for (uint i=0;i<images;i++)
-        {
-        permutedArray2[i] = (Rpp32u) initial_permute_array[i];
-        }
+        memcpy(permutedArray2, initial_permute_array, images * sizeof(Rpp32u));
         randomize(initial_permute_array, images);
-        for (uint i=0;i<images;i++)
-        {
-        permutedArray3[i] = (Rpp32u) initial_permute_array[i];
-        }
+        memcpy(permutedArray3, initial_permute_array, images * sizeof(Rpp32u));
         randomize(initial_permute_array, images);
-        for (uint i=0;i<images;i++)
-        {
-        permutedArray4[i] = (Rpp32u) initial_permute_array[i];
-        }
+        memcpy(permutedArray4, initial_permute_array, images * sizeof(Rpp32u));
 
- 
-        cropRegion1[0] = (Rpp32u) ((Rpp32f) 1) ; //x1
-        cropRegion1[1] = (Rpp32u) ((Rpp32f) 2) ; //y1
-        cropRegion1[2] = (Rpp32u) ((Rpp32f) 50); //w1
-        cropRegion1[3] = (Rpp32u) ((Rpp32f) 174) ; //h1
+        cropRegion1[0] = 3;   //x1
+        cropRegion1[1] = 17;  //y1
+        cropRegion1[2] = 250; //w1
+        cropRegion1[3] = 238; //h1
 
-        cropRegion2[0] = (Rpp32u) ((Rpp32f) 0) ; //x2
-        cropRegion2[1] = (Rpp32u) ((Rpp32f) 0) ; //y2
-        cropRegion2[2] = (Rpp32u) ((Rpp32f)174); //w2
-        cropRegion2[3] = (Rpp32u) ((Rpp32f)174) ; //h2
+        cropRegion2[0] = 88;  //x2
+        cropRegion2[1] = 63;  //y2
+        cropRegion2[2] = 50;  //w2
+        cropRegion2[3] = 238; //h2
 
-        cropRegion3[0] = (Rpp32u) ((Rpp32f) 9) ; //x3
-        cropRegion3[1] = (Rpp32u) ((Rpp32f) 10) ; //y3
-        cropRegion3[2] = (Rpp32u) ((Rpp32f) 50) ; //w3
-        cropRegion3[3] = (Rpp32u) ((Rpp32f) 50) ; //h3
+        cropRegion3[0] = 7;   //x3
+        cropRegion3[1] = 106; //y3
+        cropRegion3[2] = 250; //w3
+        cropRegion3[3] = 62;  //h3
 
-        cropRegion4[0] = (Rpp32u) ((Rpp32f) 13) ; //x4
-        cropRegion4[1] = (Rpp32u) ((Rpp32f) 15) ; //y4
-        cropRegion4[2] = (Rpp32u) ((Rpp32f) 174); //w4
-        cropRegion4[3] = (Rpp32u) ((Rpp32f) 50) ; //h4
-        
+        cropRegion4[0] = 103; //x4
+        cropRegion4[1] = 12;  //y4
+        cropRegion4[2] = 50;  //w4
+        cropRegion4[3] = 62;  //h4
 
         start_omp = omp_get_wtime();
         start = clock();
