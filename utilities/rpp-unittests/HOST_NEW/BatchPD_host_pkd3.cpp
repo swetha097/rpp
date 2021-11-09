@@ -31,9 +31,7 @@ void swap (unsigned int *a, unsigned int *b)
 
 void randomize (unsigned int arr[], unsigned int n)
 {
-    // Use a different seed value so that
-    // we don't get same result each time
-    // we run this program
+    // Use a different seed value each time
     srand (time(NULL));
     for (unsigned int i = n - 1; i > 0; i--)
     {
@@ -3591,7 +3589,7 @@ int main(int argc, char **argv)
     case 82:
     {
         test_case_name = "ricap";
-        Rpp32u initial_permute_array[images];
+        Rpp32u initialPermuteArray[images];
         Rpp32u permutedArray1[images] ;
         Rpp32u permutedArray2[images] ;
         Rpp32u permutedArray3[images] ;
@@ -3602,16 +3600,16 @@ int main(int argc, char **argv)
         Rpp32u cropRegion4[4] ;
         for (uint i = 0; i < images; i++ )
         {
-            initial_permute_array[i] = i;
+            initialPermuteArray[i] = i;
         }
-        randomize(initial_permute_array, images);
-        memcpy(permutedArray1, initial_permute_array, images * sizeof(Rpp32u));
-        randomize(initial_permute_array, images);
-        memcpy(permutedArray2, initial_permute_array, images * sizeof(Rpp32u));
-        randomize(initial_permute_array, images);
-        memcpy(permutedArray3, initial_permute_array, images * sizeof(Rpp32u));
-        randomize(initial_permute_array, images);
-        memcpy(permutedArray4, initial_permute_array, images * sizeof(Rpp32u));
+        randomize(initialPermuteArray, images);
+        memcpy(permutedArray1, initialPermuteArray, images * sizeof(Rpp32u));
+        randomize(initialPermuteArray, images);
+        memcpy(permutedArray2, initialPermuteArray, images * sizeof(Rpp32u));
+        randomize(initialPermuteArray, images);
+        memcpy(permutedArray3, initialPermuteArray, images * sizeof(Rpp32u));
+        randomize(initialPermuteArray, images);
+        memcpy(permutedArray4, initialPermuteArray, images * sizeof(Rpp32u));
 
         cropRegion1[0] = 3; //x1
         cropRegion1[1] = 17;    //y1
