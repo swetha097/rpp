@@ -99,25 +99,25 @@ directory_name_generator() {
 }
 
 if [[ "$1" -lt 0 ]] | [[ "$1" -gt 82 ]]; then
-    echo "The starting case# must be in the 0-81 range!"
+    echo "The starting case# must be in the 0-82 range!"
     echo
     echo "The rawLogsGenScript.sh bash script runs the RPP performance testsuite for AMDRPP functionalities in HOST/OCL/HIP backends."
     echo
     echo "Syntax: ./rawLogsGenScript.sh <S> <E> <U>"
-    echo "S     CASE_START (Starting case# (0-81))"
-    echo "E     CASE_END (Ending case# (0-81))"
+    echo "S     CASE_START (Starting case# (0-82))"
+    echo "E     CASE_END (Ending case# (0-82))"
     echo "U     UNIQUE_FUNC (0 = Skip / 1 = Run)"
     exit 1
 fi
 
 if [[ "$2" -lt 0 ]] | [[ "$2" -gt 82 ]]; then
-    echo "The ending case# must be in the 0-81 range!"
+    echo "The ending case# must be in the 0-82 range!"
     echo
     echo "The rawLogsGenScript.sh bash script runs the RPP performance testsuite for AMDRPP functionalities in HOST/OCL/HIP backends."
     echo
     echo "Syntax: ./rawLogsGenScript.sh <S> <E> <U>"
-    echo "S     CASE_START (Starting case# (0-81))"
-    echo "E     CASE_END (Ending case# (0-81))"
+    echo "S     CASE_START (Starting case# (0-82))"
+    echo "E     CASE_END (Ending case# (0-82))"
     echo "U     UNIQUE_FUNC (0 = Skip / 1 = Run)"
     exit 1
 fi
@@ -129,8 +129,8 @@ if [ "$3" -ne 0 ]; then
         echo "The rawLogsGenScript.sh bash script runs the RPP performance testsuite for AMDRPP functionalities in HOST/OCL/HIP backends."
         echo
         echo "Syntax: ./rawLogsGenScript.sh <S> <E> <U>"
-        echo "S     CASE_START (Starting case# (0-81))"
-        echo "E     CASE_END (Ending case# (0-81))"
+        echo "S     CASE_START (Starting case# (0-82))"
+        echo "E     CASE_END (Ending case# (0-82))"
         echo "U     UNIQUE_FUNC (0 = Skip / 1 = Run)"
         exit 1
     fi
@@ -138,7 +138,7 @@ fi
 
 if (( "$#" < 3 )); then
     CASE_START="0"
-    CASE_END="81"
+    CASE_END="82"
     UNIQUE_FUNC="0"
 else
     CASE_START="$1"
@@ -159,7 +159,7 @@ echo "##########################################################################
 echo "Running all PKD3 Inputs..."
 echo "##########################################################################################"
 
-printf "\n\nUsage: ./BatchPD_host_pkd3 <src1 folder> <src2 folder (place same as src1 folder for single image functionalities)> <dst folder> <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <outputFormatToggle (pkd->pkd = 0 / pkd->pln = 1)> <case number = 0:81> <verbosity = 0/1>"
+printf "\n\nUsage: ./BatchPD_host_pkd3 <src1 folder> <src2 folder (place same as src1 folder for single image functionalities)> <dst folder> <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <outputFormatToggle (pkd->pkd = 0 / pkd->pln = 1)> <case number = 0:82> <verbosity = 0/1>"
 
 for ((case=$CASE_START;case<=$CASE_END;case++))
 do
@@ -219,7 +219,7 @@ echo "##########################################################################
 echo "Running all PLN1 Inputs..."
 echo "##########################################################################################"
 
-printf "\n\nUsage: ./BatchPD_host_pln1 <src1 folder> <src2 folder (place same as src1 folder for single image functionalities)> <dst folder> <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <outputFormatToggle (pkd->pkd = 0 / pkd->pln = 1)> <case number = 0:81> <verbosity = 0/1>"
+printf "\n\nUsage: ./BatchPD_host_pln1 <src1 folder> <src2 folder (place same as src1 folder for single image functionalities)> <dst folder> <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <outputFormatToggle (pkd->pkd = 0 / pkd->pln = 1)> <case number = 0:82> <verbosity = 0/1>"
 
 for ((case=$CASE_START;case<=$CASE_END;case++))
 do
@@ -279,7 +279,7 @@ echo "##########################################################################
 echo "Running all PLN3 Inputs..."
 echo "##########################################################################################"
 
-printf "\n\nUsage: ./BatchPD_host_pln3 <src1 folder> <src2 folder (place same as src1 folder for single image functionalities)> <dst folder> <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <outputFormatToggle (pkd->pkd = 0 / pkd->pln = 1)> <case number = 0:81> <verbosity = 0/1>"
+printf "\n\nUsage: ./BatchPD_host_pln3 <src1 folder> <src2 folder (place same as src1 folder for single image functionalities)> <dst folder> <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <outputFormatToggle (pkd->pkd = 0 / pkd->pln = 1)> <case number = 0:82> <verbosity = 0/1>"
 
 for ((case=$CASE_START;case<=$CASE_END;case++))
 do
