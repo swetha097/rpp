@@ -3566,7 +3566,7 @@ int main(int argc, char **argv)
         else if (ip_bitDepth == 4)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 5)
-            missingFuncFlag = 1; //rppi_ricap_i8_pln1_batchPD_host(inputi8, srcSize, maxSize, outputi8, permutedArray1, permutedArray2, permutedArray3, permutedArray4, cropRegion1, cropRegion2, cropRegion3, cropRegion4, outputFormatToggle, noOfImages, handle);
+            rppi_ricap_i8_pln1_batchPD_host(inputi8, srcSize, maxSize, outputi8, permutedArray1, permutedArray2, permutedArray3, permutedArray4, cropRegion1, cropRegion2, cropRegion3, cropRegion4, outputFormatToggle, noOfImages, handle);
         else if (ip_bitDepth == 6)
             missingFuncFlag = 1;
         else
