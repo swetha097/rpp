@@ -3722,8 +3722,8 @@ int main(int argc, char **argv)
         cropRegion1[2] = 250; //w1
         cropRegion1[3] = 238; //h1
 
-        cropRegion2[0] = 88;  //x2
-        cropRegion2[1] = 63;  //y2
+        cropRegion2[0] = 7;  //x2
+        cropRegion2[1] = 16;  //y2
         cropRegion2[2] = 50;  //w2
         cropRegion2[3] = 238; //h2
 
