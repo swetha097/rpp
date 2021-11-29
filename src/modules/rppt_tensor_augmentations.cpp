@@ -774,3 +774,100 @@ rppt_color_cast_host(RppPtr_t srcPtr,
 
     return RPP_SUCCESS;
 }
+
+/******************** ricap ********************/
+
+RppStatus
+rppt_ricap_host(RppPtr_t srcPtr,
+                RpptDescPtr srcDescPtr,
+                RppPtr_t dstPtr,
+                RpptDescPtr dstDescPtr,
+                Rpp32u *permutedIndices1, 
+                Rpp32u *permutedIndices2, 
+                Rpp32u *permutedIndices3, 
+                Rpp32u *permutedIndices4, 
+                Rpp32u *cropRegion1, 
+                Rpp32u *cropRegion2, 
+                Rpp32u *cropRegion3, 
+                Rpp32u *cropRegion4,
+                RpptROIPtr roiTensorPtrSrc,
+                RpptRoiType roiType,
+                rppHandle_t rppHandle)
+{
+    RppLayoutParams layoutParams = get_layout_params(srcDescPtr->layout, srcDescPtr->c);
+
+    if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
+    {
+        ricap_u8_u8_host_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
+                                     srcDescPtr,
+                                     static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
+                                     dstDescPtr,
+                                     permutedIndices1, 
+                                     permutedIndices2, 
+                                     permutedIndices3, 
+                                     permutedIndices4, 
+                                     cropRegion1, 
+                                     cropRegion2, 
+                                     cropRegion3, 
+                                     cropRegion4,
+                                     roiTensorPtrSrc,
+                                     roiType,
+                                     layoutParams);
+    }
+    // else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
+    // {
+    //     ricap_f16_f16_host_tensor((Rpp16f*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+    //                                    srcDescPtr,
+    //                                    (Rpp16f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+    //                                    dstDescPtr,
+    //                                    permutedIndices1, 
+    //                                    permutedIndices2, 
+    //                                    permutedIndices3, 
+    //                                    permutedIndices4, 
+    //                                    cropRegion1, 
+    //                                    cropRegion2, 
+    //                                    cropRegion3, 
+    //                                    cropRegion4,
+    //                                    roiTensorPtrSrc,
+    //                                    roiType,
+    //                                    layoutParams);
+    // }
+    // else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
+    // {
+    //     ricap_f32_f32_host_tensor((Rpp32f*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+    //                                    srcDescPtr,
+    //                                    (Rpp32f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+    //                                    dstDescPtr,
+    //                                    permutedIndices1, 
+    //                                    permutedIndices2, 
+    //                                    permutedIndices3, 
+    //                                    permutedIndices4, 
+    //                                    cropRegion1, 
+    //                                    cropRegion2, 
+    //                                    cropRegion3, 
+    //                                    cropRegion4,
+    //                                    roiTensorPtrSrc,
+    //                                    roiType,
+    //                                    layoutParams);
+    // }
+    // else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
+    // {
+    //     ricap_i8_i8_host_tensor(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offsetInBytes,
+    //                                  srcDescPtr,
+    //                                  static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
+    //                                  dstDescPtr,
+    //                                  permutedIndices1, 
+    //                                  permutedIndices2, 
+    //                                  permutedIndices3, 
+    //                                  permutedIndices4, 
+    //                                  cropRegion1, 
+    //                                  cropRegion2, 
+    //                                  cropRegion3, 
+    //                                  cropRegion4,
+    //                                  roiTensorPtrSrc,
+    //                                  roiType,
+    //                                  layoutParams);
+    // }
+
+    return RPP_SUCCESS;
+}
