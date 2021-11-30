@@ -5538,69 +5538,129 @@ RppStatus ricap_u8_u8_host_tensor(Rpp8u *srcPtr,
         
 
         // ricap with fused output-layout toggle (NCHW -> NHWC)
-        /*
+        
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
-            Rpp32u alignedLength = bufferLength & ~47;
+            Rpp32u alignedLength1 = bufferLength1 & ~47;
+            Rpp32u alignedLength2 = bufferLength2 & ~47;
+            Rpp32u alignedLength3 = bufferLength3 & ~47;
+            Rpp32u alignedLength4 = bufferLength4 & ~47;
 
-            Rpp8u *srcPtrRowR, *srcPtrRowG, *srcPtrRowB, *dstPtrRow;
-            srcPtrRowR = srcPtrChannel;
-            srcPtrRowG = srcPtrRowR + srcDescPtr->strides.cStride;
-            srcPtrRowB = srcPtrRowG + srcDescPtr->strides.cStride;
+            Rpp8u *srcPtrRowR1, *srcPtrRowG1, *srcPtrRowB1,*srcPtrRowR2, *srcPtrRowG2, *srcPtrRowB2, *srcPtrRowR3, *srcPtrRowG3, *srcPtrRowB3, *srcPtrRowR4, *srcPtrRowG4, *srcPtrRowB4, *dstPtrRow;
+            srcPtrRowR1 = srcPtrChannel1;
+            srcPtrRowG1 = srcPtrRowR1 + srcDescPtr->strides.cStride;
+            srcPtrRowB1 = srcPtrRowG1 + srcDescPtr->strides.cStride;
+
+            srcPtrRowR2 = srcPtrChannel2;
+            srcPtrRowG2 = srcPtrRowR2 + srcDescPtr->strides.cStride;
+            srcPtrRowB2 = srcPtrRowG2 + srcDescPtr->strides.cStride;
+
+            srcPtrRowR3 = srcPtrChannel3;
+            srcPtrRowG3 = srcPtrRowR3 + srcDescPtr->strides.cStride;
+            srcPtrRowB3 = srcPtrRowG3 + srcDescPtr->strides.cStride;
+
+            srcPtrRowR4 = srcPtrChannel4;
+            srcPtrRowG4 = srcPtrRowR4 + srcDescPtr->strides.cStride;
+            srcPtrRowB4 = srcPtrRowG4 + srcDescPtr->strides.cStride;
+
             dstPtrRow = dstPtrChannel;
 
-            for(int i = 0; i < roiPtr->xywhROI.roiHeight; i++)
+            for(int i = 0; i < roiPtr1->xywhROI.roiHeight; i++)
             {
-                Rpp8u *srcPtrTempR, *srcPtrTempG, *srcPtrTempB, *dstPtrTemp;
-                srcPtrTempR = srcPtrRowR;
-                srcPtrTempG = srcPtrRowG;
-                srcPtrTempB = srcPtrRowB;
+                Rpp8u *srcPtrTempR1, *srcPtrTempG1, *srcPtrTempB1,*srcPtrTempR2, *srcPtrTempG2, *srcPtrTempB2, *dstPtrTemp;
+                srcPtrTempR1 = srcPtrRowR1;
+                srcPtrTempG1 = srcPtrRowG1;
+                srcPtrTempB1 = srcPtrRowB1;
+
+                srcPtrTempR2 = srcPtrRowR2;
+                srcPtrTempG2 = srcPtrRowG2;
+                srcPtrTempB2 = srcPtrRowB2;
+
                 dstPtrTemp = dstPtrRow;
 
-                int vectorLoopCount = 0;
-                for (; vectorLoopCount < alignedLength; vectorLoopCount+=16)
+                int vectorLoopCount1 = 0;
+                for (; vectorLoopCount1 < bufferLength3; vectorLoopCount1++)
                 {
-                    __m128 p[12];
+                    dstPtrTemp[0] = *srcPtrTempR1;
+                    dstPtrTemp[1] = *srcPtrTempG1;
+                    dstPtrTemp[2] = *srcPtrTempB1;
 
-                    rpp_simd_load(rpp_load48_u8pln3_to_f32pln3, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
-                    p[0] = _mm_fmadd_ps(p[0], pMul, pAdd);    // ricap adjustment Rs
-                    p[1] = _mm_fmadd_ps(p[1], pMul, pAdd);    // ricap adjustment Rs
-                    p[2] = _mm_fmadd_ps(p[2], pMul, pAdd);    // ricap adjustment Rs
-                    p[3] = _mm_fmadd_ps(p[3], pMul, pAdd);    // ricap adjustment Rs
-                    p[4] = _mm_fmadd_ps(p[4], pMul, pAdd);    // ricap adjustment Gs
-                    p[5] = _mm_fmadd_ps(p[5], pMul, pAdd);    // ricap adjustment Gs
-                    p[6] = _mm_fmadd_ps(p[6], pMul, pAdd);    // ricap adjustment Gs
-                    p[7] = _mm_fmadd_ps(p[7], pMul, pAdd);    // ricap adjustment Gs
-                    p[8] = _mm_fmadd_ps(p[8], pMul, pAdd);    // ricap adjustment Bs
-                    p[9] = _mm_fmadd_ps(p[9], pMul, pAdd);    // ricap adjustment Bs
-                    p[10] = _mm_fmadd_ps(p[10], pMul, pAdd);    // ricap adjustment Bs
-                    p[11] = _mm_fmadd_ps(p[11], pMul, pAdd);    // ricap adjustment Bs
-                    rpp_simd_store(rpp_store48_f32pln3_to_u8pkd3, dstPtrTemp, p);    // simd stores
-
-                    srcPtrTempR += 16;
-                    srcPtrTempG += 16;
-                    srcPtrTempB += 16;
-                    dstPtrTemp += 48;
-                }
-                for (; vectorLoopCount < bufferLength; vectorLoopCount++)
-                {
-                    dstPtrTemp[0] = (Rpp8u) RPPPIXELCHECK((((Rpp32f) (*srcPtrTempR)) * alpha) + beta);
-                    dstPtrTemp[1] = (Rpp8u) RPPPIXELCHECK((((Rpp32f) (*srcPtrTempG)) * alpha) + beta);
-                    dstPtrTemp[2] = (Rpp8u) RPPPIXELCHECK((((Rpp32f) (*srcPtrTempB)) * alpha) + beta);
-
-                    srcPtrTempR++;
-                    srcPtrTempG++;
-                    srcPtrTempB++;
+                    srcPtrTempR1++;
+                    srcPtrTempG1++;
+                    srcPtrTempB1++;
                     dstPtrTemp += 3;
                 }
 
-                srcPtrRowR += srcDescPtr->strides.hStride;
-                srcPtrRowG += srcDescPtr->strides.hStride;
-                srcPtrRowB += srcDescPtr->strides.hStride;
+                int vectorLoopCount2 = 0;
+                for (; vectorLoopCount2 < bufferLength4; vectorLoopCount2++)
+                {
+                    dstPtrTemp[0] = *srcPtrTempR2;
+                    dstPtrTemp[1] = *srcPtrTempG2;
+                    dstPtrTemp[2] = *srcPtrTempB2;
+
+                    srcPtrTempR2++;
+                    srcPtrTempG2++;
+                    srcPtrTempB2++;
+                    dstPtrTemp += 3;
+                }
+
+                srcPtrRowR1 += srcDescPtr->strides.hStride;
+                srcPtrRowG1 += srcDescPtr->strides.hStride;
+                srcPtrRowB1 += srcDescPtr->strides.hStride;
+                srcPtrRowR2 += srcDescPtr->strides.hStride;
+                srcPtrRowG2 += srcDescPtr->strides.hStride;
+                srcPtrRowB2 += srcDescPtr->strides.hStride;
+                dstPtrRow += dstDescPtr->strides.hStride;
+            }
+
+            for(int i = 0; i < roiPtr3->xywhROI.roiHeight; i++)
+            {
+                Rpp8u *srcPtrTempR3, *srcPtrTempG3, *srcPtrTempB3,*srcPtrTempR4, *srcPtrTempG4, *srcPtrTempB4, *dstPtrTemp;
+                srcPtrTempR3 = srcPtrRowR3;
+                srcPtrTempG3 = srcPtrRowG3;
+                srcPtrTempB3 = srcPtrRowB3;
+
+                srcPtrTempR4 = srcPtrRowR4;
+                srcPtrTempG4 = srcPtrRowG4;
+                srcPtrTempB4 = srcPtrRowB4;
+
+                dstPtrTemp = dstPtrRow;
+
+                int vectorLoopCount3 = 0;
+                for (; vectorLoopCount3 < bufferLength3; vectorLoopCount3++)
+                {
+                    dstPtrTemp[0] = *srcPtrTempR3;
+                    dstPtrTemp[1] = *srcPtrTempG3;
+                    dstPtrTemp[2] = *srcPtrTempB3;
+
+                    srcPtrTempR3++;
+                    srcPtrTempG3++;
+                    srcPtrTempB3++;
+                    dstPtrTemp += 3;
+                }
+
+                int vectorLoopCount4 = 0;
+                for (; vectorLoopCount4 < bufferLength4; vectorLoopCount4++)
+                {
+                    dstPtrTemp[0] = *srcPtrTempR4;
+                    dstPtrTemp[1] = *srcPtrTempG4;
+                    dstPtrTemp[2] = *srcPtrTempB4;
+
+                    srcPtrTempR4++;
+                    srcPtrTempG4++;
+                    srcPtrTempB4++;
+                    dstPtrTemp += 3;
+                }
+
+                srcPtrRowR3 += srcDescPtr->strides.hStride;
+                srcPtrRowG3 += srcDescPtr->strides.hStride;
+                srcPtrRowB3 += srcDescPtr->strides.hStride;
+                srcPtrRowR4 += srcDescPtr->strides.hStride;
+                srcPtrRowG4 += srcDescPtr->strides.hStride;
+                srcPtrRowB4 += srcDescPtr->strides.hStride;
                 dstPtrRow += dstDescPtr->strides.hStride;
             }
         }
-        */
         // ricap without fused output-layout toggle (NHWC -> NHWC or NCHW -> NCHW)
         else // To be Uncommented Later
         {    // To be Uncommented Later

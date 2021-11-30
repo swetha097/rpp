@@ -219,7 +219,7 @@ inline RppStatus rpp_load48_u8pkd3_to_u8pln3(Rpp8u *srcPtr, __m128 *p)
     px[4] = _mm_unpacklo_epi8(px[0], px[1]);    /* unpack 8 lo-pixels of px[0,1] */
     px[5] = _mm_unpacklo_epi8(px[2], px[3]);    /* unpack 8 lo-pixels of px[2,3] */
     px[6] = _mm_unpackhi_epi8(px[4], px[5]);    /* unpack 8 hi-pixels of px[4,5] */
-    p[1] = _mm_shuffle_epi8(px[6], pxMaskRGB);   /* store [G01|G02|G03|G04|G05|G06|G07|G08|G09|G10|G11|G12|G13|G14|G15|G16] */
+    p[1] = _mm_shuffle_epi8(px[6], pxMaskRGB);  /* store [G01|G02|G03|G04|G05|G06|G07|G08|G09|G10|G11|G12|G13|G14|G15|G16] */
 
     return RPP_SUCCESS;
 }
