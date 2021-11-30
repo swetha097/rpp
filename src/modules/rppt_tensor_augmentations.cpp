@@ -854,6 +854,9 @@ rppt_box_filter_gpu(RppPtr_t srcPtr,
     }
 
 #endif //BACKEND
+
+    return RPP_SUCCESS;
+}
 /******************** ricap ********************/
 
 RppStatus
