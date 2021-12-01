@@ -792,7 +792,6 @@ int main(int argc, char **argv)
     case 82:
         {
             test_case_name = "ricap";
-            std::cerr<<"\n In ricap tensor case";
             Rpp32u initialPermuteArray[images];
             Rpp32u permutedArray1[images] ;
             Rpp32u permutedArray2[images] ;

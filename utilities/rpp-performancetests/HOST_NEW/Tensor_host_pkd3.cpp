@@ -24,6 +24,25 @@ typedef half Rpp16f;
 #define RPPMAX2(a,b) ((a > b) ? a : b)
 #define RPPMIN2(a,b) ((a < b) ? a : b)
 
+void swap (unsigned int *a, unsigned int *b)
+{
+    unsigned int temp = *a;
+    *a = *b;
+    *b = temp;
+}
+
+void randomize (unsigned int arr[], unsigned int n)
+{
+    // Use a different seed value each time
+    srand (time(NULL));
+    for (unsigned int i = n - 1; i > 0; i--)
+    {
+        // Pick a random index from 0 to i
+        unsigned int j = rand() % (i + 1);
+        swap(&arr[i], &arr[j]);
+    }
+}
+
 int main(int argc, char **argv)
 {
     // Handle inputs
@@ -76,6 +95,9 @@ int main(int argc, char **argv)
         break;
     case 81:
         strcpy(funcName, "color_jitter");
+        break;
+    case 82:
+        strcpy(funcName, "ricap");
         break;
     default:
         strcpy(funcName, "test_case");
@@ -683,6 +705,74 @@ int main(int argc, char **argv)
                 missingFuncFlag = 1;
             else if (ip_bitDepth == 5)
                 rppt_color_jitter_host(inputi8, srcDescPtr, outputi8, dstDescPtr, brightness, contrast, hue, saturation, roiTensorPtrSrc, roiTypeSrc, handle);
+            else if (ip_bitDepth == 6)
+                missingFuncFlag = 1;
+            else
+                missingFuncFlag = 1;
+            end = clock();
+            end_omp = omp_get_wtime();
+
+            break;
+        }
+        case 82:
+        {
+            test_case_name = "ricap";
+            Rpp32u initialPermuteArray[images];
+            Rpp32u permutedArray1[images] ;
+            Rpp32u permutedArray2[images] ;
+            Rpp32u permutedArray3[images] ;
+            Rpp32u permutedArray4[images] ;
+            Rpp32u cropRegion1[4] ;
+            Rpp32u cropRegion2[4] ;
+            Rpp32u cropRegion3[4] ;
+            Rpp32u cropRegion4[4] ;
+            for (uint i = 0; i < images; i++ )
+            {
+                initialPermuteArray[i] = i;
+            }
+            randomize(initialPermuteArray, images);
+            memcpy(permutedArray1, initialPermuteArray, images * sizeof(Rpp32u));
+            randomize(initialPermuteArray, images);
+            memcpy(permutedArray2, initialPermuteArray, images * sizeof(Rpp32u));
+            randomize(initialPermuteArray, images);
+            memcpy(permutedArray3, initialPermuteArray, images * sizeof(Rpp32u));
+            randomize(initialPermuteArray, images);
+            memcpy(permutedArray4, initialPermuteArray, images * sizeof(Rpp32u));
+
+            cropRegion1[0] = 3; //x1
+            cropRegion1[1] = 17;    //y1
+            cropRegion1[2] = 250;   //w1
+            cropRegion1[3] = 238;   //h1
+
+            cropRegion2[0] = 7;  //x2
+            cropRegion2[1] = 16;  //y2
+            cropRegion2[2] = 50;  //w2
+            cropRegion2[3] = 238; //h2
+
+            cropRegion3[0] = 7;   //x3
+            cropRegion3[1] = 106; //y3
+            cropRegion3[2] = 250; //w3
+            cropRegion3[3] = 62;  //h3
+
+            cropRegion4[0] = 103; //x4
+            cropRegion4[1] = 12;  //y4
+            cropRegion4[2] = 50;  //w4
+            cropRegion4[3] = 62;  //h4
+
+            start_omp = omp_get_wtime();
+            start = clock();
+            if (ip_bitDepth == 0)
+                rppt_ricap_host(input, srcDescPtr, output, dstDescPtr, permutedArray1, permutedArray2, permutedArray3, permutedArray4, cropRegion1, cropRegion2, cropRegion3, cropRegion4, roiTensorPtrSrc, roiTypeSrc, handle);
+            else if (ip_bitDepth == 1)
+                missingFuncFlag = 1; // rppt_ricap_host(inputf16, srcDescPtr, outputf16, dstDescPtr, permutedArray1, permutedArray2, permutedArray3, permutedArray4, cropRegion1, cropRegion2, cropRegion3, cropRegion4, roiTensorPtrSrc, roiTypeSrc, handle);
+            else if (ip_bitDepth == 2)
+                missingFuncFlag = 1; // rppt_ricap_host(inputf32, srcDescPtr, outputf32, dstDescPtr, permutedArray1, permutedArray2, permutedArray3, permutedArray4, cropRegion1, cropRegion2, cropRegion3, cropRegion4, roiTensorPtrSrc, roiTypeSrc, handle);
+            else if (ip_bitDepth == 3)
+                missingFuncFlag = 1;
+            else if (ip_bitDepth == 4)
+                missingFuncFlag = 1;
+            else if (ip_bitDepth == 5)
+                missingFuncFlag = 1; // rppt_ricap_host(inputi8, srcDescPtr, outputi8, dstDescPtr, permutedArray1, permutedArray2, permutedArray3, permutedArray4, cropRegion1, cropRegion2, cropRegion3, cropRegion4, roiTensorPtrSrc, roiTypeSrc, handle);
             else if (ip_bitDepth == 6)
                 missingFuncFlag = 1;
             else
