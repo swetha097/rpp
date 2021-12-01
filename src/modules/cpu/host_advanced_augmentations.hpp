@@ -2663,26 +2663,35 @@ RppStatus ricap_host_batch(T *srcPtr, RppiSize *batch_srcSize, RppiSize *batch_s
             srcPtrChannelROI3 = srcPtrImage3  + (cropRegion3[1] * width_srcSizeMax) + cropRegion3[0];
             srcPtrChannelROI4 = srcPtrImage4  + (cropRegion4[1] * width_srcSizeMax) + cropRegion4[0];
 
+             T *tempDstPtrChannel, *tempSrcPtrChannelROI1, *tempSrcPtrChannelROI2, *tempSrcPtrChannelROI3, *tempSrcPtrChannelROI4;
+            tempDstPtrChannel = dstPtrChannel;
+
             for (int c = 0; c < channel; c++)
             {
+            tempDstPtrChannel = dstPtrChannel;
+            tempSrcPtrChannelROI1 = srcPtrChannelROI1;
+            tempSrcPtrChannelROI2 = srcPtrChannelROI2;
+            tempSrcPtrChannelROI3 = srcPtrChannelROI3;
+            tempSrcPtrChannelROI4 = srcPtrChannelROI4;
+
                 for (int i = 0; i < cropRegion1[3]; i++)
                 {
-                    memcpy(dstPtrChannel, srcPtrChannelROI1, cropBufferInBytes[0]);
-                    dstPtrChannel += cropRegion1[2];
-                    srcPtrChannelROI1 += width_srcSizeMax;
-                    memcpy(dstPtrChannel, srcPtrChannelROI2, cropBufferInBytes[1]);
-                    dstPtrChannel += cropRegion2[2];
-                    srcPtrChannelROI2 += width_srcSizeMax;
+                    memcpy(tempDstPtrChannel, tempSrcPtrChannelROI1, cropBufferInBytes[0]);
+                    tempDstPtrChannel += cropRegion1[2];
+                    tempSrcPtrChannelROI1 += width_srcSizeMax;
+                    memcpy(tempDstPtrChannel, tempSrcPtrChannelROI2, cropBufferInBytes[1]);
+                    tempDstPtrChannel += cropRegion2[2];
+                    tempSrcPtrChannelROI2 += width_srcSizeMax;
                 }
 
                 for (int i = 0; i < cropRegion3[3]; i++)
                 {
-                    memcpy(dstPtrChannel, srcPtrChannelROI3, cropBufferInBytes[2]);
-                    dstPtrChannel += cropRegion3[2];
-                    srcPtrChannelROI3 += width_srcSizeMax;
-                    memcpy(dstPtrChannel, srcPtrChannelROI4, cropBufferInBytes[3]);
-                    dstPtrChannel += cropRegion4[2];
-                    srcPtrChannelROI4 += width_srcSizeMax;
+                    memcpy(tempDstPtrChannel, tempSrcPtrChannelROI3, cropBufferInBytes[2]);
+                    tempDstPtrChannel += cropRegion3[2];
+                    tempSrcPtrChannelROI3 += width_srcSizeMax;
+                    memcpy(tempDstPtrChannel, tempSrcPtrChannelROI4, cropBufferInBytes[3]);
+                    tempDstPtrChannel += cropRegion4[2];
+                    tempSrcPtrChannelROI4 += width_srcSizeMax;
                 }
                 dstPtrChannel += srcAndDstImageDimMax;
                 srcPtrChannelROI1 += srcAndDstImageDimMax;
