@@ -2656,6 +2656,116 @@ RppStatus ricap_host_batch(T *srcPtr, RppiSize *batch_srcSize, RppiSize *batch_s
             srcPtrImage4 = srcPtr + srcLoc4;
             dstPtrImage = dstPtr + dstLoc;
             Rpp32u width_srcSizeMax = batch_srcSizeMax[permutedIndices1[0]].width;
+           
+        if (outputFormatToggle == 1)
+            {
+                T *srcPtrImageRoiR1, *srcPtrImageRoiG1, *srcPtrImageRoiB1, *srcPtrImageRoiR2, *srcPtrImageRoiG2, *srcPtrImageRoiB2, *srcPtrImageRoiR3, *srcPtrImageRoiG3, *srcPtrImageRoiB3, *srcPtrImageRoiR4, *srcPtrImageRoiG4, *srcPtrImageRoiB4;
+                T *dstPtrImageTemp;
+
+                srcPtrImageRoiR1 = srcPtrImage1 + (cropRegion1[1] * width_srcSizeMax) + cropRegion1[0];
+                srcPtrImageRoiG1 = srcPtrImageRoiR1 + srcAndDstImageDimMax;
+                srcPtrImageRoiB1 = srcPtrImageRoiG1 + srcAndDstImageDimMax;
+
+                srcPtrImageRoiR2 = srcPtrImage2 + (cropRegion2[1] * width_srcSizeMax) + cropRegion2[0];
+                srcPtrImageRoiG2 = srcPtrImageRoiR2 + srcAndDstImageDimMax;
+                srcPtrImageRoiB2 = srcPtrImageRoiG2 + srcAndDstImageDimMax;
+
+                srcPtrImageRoiR3 = srcPtrImage3 + (cropRegion3[1] * width_srcSizeMax) + cropRegion3[0];
+                srcPtrImageRoiG3 = srcPtrImageRoiR3 + srcAndDstImageDimMax;
+                srcPtrImageRoiB3 = srcPtrImageRoiG3 + srcAndDstImageDimMax;
+
+                srcPtrImageRoiR4 = srcPtrImage4 + (cropRegion4[1] * width_srcSizeMax) + cropRegion4[0];
+                srcPtrImageRoiG4 = srcPtrImageRoiR4 + srcAndDstImageDimMax;
+                srcPtrImageRoiB4 = srcPtrImageRoiG4 + srcAndDstImageDimMax;
+
+                dstPtrImageTemp = dstPtrImage;
+                Rpp32u incrementDst = (batch_srcSizeMax[batchCount].width - batch_srcSize[batchCount].width) * channel;
+
+                for(int i = 0; i < cropRegion1[3]; i++)
+                {
+                    for(int j = 0; j < cropRegion1[2]; j++)
+                    {
+                        *dstPtrImageTemp = *srcPtrImageRoiR1;
+                        srcPtrImageRoiR1++;
+                        dstPtrImageTemp++;
+
+                        *dstPtrImageTemp = *srcPtrImageRoiG1;
+                        srcPtrImageRoiG1++;
+                        dstPtrImageTemp++;
+
+                        *dstPtrImageTemp = *srcPtrImageRoiB1;
+                        srcPtrImageRoiB1++;
+                        dstPtrImageTemp++;
+                    }
+                    srcPtrImageRoiR1 += (width_srcSizeMax - cropRegion1[2]);
+                    srcPtrImageRoiG1 += (width_srcSizeMax - cropRegion1[2]);
+                    srcPtrImageRoiB1 += (width_srcSizeMax - cropRegion1[2]);
+
+                    for(int j = 0; j < cropRegion2[2]; j++)
+                    {
+                        *dstPtrImageTemp = *srcPtrImageRoiR2;
+                        srcPtrImageRoiR2++;
+                        dstPtrImageTemp++;
+
+                        *dstPtrImageTemp = *srcPtrImageRoiG2;
+                        srcPtrImageRoiG2++;
+                        dstPtrImageTemp++;
+
+                        *dstPtrImageTemp = *srcPtrImageRoiB2;
+                        srcPtrImageRoiB2++;
+                        dstPtrImageTemp++;
+                    }
+                    
+                    srcPtrImageRoiR2 += (width_srcSizeMax - cropRegion2[2]);
+                    srcPtrImageRoiG2 += (width_srcSizeMax - cropRegion2[2]);
+                    srcPtrImageRoiB2 += (width_srcSizeMax - cropRegion2[2]);
+                    dstPtrImageTemp += incrementDst;
+                }
+
+                for(int i = 0; i < cropRegion3[3]; i++)
+                {
+                    for(int j = 0; j < cropRegion3[2]; j++)
+                    {
+                        *dstPtrImageTemp = *srcPtrImageRoiR3;
+                        srcPtrImageRoiR3++;
+                        dstPtrImageTemp++;
+
+                        *dstPtrImageTemp = *srcPtrImageRoiG3;
+                        srcPtrImageRoiG3++;
+                        dstPtrImageTemp++;
+
+                        *dstPtrImageTemp = *srcPtrImageRoiB3;
+                        srcPtrImageRoiB3++;
+                        dstPtrImageTemp++;
+                    }
+                    srcPtrImageRoiR3 += (width_srcSizeMax - cropRegion3[2]);
+                    srcPtrImageRoiG3 += (width_srcSizeMax - cropRegion3[2]);
+                    srcPtrImageRoiB3 += (width_srcSizeMax - cropRegion3[2]);
+
+                    for(int j = 0; j < cropRegion4[2]; j++)
+                    {
+                        *dstPtrImageTemp = *srcPtrImageRoiR4;
+                        srcPtrImageRoiR4++;
+                        dstPtrImageTemp++;
+
+                        *dstPtrImageTemp = *srcPtrImageRoiG4;
+                        srcPtrImageRoiG4++;
+                        dstPtrImageTemp++;
+
+                        *dstPtrImageTemp = *srcPtrImageRoiB4;
+                        srcPtrImageRoiB4++;
+                        dstPtrImageTemp++;
+                    }
+                    
+                    srcPtrImageRoiR4 += (width_srcSizeMax - cropRegion4[2]);
+                    srcPtrImageRoiG4 += (width_srcSizeMax - cropRegion4[2]);
+                    srcPtrImageRoiB4 += (width_srcSizeMax - cropRegion4[2]);
+                    dstPtrImageTemp += incrementDst;
+                }
+            }
+        
+        else
+        {
             T *dstPtrChannel, *srcPtrChannelROI1, *srcPtrChannelROI2, *srcPtrChannelROI3, *srcPtrChannelROI4;
             dstPtrChannel = dstPtrImage ;
             srcPtrChannelROI1 = srcPtrImage1  + (cropRegion1[1] * width_srcSizeMax) + cropRegion1[0];
@@ -2699,6 +2809,7 @@ RppStatus ricap_host_batch(T *srcPtr, RppiSize *batch_srcSize, RppiSize *batch_s
                 srcPtrChannelROI3 += srcAndDstImageDimMax;
                 srcPtrChannelROI4 += srcAndDstImageDimMax;
             }
+        }
         }
     }
     else if (chnFormat == RPPI_CHN_PACKED)
