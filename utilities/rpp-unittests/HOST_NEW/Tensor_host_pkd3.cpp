@@ -24,13 +24,6 @@ typedef half Rpp16f;
 #define RPPMAX2(a,b) ((a > b) ? a : b)
 #define RPPMIN2(a,b) ((a < b) ? a : b)
 
-void swap (unsigned int *a, unsigned int *b)
-{
-    unsigned int temp = *a;
-    *a = *b;
-    *b = temp;
-}
-
 void randomize (unsigned int arr[], unsigned int n)
 {
     // Use a different seed value each time
@@ -39,7 +32,7 @@ void randomize (unsigned int arr[], unsigned int n)
     {
         // Pick a random index from 0 to i
         unsigned int j = rand() % (i + 1);
-        swap(&arr[i], &arr[j]);
+        std::swap(arr[i], arr[j]);
     }
 }
 
