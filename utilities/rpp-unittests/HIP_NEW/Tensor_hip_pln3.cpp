@@ -21,6 +21,18 @@ using namespace std;
 #define RPPMAX2(a,b) ((a > b) ? a : b)
 #define RPPMIN2(a,b) ((a < b) ? a : b)
 
+inline void randomize (unsigned int arr[], unsigned int n)
+{
+    // Use a different seed value each time
+    srand (time(NULL));
+    for (unsigned int i = n - 1; i > 0; i--)
+    {
+        // Pick a random index from 0 to i
+        unsigned int j = rand() % (i + 1);
+        std::swap(arr[i], arr[j]);
+    }
+}
+
 int main(int argc, char **argv)
 {
     // Handle inputs
@@ -85,6 +97,9 @@ int main(int argc, char **argv)
         break;
     case 49:
         strcpy(funcName, "box_filter");
+        break;
+    case 80:
+        strcpy(funcName, "ricap");
         break;
     default:
         strcpy(funcName, "test_case");
@@ -991,6 +1006,95 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
 
         hipDeviceSynchronize();
+
+        end = clock();
+
+        break;
+    }
+    case 80:
+    {
+        test_case_name = "ricap";
+        uint no_of_crops = 4;
+
+        RpptROI *cropregion = (RpptROI *) calloc(no_of_crops, sizeof(RpptROI));
+        RpptROI *d_cropregion;
+        hipMalloc(&d_cropregion, no_of_crops * sizeof(RpptROI));
+        Rpp32u initial_permute_array[images];
+        Rpp32u permuted_array1[images];
+        Rpp32u permuted_array2[images];
+        Rpp32u permuted_array3[images];
+        Rpp32u permuted_array4[images];
+
+        uint src_width = roiTensorPtrSrc[0].xywhROI.roiWidth;
+        uint src_height = roiTensorPtrSrc[0].xywhROI.roiHeight;
+
+        cropregion[0].xywhROI.xy.x =  floor(.2 * src_width);
+        cropregion[0].xywhROI.xy.y =  floor(.3 * src_height);
+        cropregion[0].xywhROI.roiWidth = floor(.75 * src_width);
+        cropregion[0].xywhROI.roiHeight = floor(.25 * src_height);
+
+        cropregion[1].xywhROI.xy.x  = floor(.1 * src_width);
+        cropregion[1].xywhROI.xy.y = floor(.4 * src_height);
+        cropregion[1].xywhROI.roiWidth = floor(.25 * src_width);
+        cropregion[1].xywhROI.roiHeight = floor(.25* src_height);
+
+        cropregion[2].xywhROI.xy.x  = floor(.4 * src_width);
+        cropregion[2].xywhROI.xy.y = floor(.15 * src_height);
+        cropregion[2].xywhROI.roiWidth = floor(.75 * src_width);
+        cropregion[2].xywhROI.roiHeight = floor(.75* src_height);
+
+        cropregion[3].xywhROI.xy.x  = floor(.2 * src_width);
+        cropregion[3].xywhROI.xy.y = floor(.2 * src_height);
+        cropregion[3].xywhROI.roiWidth = floor(.25 * src_width);
+        cropregion[3].xywhROI.roiHeight = floor(.75* src_height);
+
+        for (uint i = 0; i < images; i++ )
+        {
+            initial_permute_array[i] = i;
+        }
+        randomize(initial_permute_array, images);
+        memcpy(permuted_array1, initial_permute_array, images * sizeof(Rpp32u));
+        randomize(initial_permute_array, images);
+        memcpy(permuted_array2, initial_permute_array, images * sizeof(Rpp32u));
+        randomize(initial_permute_array, images);
+        memcpy(permuted_array3, initial_permute_array, images * sizeof(Rpp32u));
+        randomize(initial_permute_array, images);
+        memcpy(permuted_array4, initial_permute_array, images * sizeof(Rpp32u));
+
+        // Change RpptRoiType for ltrbROI override sample
+        // roiTypeSrc = RpptRoiType::LTRB;
+        // roiTypeDst = RpptRoiType::LTRB;
+
+        hipError_t err;
+        err = hipMemcpy(d_roiTensorPtrSrc, roiTensorPtrSrc, images * sizeof(RpptROI), hipMemcpyHostToDevice);
+        if (err) {
+            std::cerr<<"\n RICAP Mem copy did not happen properly";
+            exit(0);
+        }
+        err = hipMemcpy(d_cropregion, cropregion, no_of_crops * sizeof(RpptROI), hipMemcpyHostToDevice);
+        if (err) {
+            std::cerr<<"\n RICAP Mem copy did not happen properly";
+            exit(0);
+        }
+
+        start = clock();
+        std::cerr<<"\n Gonna make call to ricap";
+        if (ip_bitDepth == 0)
+            rppt_ricap_gpu(d_input, srcDescPtr, d_output, dstDescPtr, permuted_array1, permuted_array2, permuted_array3, permuted_array4, d_cropregion, d_roiTensorPtrSrc, roiTypeSrc, handle);
+        else if (ip_bitDepth == 1)
+            rppt_ricap_gpu(d_inputf16, srcDescPtr, d_outputf16, dstDescPtr, permuted_array1, permuted_array2, permuted_array3, permuted_array4, d_cropregion, d_roiTensorPtrSrc, roiTypeSrc, handle);
+        else if (ip_bitDepth == 2)
+            rppt_ricap_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, permuted_array1, permuted_array2, permuted_array3, permuted_array4, d_cropregion, d_roiTensorPtrSrc, roiTypeSrc, handle);
+        else if (ip_bitDepth == 3)
+            missingFuncFlag = 1;
+        else if (ip_bitDepth == 4)
+            missingFuncFlag = 1;
+        else if (ip_bitDepth == 5)
+            rppt_ricap_gpu(d_inputi8, srcDescPtr, d_outputi8, dstDescPtr, permuted_array1, permuted_array2, permuted_array3, permuted_array4, d_cropregion, d_roiTensorPtrSrc, roiTypeSrc, handle);
+        else if (ip_bitDepth == 6)
+            missingFuncFlag = 1;
+        else
+            missingFuncFlag = 1;
 
         end = clock();
 
