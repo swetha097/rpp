@@ -171,6 +171,32 @@ RppStatus rppt_erode_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPt
 
 RppStatus rppt_dilate_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32u kernelSize, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 
+
+/******************** ricap ********************/
+
+// ricap augmentation for a NCHW/NHWC layout tensor
+
+// *param[in] srcPtr source tensor memory
+// *param[in] srcDesc source tensor descriptor
+// *param[out] dstPtr destination tensor memory
+// *param[in] dstDesc destination tensor descriptor
+// *param[in] Permuted Indices Array 1 for a batch of images
+// *param[in] Permuted Indices Array 2 for a batch of images
+// *param[in] Permuted Indices Array 3 for a batch of images
+// *param[in] Permuted Indices Array 4 for a batch of images
+// *param[in] Permuted Crop Region 1 for a batch of images for 1st Permuted Array of a batch of images
+// *param[in] Permuted Crop Region 2 for a batch of images for 2nd Permuted Array of a batch of images
+// *param[in] Permuted Crop Region 3 for a batch of images for 3rd Permuted Array of a batch of images
+// *param[in] Permuted Crop Region 4 for a batch of images for 4th Permuted Array of a batch of images
+// *param[in] roiTensorSrc ROI data for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
+// *param[in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
+// *returns a  RppStatus enumeration.
+// *retval RPP_SUCCESS : succesful completion
+// *retval RPP_ERROR : Error
+
+RppStatus rppt_ricap_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32u *permutedIndices1, Rpp32u *permutedIndices2, Rpp32u *permutedIndices3, Rpp32u *permutedIndices4, RpptROIPtr roiPtrInputCropRegion, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
+
+
 #ifdef __cplusplus
 }
 #endif

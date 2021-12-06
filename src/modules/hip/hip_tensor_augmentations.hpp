@@ -6,6 +6,7 @@
 #include "kernel/box_filter.hpp"
 #include "kernel/erode.hpp"
 #include "kernel/dilate.hpp"
+#include "kernel/ricap.hpp"
 #include "kernel/roi_conversion.hpp"
 
 /******************** brightness ********************/
@@ -201,6 +202,35 @@ RppStatus dilate_hip_tensor(T *srcPtr,
                            kernelSize,
                            roiTensorPtrSrc,
                            handle);
+
+    return RPP_SUCCESS;
+}
+
+/******************** ricap ********************/
+
+template <typename T>
+RppStatus ricap_hip_tensor(T *srcPtr,
+                                RpptDescPtr srcDescPtr,
+                                T *dstPtr,
+                                RpptDescPtr dstDescPtr,
+                                RpptROIPtr roiTensorPtrSrc,
+                                RpptRoiType roiType,
+                                RpptROIPtr cropRegion,
+                                rpp::Handle& handle)
+{
+    if (roiType == RpptRoiType::LTRB)
+    {
+        hip_exec_roi_converison_ltrb_to_xywh(roiTensorPtrSrc,
+                                             handle);
+    }
+
+    hip_exec_ricap_tensor(srcPtr,
+                               srcDescPtr,
+                               dstPtr,
+                               dstDescPtr,
+                               roiTensorPtrSrc,
+                               cropRegion,
+                               handle);
 
     return RPP_SUCCESS;
 }
