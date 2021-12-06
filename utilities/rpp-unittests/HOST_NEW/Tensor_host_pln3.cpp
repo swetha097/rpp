@@ -807,30 +807,33 @@ int main(int argc, char **argv)
             randomize(initialPermuteArray, images);
             memcpy(permutedArray4, initialPermuteArray, images * sizeof(Rpp32u));
 
-            cropRegion1[0] = 3; //x1
-            cropRegion1[1] = 17;    //y1
-            cropRegion1[2] = 250;   //w1
-            cropRegion1[3] = 238;   //h1
+            RpptROI *roiPtrInputCropRegion = (RpptROI *) calloc(4, sizeof(RpptROI));
 
-            cropRegion2[0] = 7;  //x2
-            cropRegion2[1] = 16;  //y2
-            cropRegion2[2] = 50;  //w2
-            cropRegion2[3] = 238; //h2
+            // xywhROI override sample
+            roiPtrInputCropRegion[0].xywhROI.xy.x = 3;
+            roiPtrInputCropRegion[0].xywhROI.xy.y = 17;
+            roiPtrInputCropRegion[0].xywhROI.roiWidth = 250;
+            roiPtrInputCropRegion[0].xywhROI.roiHeight = 238;
 
-            cropRegion3[0] = 7;   //x3
-            cropRegion3[1] = 106; //y3
-            cropRegion3[2] = 250; //w3
-            cropRegion3[3] = 62;  //h3
+            roiPtrInputCropRegion[1].xywhROI.xy.x = 7;
+            roiPtrInputCropRegion[1].xywhROI.xy.y = 16;
+            roiPtrInputCropRegion[1].xywhROI.roiWidth = 50;
+            roiPtrInputCropRegion[1].xywhROI.roiHeight = 238;
 
-            cropRegion4[0] = 103; //x4
-            cropRegion4[1] = 12;  //y4
-            cropRegion4[2] = 50;  //w4
-            cropRegion4[3] = 62;  //h4
+            roiPtrInputCropRegion[2].xywhROI.xy.x = 7;
+            roiPtrInputCropRegion[2].xywhROI.xy.y = 106;
+            roiPtrInputCropRegion[2].xywhROI.roiWidth = 250;
+            roiPtrInputCropRegion[2].xywhROI.roiHeight = 62;
+
+            roiPtrInputCropRegion[3].xywhROI.xy.x = 103;
+            roiPtrInputCropRegion[3].xywhROI.xy.y = 12;
+            roiPtrInputCropRegion[3].xywhROI.roiWidth = 50;
+            roiPtrInputCropRegion[3].xywhROI.roiHeight = 62;
 
             start_omp = omp_get_wtime();
             start = clock();
             if (ip_bitDepth == 0)
-                rppt_ricap_host(input, srcDescPtr, output, dstDescPtr, permutedArray1, permutedArray2, permutedArray3, permutedArray4, cropRegion1, cropRegion2, cropRegion3, cropRegion4, roiTensorPtrSrc, roiTypeSrc, handle);
+                rppt_ricap_host(input, srcDescPtr, output, dstDescPtr, permutedArray1, permutedArray2, permutedArray3, permutedArray4, roiPtrInputCropRegion,  roiTensorPtrSrc, roiTypeSrc, handle);
             else if (ip_bitDepth == 1)
                 missingFuncFlag = 1; // rppt_ricap_host(inputf16, srcDescPtr, outputf16, dstDescPtr, permutedArray1, permutedArray2, permutedArray3, permutedArray4, cropRegion1, cropRegion2, cropRegion3, cropRegion4, roiTensorPtrSrc, roiTypeSrc, handle);
             else if (ip_bitDepth == 2)

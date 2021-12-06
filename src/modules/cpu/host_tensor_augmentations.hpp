@@ -5271,14 +5271,11 @@ RppStatus ricap_u8_u8_host_tensor(Rpp8u *srcPtr,
                                        RpptDescPtr srcDescPtr,
                                        Rpp8u *dstPtr,
                                        RpptDescPtr dstDescPtr,
-                                       Rpp32u *permutedIndices1, 
-                                       Rpp32u *permutedIndices2, 
-                                       Rpp32u *permutedIndices3, 
-                                       Rpp32u *permutedIndices4, 
-                                       Rpp32u *cropRegion1, 
-                                       Rpp32u *cropRegion2, 
-                                       Rpp32u *cropRegion3, 
-                                       Rpp32u *cropRegion4,
+                                       Rpp32u *permutedIndices1,
+                                       Rpp32u *permutedIndices2,
+                                       Rpp32u *permutedIndices3,
+                                       Rpp32u *permutedIndices4,
+                                       RpptROIPtr roiPtrInputCropRegion,
                                        RpptROIPtr roiTensorPtrSrc,
                                        RpptRoiType roiType,
                                        RppLayoutParams layoutParams)
@@ -5306,51 +5303,26 @@ RppStatus ricap_u8_u8_host_tensor(Rpp8u *srcPtr,
         }
         else
         {
-            RpptROI roiInput1, roiInput2, roiInput3, roiInput4;
-            RpptROIPtr roiPtrInput1 , roiPtrInput2, roiPtrInput3, roiPtrInput4;
-            roiPtrInput1 = &roiInput1;
-            roiPtrInput2 = &roiInput2;
-            roiPtrInput3 = &roiInput3;
-            roiPtrInput4 = &roiInput4;
-            roiPtrInput1->xywhROI.xy.x = cropRegion1[0];// change this
-            roiPtrInput1->xywhROI.xy.y = cropRegion1[1]; //change this
-            roiPtrInput1->xywhROI.roiWidth = cropRegion1[2];
-            roiPtrInput1->xywhROI.roiHeight = cropRegion1[3];
-
-            roiPtrInput2->xywhROI.xy.x = cropRegion2[0];
-            roiPtrInput2->xywhROI.xy.y = cropRegion2[1];
-            roiPtrInput2->xywhROI.roiWidth = cropRegion2[2];
-            roiPtrInput2->xywhROI.roiHeight = cropRegion2[3];
-
-            roiPtrInput3->xywhROI.xy.x = cropRegion3[0];
-            roiPtrInput3->xywhROI.xy.y = cropRegion3[1];
-            roiPtrInput3->xywhROI.roiWidth = cropRegion3[2];
-            roiPtrInput3->xywhROI.roiHeight = cropRegion3[3];
-
-            roiPtrInput4->xywhROI.xy.x = cropRegion4[0];
-            roiPtrInput4->xywhROI.xy.y = cropRegion4[1];
-            roiPtrInput4->xywhROI.roiWidth = cropRegion4[2];
-            roiPtrInput4->xywhROI.roiHeight = cropRegion4[3];
             RpptROI roiImage1, roiImage2, roiImage3, roiImage4;
             RpptROIPtr roiPtrImage1, roiPtrImage2, roiPtrImage3, roiPtrImage4;
-            
+
             if (roiType == RpptRoiType::LTRB)
             {
                 roiPtrImage1 = &roiImage1;
-                compute_xywh_from_ltrb_host(roiPtrInput1, roiPtrImage1);
+                compute_xywh_from_ltrb_host(&roiPtrInputCropRegion[0], roiPtrImage1);
                 roiPtrImage2 = &roiImage2;
-                compute_xywh_from_ltrb_host(roiPtrInput2, roiPtrImage2);
+                compute_xywh_from_ltrb_host(&roiPtrInputCropRegion[1], roiPtrImage2);
                 roiPtrImage3 = &roiImage3;
-                compute_xywh_from_ltrb_host(roiPtrInput3, roiPtrImage3);
+                compute_xywh_from_ltrb_host(&roiPtrInputCropRegion[2], roiPtrImage3);
                 roiPtrImage4 = &roiImage4;
-                compute_xywh_from_ltrb_host(roiPtrInput4, roiPtrImage4);
+                compute_xywh_from_ltrb_host(&roiPtrInputCropRegion[3], roiPtrImage4);
             }
             else if (roiType == RpptRoiType::XYWH)
             {
-                roiPtrImage1 = roiPtrInput1;
-                roiPtrImage2 = roiPtrInput2;
-                roiPtrImage3 = roiPtrInput3;
-                roiPtrImage4 = roiPtrInput4;
+                roiPtrImage1 = &roiPtrInputCropRegion[0];
+                roiPtrImage2 = &roiPtrInputCropRegion[1];
+                roiPtrImage3 = &roiPtrInputCropRegion[2];
+                roiPtrImage4 = &roiPtrInputCropRegion[3];
             }
 
             roiPtr1 = &roi1;
@@ -5406,7 +5378,7 @@ RppStatus ricap_u8_u8_host_tensor(Rpp8u *srcPtr,
                 Rpp8u *srcPtrTemp1, *srcPtrTemp2, *dstPtrTempR, *dstPtrTempG, *dstPtrTempB;
                 srcPtrTemp1 = srcPtrRow1;
                 srcPtrTemp2 = srcPtrRow2;
-                
+
                 dstPtrTempR = dstPtrRowR;
                 dstPtrTempG = dstPtrRowG;
                 dstPtrTempB = dstPtrRowB;
@@ -5473,7 +5445,7 @@ RppStatus ricap_u8_u8_host_tensor(Rpp8u *srcPtr,
                 Rpp8u *srcPtrTemp3, *srcPtrTemp4, *dstPtrTempR, *dstPtrTempG, *dstPtrTempB;
                 srcPtrTemp3 = srcPtrRow3;
                 srcPtrTemp4 = srcPtrRow4;
-                
+
                 dstPtrTempR = dstPtrRowR;
                 dstPtrTempG = dstPtrRowG;
                 dstPtrTempB = dstPtrRowB;
@@ -5535,10 +5507,10 @@ RppStatus ricap_u8_u8_host_tensor(Rpp8u *srcPtr,
                 dstPtrRowB += dstDescPtr->strides.hStride;
             }
         }
-        
+
 
         // ricap with fused output-layout toggle (NCHW -> NHWC)
-        
+
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
             Rpp32u alignedLength1 = bufferLength1 & ~47;
@@ -5736,7 +5708,7 @@ RppStatus ricap_u8_u8_host_tensor(Rpp8u *srcPtr,
                     srcPtrRow2 += srcDescPtr->strides.hStride;
                     dstPtrRow += dstDescPtr->strides.hStride;
                 }
-              
+
                 for(int i = 0; i < roiPtr3->xywhROI.roiHeight; i++)
                 {
                     Rpp8u *srcPtrTemp1, *srcPtrTemp2, *srcPtrTemp3, *srcPtrTemp4, *dstPtrTemp; // put the variable declaration outisde the loop later
@@ -5796,8 +5768,8 @@ RppStatus ricap_u8_u8_host_tensor(Rpp8u *srcPtr,
                     srcPtrRow4 += srcDescPtr->strides.hStride;
                     dstPtrRow += dstDescPtr->strides.hStride;
                 }
-                
-                
+
+
                 srcPtrChannel1 += srcDescPtr->strides.cStride;
                 srcPtrChannel2 += srcDescPtr->strides.cStride;
                 srcPtrChannel3 += srcDescPtr->strides.cStride;
