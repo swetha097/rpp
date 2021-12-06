@@ -5386,10 +5386,10 @@ RppStatus ricap_u8_u8_host_tensor(Rpp8u *srcPtr,
                 int vectorLoopCount1 = 0;
                 for (; vectorLoopCount1 < alignedLength1; vectorLoopCount1+=48)
                 {
-                    __m128 p[3];
+                    __m128i p[3];
 
                     rpp_simd_load(rpp_load48_u8pkd3_to_u8pln3, srcPtrTemp1, p);    // simd loads
-                    rpp_simd_store(rpp_store48_u8_to_u8, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
+                    rpp_simd_store(rpp_store48_u8pln3_to_u8pln3, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
 
                     srcPtrTemp1 += 48;
                     dstPtrTempR += 16;
@@ -5411,10 +5411,10 @@ RppStatus ricap_u8_u8_host_tensor(Rpp8u *srcPtr,
                 int vectorLoopCount2 = 0;
                 for (; vectorLoopCount2 < alignedLength2; vectorLoopCount2+=48)
                 {
-                    __m128 p[3];
+                    __m128i p[3];
 
                     rpp_simd_load(rpp_load48_u8pkd3_to_u8pln3, srcPtrTemp2, p);    // simd loads
-                    rpp_simd_store(rpp_store48_u8_to_u8, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
+                    rpp_simd_store(rpp_store48_u8pln3_to_u8pln3, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
 
                     srcPtrTemp2 += 48;
                     dstPtrTempR += 16;
@@ -5439,7 +5439,6 @@ RppStatus ricap_u8_u8_host_tensor(Rpp8u *srcPtr,
                 dstPtrRowG += dstDescPtr->strides.hStride;
                 dstPtrRowB += dstDescPtr->strides.hStride;
             }
-
             for(int i = 0; i < roiPtr3->xywhROI.roiHeight; i++)
             {
                 Rpp8u *srcPtrTemp3, *srcPtrTemp4, *dstPtrTempR, *dstPtrTempG, *dstPtrTempB;
@@ -5453,10 +5452,10 @@ RppStatus ricap_u8_u8_host_tensor(Rpp8u *srcPtr,
                 int vectorLoopCount3 = 0;
                 for (; vectorLoopCount3 < alignedLength3; vectorLoopCount3+=48)
                 {
-                    __m128 p[3];
+                    __m128i p[3];
 
                     rpp_simd_load(rpp_load48_u8pkd3_to_u8pln3, srcPtrTemp3, p);    // simd loads
-                    rpp_simd_store(rpp_store48_u8_to_u8, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
+                    rpp_simd_store(rpp_store48_u8pln3_to_u8pln3, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
 
                     srcPtrTemp3 += 48;
                     dstPtrTempR += 16;
@@ -5474,14 +5473,13 @@ RppStatus ricap_u8_u8_host_tensor(Rpp8u *srcPtr,
                     dstPtrTempG++;
                     dstPtrTempB++;
                 }
-
                 int vectorLoopCount4 = 0;
                 for (; vectorLoopCount4 < alignedLength4; vectorLoopCount4+=48)
                 {
-                    __m128 p[3];
+                    __m128i p[3];
 
                     rpp_simd_load(rpp_load48_u8pkd3_to_u8pln3, srcPtrTemp4, p);    // simd loads
-                    rpp_simd_store(rpp_store48_u8_to_u8, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
+                    rpp_simd_store(rpp_store48_u8pln3_to_u8pln3, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
 
                     srcPtrTemp4 += 48;
                     dstPtrTempR += 16;
@@ -5507,7 +5505,6 @@ RppStatus ricap_u8_u8_host_tensor(Rpp8u *srcPtr,
                 dstPtrRowB += dstDescPtr->strides.hStride;
             }
         }
-
 
         // ricap with fused output-layout toggle (NCHW -> NHWC)
 
@@ -5634,8 +5631,8 @@ RppStatus ricap_u8_u8_host_tensor(Rpp8u *srcPtr,
             }
         }
         // ricap without fused output-layout toggle (NHWC -> NHWC or NCHW -> NCHW)
-        else // To be Uncommented Later
-        {    // To be Uncommented Later
+        else
+        {
             Rpp32u alignedLength1 = bufferLength1 & ~15;
             Rpp32u alignedLength2 = bufferLength2 & ~15;
             Rpp32u alignedLength3 = bufferLength3 & ~15;
@@ -5769,14 +5766,13 @@ RppStatus ricap_u8_u8_host_tensor(Rpp8u *srcPtr,
                     dstPtrRow += dstDescPtr->strides.hStride;
                 }
 
-
                 srcPtrChannel1 += srcDescPtr->strides.cStride;
                 srcPtrChannel2 += srcDescPtr->strides.cStride;
                 srcPtrChannel3 += srcDescPtr->strides.cStride;
                 srcPtrChannel4 += srcDescPtr->strides.cStride;
                 dstPtrChannel += dstDescPtr->strides.cStride;
             }
-        } //else loop to be uncommented later
+        }
     }
 
     return RPP_SUCCESS;

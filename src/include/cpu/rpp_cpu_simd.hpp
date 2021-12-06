@@ -190,7 +190,7 @@ inline RppStatus rpp_store48_f32pln3_to_u8pkd3(Rpp8u *dstPtr, __m128 *p)
     return RPP_SUCCESS;
 }
 
-inline RppStatus rpp_load48_u8pkd3_to_u8pln3(Rpp8u *srcPtr, __m128 *p)
+inline RppStatus rpp_load48_u8pkd3_to_u8pln3(Rpp8u *srcPtr, __m128i *p)
 {
     __m128i px[8];
     __m128i pxMask = _mm_setr_epi8(0, 3, 6, 9, 1, 4, 7, 10, 2, 5, 8, 11, 12, 13, 14, 15);
@@ -205,7 +205,7 @@ inline RppStatus rpp_load48_u8pkd3_to_u8pln3(Rpp8u *srcPtr, __m128 *p)
     px[1] = _mm_shuffle_epi8(px[1], pxMask);    /* shuffle to get [R05|R06|R07|R08|G05|G06|G07|G08 || B05|B06|B07|B08|R09|G09|B09|R10] - Need R05-08, G05-08, B05-08 */
     px[2] = _mm_shuffle_epi8(px[2], pxMask);    /* shuffle to get [R09|R10|R11|R12|G09|G10|G11|G12 || B09|B10|B11|B12|R13|G13|B13|R14] - Need R09-12, G09-12, B09-12 */
     px[3] = _mm_shuffle_epi8(px[3], pxMask);    /* shuffle to get [R13|R14|R15|R16|G13|G14|G15|G16 || B13|B14|B15|B16|R17|G17|B17|R18] - Need R13-16, G13-16, B13-16 */
-    
+
     px[4] = _mm_unpackhi_epi8(px[0], px[1]);    /* unpack 8 hi-pixels of px[0,1] */
     px[5] = _mm_unpackhi_epi8(px[2], px[3]);    /* unpack 8 hi-pixels of px[2,3] */
     px[6] = _mm_unpacklo_epi8(px[4], px[5]);    /* unpack 8 lo-pixels of px[4,5] */
@@ -224,12 +224,12 @@ inline RppStatus rpp_load48_u8pkd3_to_u8pln3(Rpp8u *srcPtr, __m128 *p)
     return RPP_SUCCESS;
 }
 
-inline RppStatus rpp_store48_u8_to_u8(Rpp8u *dstPtrR, Rpp8u *dstPtrG, Rpp8u *dstPtrB, __m128 *p)
+inline RppStatus rpp_store48_u8pln3_to_u8pln3(Rpp8u *dstPtrR, Rpp8u *dstPtrG, Rpp8u *dstPtrB, __m128i *p)
 {
     _mm_storeu_si128((__m128i *)dstPtrR, p[0]);    /* store [R01|R02|R03|R04|R05|R06|R07|R08|R09|R10|R11|R12|R13|R14|R15|R16] */
     _mm_storeu_si128((__m128i *)dstPtrG, p[1]);    /* store [G01|G02|G03|G04|G05|G06|G07|G08|G09|G10|G11|G12|G13|G14|G15|G16] */
     _mm_storeu_si128((__m128i *)dstPtrB, p[2]);    /* store [B01|B02|B03|B04|B05|B06|B07|B08|B09|B10|B11|B12|B13|B14|B15|B16] */
-    
+
     return RPP_SUCCESS;
 }
 
