@@ -607,26 +607,23 @@ int main(int argc, char **argv)
         {
             test_case_name = "ricap";
             Rpp32u initialPermuteArray[images];
-            Rpp32u permutedArray1[images] ;
-            Rpp32u permutedArray2[images] ;
-            Rpp32u permutedArray3[images] ;
-            Rpp32u permutedArray4[images] ;
-            Rpp32u cropRegion1[4] ;
-            Rpp32u cropRegion2[4] ;
-            Rpp32u cropRegion3[4] ;
-            Rpp32u cropRegion4[4] ;
-            for (uint i = 0; i < images; i++ )
+            Rpp32u permutedArray[images * 4];
+            Rpp32u cropRegion1[4];
+            Rpp32u cropRegion2[4];
+            Rpp32u cropRegion3[4];
+            Rpp32u cropRegion4[4];
+            for (uint i = 0; i < images; i++)
             {
                 initialPermuteArray[i] = i;
             }
             randomize(initialPermuteArray, images);
-            memcpy(permutedArray1, initialPermuteArray, images * sizeof(Rpp32u));
+            memcpy(permutedArray, initialPermuteArray, images * sizeof(Rpp32u));
             randomize(initialPermuteArray, images);
-            memcpy(permutedArray2, initialPermuteArray, images * sizeof(Rpp32u));
+            memcpy(permutedArray + images, initialPermuteArray, images * sizeof(Rpp32u));
             randomize(initialPermuteArray, images);
-            memcpy(permutedArray3, initialPermuteArray, images * sizeof(Rpp32u));
+            memcpy(permutedArray + (images * 2), initialPermuteArray, images * sizeof(Rpp32u));
             randomize(initialPermuteArray, images);
-            memcpy(permutedArray4, initialPermuteArray, images * sizeof(Rpp32u));
+            memcpy(permutedArray + (images * 3), initialPermuteArray, images * sizeof(Rpp32u));
 
             // Change RpptRoiType for ltrbROI override sample
             // roiTypeSrc = RpptRoiType::LTRB;
@@ -678,17 +675,17 @@ int main(int argc, char **argv)
             start_omp = omp_get_wtime();
             start = clock();
             if (ip_bitDepth == 0)
-                rppt_ricap_host(input, srcDescPtr, output, dstDescPtr, permutedArray1, permutedArray2, permutedArray3, permutedArray4, roiPtrInputCropRegion, roiTensorPtrSrc, roiTypeSrc, handle);
+                rppt_ricap_host(input, srcDescPtr, output, dstDescPtr, permutedArray, roiPtrInputCropRegion, roiTensorPtrSrc, roiTypeSrc, handle);
             else if (ip_bitDepth == 1)
-                missingFuncFlag = 1; // rppt_ricap_host(inputf16, srcDescPtr, outputf16, dstDescPtr, permutedArray1, permutedArray2, permutedArray3, permutedArray4, cropRegion1, cropRegion2, cropRegion3, cropRegion4, roiTensorPtrSrc, roiTypeSrc, handle);
+                missingFuncFlag = 1; // rppt_ricap_host(inputf16, srcDescPtr, outputf16, dstDescPtr, permutedArray, roiPtrInputCropRegion, roiTensorPtrSrc, roiTypeSrc, handle);
             else if (ip_bitDepth == 2)
-                missingFuncFlag = 1; // rppt_ricap_host(inputf32, srcDescPtr, outputf32, dstDescPtr, permutedArray1, permutedArray2, permutedArray3, permutedArray4, cropRegion1, cropRegion2, cropRegion3, cropRegion4, roiTensorPtrSrc, roiTypeSrc, handle);
+                missingFuncFlag = 1; // rppt_ricap_host(inputf32, srcDescPtr, outputf32, dstDescPtr, permutedArray, roiPtrInputCropRegion, roiTensorPtrSrc, roiTypeSrc, handle);
             else if (ip_bitDepth == 3)
                 missingFuncFlag = 1;
             else if (ip_bitDepth == 4)
                 missingFuncFlag = 1;
             else if (ip_bitDepth == 5)
-                missingFuncFlag = 1; // rppt_ricap_host(inputi8, srcDescPtr, outputi8, dstDescPtr, permutedArray1, permutedArray2, permutedArray3, permutedArray4, cropRegion1, cropRegion2, cropRegion3, cropRegion4, roiTensorPtrSrc, roiTypeSrc, handle);
+                missingFuncFlag = 1; // rppt_ricap_host(inputi8, srcDescPtr, outputi8, dstDescPtr, permutedArray, roiPtrInputCropRegion, roiTensorPtrSrc, roiTypeSrc, handle);
             else if (ip_bitDepth == 6)
                 missingFuncFlag = 1;
             else
