@@ -13,6 +13,10 @@
 #include <omp.h>
 #include <half.hpp>
 #include <fstream>
+#include <random>
+#include <boost/math/distributions.hpp>
+#include <boost/math/special_functions/beta.hpp>
+using namespace boost::math;
 
 using namespace cv;
 using namespace std;
@@ -34,6 +38,11 @@ void randomize (unsigned int arr[], unsigned int n)
         unsigned int j = rand() % (i + 1);
         std::swap(arr[i], arr[j]);
     }
+}
+
+int inline random_val(int min, int max)
+{
+  return rand() % (max - min + 1) + min;
 }
 
 int main(int argc, char **argv)
@@ -708,7 +717,24 @@ int main(int argc, char **argv)
     }
     case 82:
         {
+            std::cerr<<"\n HERE 1";
             test_case_name = "ricap";
+            float _beta_param = 0.3;
+            std::random_device rd;
+            std::mt19937 gen(rd());
+            static std::uniform_real_distribution<double> unif(0,1);
+            double p = unif(gen);
+            double randFromDist = boost::math::ibeta_inv(_beta_param, _beta_param, p);
+
+            std::random_device rd1;
+            std::mt19937 gen1(rd1());
+            static std::uniform_real_distribution<double> unif1(0,1);
+            double p1 = unif1(gen1);
+            double randFromDist1 = boost::math::ibeta_inv(_beta_param, _beta_param, p1);
+
+            uint32_t Ix = maxDstWidth;
+            uint32_t Iy = maxDstWidth;
+
             Rpp32u initialPermuteArray[images];
             Rpp32u permutedArray[images * 4];
             Rpp32u cropRegion1[4] ;
@@ -730,25 +756,26 @@ int main(int argc, char **argv)
 
             RpptROI *roiPtrInputCropRegion = (RpptROI *) calloc(4, sizeof(RpptROI));
             // xywhROI override sample
-            roiPtrInputCropRegion[0].xywhROI.xy.x = 3;
-            roiPtrInputCropRegion[0].xywhROI.xy.y = 17;
-            roiPtrInputCropRegion[0].xywhROI.roiWidth = 250;
-            roiPtrInputCropRegion[0].xywhROI.roiHeight = 238;
+            std::cerr<<"\n HERE 2";
+            std::cerr<<"Ix:"<<Ix;
+            std::cerr<<"Iy:"<<Iy;
+            roiPtrInputCropRegion[0].xywhROI.roiWidth = std::round(randFromDist * Ix);                    // w1
+            roiPtrInputCropRegion[0].xywhROI.roiHeight = std::round(randFromDist1 * Iy);                  // h1
+            roiPtrInputCropRegion[1].xywhROI.roiWidth = Ix - roiPtrInputCropRegion[0].xywhROI.roiWidth;   // w2
+            roiPtrInputCropRegion[1].xywhROI.roiHeight = roiPtrInputCropRegion[0].xywhROI.roiHeight;      // h2
+            roiPtrInputCropRegion[2].xywhROI.roiWidth = roiPtrInputCropRegion[0].xywhROI.roiWidth;        // w3
+            roiPtrInputCropRegion[2].xywhROI.roiHeight = Iy - roiPtrInputCropRegion[0].xywhROI.roiHeight; // h3
+            roiPtrInputCropRegion[3].xywhROI.roiWidth = Ix - roiPtrInputCropRegion[0].xywhROI.roiWidth;   // w4
+            roiPtrInputCropRegion[3].xywhROI.roiHeight = Iy - roiPtrInputCropRegion[0].xywhROI.roiHeight; // h4
 
-            roiPtrInputCropRegion[1].xywhROI.xy.x = 7;
-            roiPtrInputCropRegion[1].xywhROI.xy.y = 16;
-            roiPtrInputCropRegion[1].xywhROI.roiWidth = 50;
-            roiPtrInputCropRegion[1].xywhROI.roiHeight = 238;
-
-            roiPtrInputCropRegion[2].xywhROI.xy.x = 7;
-            roiPtrInputCropRegion[2].xywhROI.xy.y = 106;
-            roiPtrInputCropRegion[2].xywhROI.roiWidth = 250;
-            roiPtrInputCropRegion[2].xywhROI.roiHeight = 62;
-
-            roiPtrInputCropRegion[3].xywhROI.xy.x = 103;
-            roiPtrInputCropRegion[3].xywhROI.xy.y = 12;
-            roiPtrInputCropRegion[3].xywhROI.roiWidth = 50;
-            roiPtrInputCropRegion[3].xywhROI.roiHeight = 62;
+            roiPtrInputCropRegion[0].xywhROI.xy.x = random_val(0, Ix - roiPtrInputCropRegion[0].xywhROI.roiWidth);  // x1
+            roiPtrInputCropRegion[0].xywhROI.xy.y = random_val(0, Iy - roiPtrInputCropRegion[0].xywhROI.roiHeight); // y1
+            roiPtrInputCropRegion[1].xywhROI.xy.x = random_val(0, Ix - roiPtrInputCropRegion[1].xywhROI.roiWidth);  // x2
+            roiPtrInputCropRegion[1].xywhROI.xy.y = random_val(0, Iy - roiPtrInputCropRegion[1].xywhROI.roiHeight); // y2
+            roiPtrInputCropRegion[2].xywhROI.xy.x = random_val(0, Ix - roiPtrInputCropRegion[2].xywhROI.roiWidth);  // x3
+            roiPtrInputCropRegion[2].xywhROI.xy.y = random_val(0, Iy - roiPtrInputCropRegion[2].xywhROI.roiHeight); // y3
+            roiPtrInputCropRegion[3].xywhROI.xy.x = random_val(0, Ix - roiPtrInputCropRegion[3].xywhROI.roiWidth);  // x4
+            roiPtrInputCropRegion[3].xywhROI.xy.y = random_val(0, Iy - roiPtrInputCropRegion[3].xywhROI.roiHeight); // y4
 
         // Change RpptRoiType for ltrbROI override sample
         // roiTypeSrc = RpptRoiType::LTRB;
@@ -761,7 +788,7 @@ int main(int argc, char **argv)
             else if (ip_bitDepth == 1)
                 missingFuncFlag = 1; // rppt_ricap_host(inputf16, srcDescPtr, outputf16, dstDescPtr, permutedArray, roiPtrInputCropRegion, roiTensorPtrSrc, roiTypeSrc, handle);
             else if (ip_bitDepth == 2)
-                missingFuncFlag = 1; // rppt_ricap_host(inputf32, srcDescPtr, outputf32, dstDescPtr, permutedArray, roiPtrInputCropRegion, roiTensorPtrSrc, roiTypeSrc, handle);
+                rppt_ricap_host(inputf32, srcDescPtr, outputf32, dstDescPtr, permutedArray, roiPtrInputCropRegion, roiTensorPtrSrc, roiTypeSrc, handle);
             else if (ip_bitDepth == 3)
                 missingFuncFlag = 1;
             else if (ip_bitDepth == 4)

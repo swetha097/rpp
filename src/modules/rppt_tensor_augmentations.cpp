@@ -885,6 +885,18 @@ rppt_ricap_host(RppPtr_t srcPtr,
                                 roiType,
                                 layoutParams);
     }
+    else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
+    {
+        ricap_f32_f32_host_tensor((Rpp32f*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                                   srcDescPtr,
+                                   (Rpp32f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                                   dstDescPtr,
+                                   permutedIndices,
+                                   roiPtrInputCropRegion,
+                                   roiTensorPtrSrc,
+                                   roiType,
+                                   layoutParams);
+    }
 
     return RPP_SUCCESS;
 }
