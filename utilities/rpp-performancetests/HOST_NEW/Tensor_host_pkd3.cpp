@@ -21,20 +21,20 @@ using half_float::half;
 typedef half Rpp16f;
 
 #define RPPPIXELCHECK(pixel) (pixel < (Rpp32f)0) ? ((Rpp32f)0) : ((pixel < (Rpp32f)255) ? pixel : ((Rpp32f)255))
-#define RPPMAX2(a,b) ((a > b) ? a : b)
-#define RPPMIN2(a,b) ((a < b) ? a : b)
+#define RPPMAX2(a, b) ((a > b) ? a : b)
+#define RPPMIN2(a, b) ((a < b) ? a : b)
 
-void swap (unsigned int *a, unsigned int *b)
+void swap(unsigned int *a, unsigned int *b)
 {
     unsigned int temp = *a;
     *a = *b;
     *b = temp;
 }
 
-void randomize (unsigned int arr[], unsigned int n)
+void randomize(unsigned int arr[], unsigned int n)
 {
     // Use a different seed value each time
-    srand (time(NULL));
+    srand(time(NULL));
     for (unsigned int i = n - 1; i > 0; i--)
     {
         // Pick a random index from 0 to i
@@ -213,8 +213,8 @@ int main(int argc, char **argv)
 
     // Initialize ROI tensors for src/dst
 
-    RpptROI *roiTensorPtrSrc = (RpptROI *) calloc(noOfImages, sizeof(RpptROI));
-    RpptROI *roiTensorPtrDst = (RpptROI *) calloc(noOfImages, sizeof(RpptROI));
+    RpptROI *roiTensorPtrSrc = (RpptROI *)calloc(noOfImages, sizeof(RpptROI));
+    RpptROI *roiTensorPtrDst = (RpptROI *)calloc(noOfImages, sizeof(RpptROI));
 
     // Set ROI tensors types for src/dst
 
@@ -360,8 +360,8 @@ int main(int argc, char **argv)
 
         for (j = 0; j < roiTensorPtrSrc[i].xywhROI.roiHeight; j++)
         {
-            memcpy(input_temp, ip_image, elementsInRow * sizeof (Rpp8u));
-            memcpy(input_second_temp, ip_image_second, elementsInRow * sizeof (Rpp8u));
+            memcpy(input_temp, ip_image, elementsInRow * sizeof(Rpp8u));
+            memcpy(input_second_temp, ip_image_second, elementsInRow * sizeof(Rpp8u));
             ip_image += elementsInRow;
             ip_image_second += elementsInRow;
             input_temp += srcDescPtr->strides.hStride;
@@ -429,8 +429,8 @@ int main(int argc, char **argv)
 
         for (int i = 0; i < ioBufferSize; i++)
         {
-            *inputi8Temp = (Rpp8s) (((Rpp32s) *inputTemp) - 128);
-            *inputi8_secondTemp = (Rpp8s) (((Rpp32s) *input_secondTemp) - 128);
+            *inputi8Temp = (Rpp8s)(((Rpp32s)*inputTemp) - 128);
+            *inputi8_secondTemp = (Rpp8s)(((Rpp32s)*input_secondTemp) - 128);
             inputTemp++;
             inputi8Temp++;
             input_secondTemp++;
@@ -723,7 +723,7 @@ int main(int argc, char **argv)
             Rpp32u cropRegion2[4];
             Rpp32u cropRegion3[4];
             Rpp32u cropRegion4[4];
-            for (uint i = 0; i < images; i++ )
+            for (uint i = 0; i < images; i++)
             {
                 initialPermuteArray[i] = i;
             }
@@ -736,7 +736,7 @@ int main(int argc, char **argv)
             randomize(initialPermuteArray, images);
             memcpy(permutedArray + (images * 3), initialPermuteArray, images * sizeof(Rpp32u));
 
-            RpptROI *roiPtrInputCropRegion = (RpptROI *) calloc(4, sizeof(RpptROI));
+            RpptROI *roiPtrInputCropRegion = (RpptROI *)calloc(4, sizeof(RpptROI));
 
             // xywhROI override sample
             roiPtrInputCropRegion[0].xywhROI.xy.x = 3;
