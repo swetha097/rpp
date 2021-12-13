@@ -6730,14 +6730,14 @@ RppStatus ricap_i8_i8_host_tensor(Rpp8s *srcPtr,
         srcPtrChannel4 = srcPtrImage4 + (roiPtr4->xywhROI.xy.y * srcDescPtr->strides.hStride) + (roiPtr4->xywhROI.xy.x * layoutParams.bufferMultiplier);
 
         dstPtrChannel = dstPtrImage;
-        /*
+
         // ricap with fused output-layout toggle (NHWC -> NCHW)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
-            Rpp32u alignedLength1 = bufferLength1 & ~47;
-            Rpp32u alignedLength2 = bufferLength2 & ~47;
-            Rpp32u alignedLength3 = bufferLength3 & ~47;
-            Rpp32u alignedLength4 = bufferLength4 & ~47;
+            Rpp32u alignedLength1 = (bufferLength1 / 48) * 48;
+            Rpp32u alignedLength2 = (bufferLength2 / 48) * 48;
+            Rpp32u alignedLength3 = (bufferLength3 / 48) * 48;
+            Rpp32u alignedLength4 = (bufferLength4 / 48) * 48;
 
             Rpp8s *srcPtrRow1, *srcPtrRow2, *srcPtrRow3, *srcPtrRow4, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
             srcPtrRow1 = srcPtrChannel1;
@@ -6763,8 +6763,8 @@ RppStatus ricap_i8_i8_host_tensor(Rpp8s *srcPtr,
                 {
                     __m128i p[3];
 
-                    rpp_simd_load(rpp_load48_u8pkd3_to_u8pln3, srcPtrTemp1, p);                             // simd loads
-                    rpp_simd_store(rpp_store48_u8pln3_to_u8pln3, dstPtrTempR, dstPtrTempG, dstPtrTempB, p); // simd stores
+                    rpp_simd_load(rpp_load48_i8pkd3_to_i8pln3, srcPtrTemp1, p);                             // simd loads
+                    rpp_simd_store(rpp_store48_i8pln3_to_i8pln3, dstPtrTempR, dstPtrTempG, dstPtrTempB, p); // simd stores
 
                     srcPtrTemp1 += 48;
                     dstPtrTempR += 16;
@@ -6788,8 +6788,8 @@ RppStatus ricap_i8_i8_host_tensor(Rpp8s *srcPtr,
                 {
                     __m128i p[3];
 
-                    rpp_simd_load(rpp_load48_u8pkd3_to_u8pln3, srcPtrTemp2, p);                             // simd loads
-                    rpp_simd_store(rpp_store48_u8pln3_to_u8pln3, dstPtrTempR, dstPtrTempG, dstPtrTempB, p); // simd stores
+                    rpp_simd_load(rpp_load48_i8pkd3_to_i8pln3, srcPtrTemp2, p);                             // simd loads
+                    rpp_simd_store(rpp_store48_i8pln3_to_i8pln3, dstPtrTempR, dstPtrTempG, dstPtrTempB, p); // simd stores
 
                     srcPtrTemp2 += 48;
                     dstPtrTempR += 16;
@@ -6829,8 +6829,8 @@ RppStatus ricap_i8_i8_host_tensor(Rpp8s *srcPtr,
                 {
                     __m128i p[3];
 
-                    rpp_simd_load(rpp_load48_u8pkd3_to_u8pln3, srcPtrTemp3, p);                             // simd loads
-                    rpp_simd_store(rpp_store48_u8pln3_to_u8pln3, dstPtrTempR, dstPtrTempG, dstPtrTempB, p); // simd stores
+                    rpp_simd_load(rpp_load48_i8pkd3_to_i8pln3, srcPtrTemp3, p);                             // simd loads
+                    rpp_simd_store(rpp_store48_i8pln3_to_i8pln3, dstPtrTempR, dstPtrTempG, dstPtrTempB, p); // simd stores
 
                     srcPtrTemp3 += 48;
                     dstPtrTempR += 16;
@@ -6853,8 +6853,8 @@ RppStatus ricap_i8_i8_host_tensor(Rpp8s *srcPtr,
                 {
                     __m128i p[3];
 
-                    rpp_simd_load(rpp_load48_u8pkd3_to_u8pln3, srcPtrTemp4, p);                             // simd loads
-                    rpp_simd_store(rpp_store48_u8pln3_to_u8pln3, dstPtrTempR, dstPtrTempG, dstPtrTempB, p); // simd stores
+                    rpp_simd_load(rpp_load48_i8pkd3_to_i8pln3, srcPtrTemp4, p);                             // simd loads
+                    rpp_simd_store(rpp_store48_i8pln3_to_i8pln3, dstPtrTempR, dstPtrTempG, dstPtrTempB, p); // simd stores
 
                     srcPtrTemp4 += 48;
                     dstPtrTempR += 16;
@@ -6881,16 +6881,13 @@ RppStatus ricap_i8_i8_host_tensor(Rpp8s *srcPtr,
             }
         }
 
-        */
-        /*
         // ricap with fused output-layout toggle (NCHW -> NHWC)
-
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
-            Rpp32u alignedLength1 = bufferLength1 & ~47;
-            Rpp32u alignedLength2 = bufferLength2 & ~47;
-            Rpp32u alignedLength3 = bufferLength3 & ~47;
-            Rpp32u alignedLength4 = bufferLength4 & ~47;
+            Rpp32u alignedLength1 = (bufferLength1 / 48) * 48;
+            Rpp32u alignedLength2 = (bufferLength2 / 48) * 48;
+            Rpp32u alignedLength3 = (bufferLength3 / 48) * 48;
+            Rpp32u alignedLength4 = (bufferLength4 / 48) * 48;
 
             Rpp8s *srcPtrRowR1, *srcPtrRowG1, *srcPtrRowB1, *srcPtrRowR2, *srcPtrRowG2, *srcPtrRowB2, *srcPtrRowR3, *srcPtrRowG3, *srcPtrRowB3, *srcPtrRowR4, *srcPtrRowG4, *srcPtrRowB4, *dstPtrRow;
             srcPtrRowR1 = srcPtrChannel1;
@@ -6925,7 +6922,17 @@ RppStatus ricap_i8_i8_host_tensor(Rpp8s *srcPtr,
                 dstPtrTemp = dstPtrRow;
 
                 int vectorLoopCount1 = 0;
-                for (; vectorLoopCount1 < bufferLength3; vectorLoopCount1++)
+                for (; vectorLoopCount1 < alignedLength1; vectorLoopCount1 += 16)
+                {
+                    __m128i px[3];
+                    rpp_simd_load(rpp_load48_i8pln3_to_i8pln3, srcPtrTempR1, srcPtrTempG1, srcPtrTempB1, px); // simd loads
+                    rpp_simd_store(rpp_store48_i8pln3_to_i8pkd3, dstPtrTemp, px);                             // simd stores
+                    srcPtrTempR1 += 16;
+                    srcPtrTempG1 += 16;
+                    srcPtrTempB1 += 16;
+                    dstPtrTemp += 48;
+                }
+                for (; vectorLoopCount1 < bufferLength1; vectorLoopCount1++)
                 {
                     dstPtrTemp[0] = *srcPtrTempR1;
                     dstPtrTemp[1] = *srcPtrTempG1;
@@ -6938,7 +6945,17 @@ RppStatus ricap_i8_i8_host_tensor(Rpp8s *srcPtr,
                 }
 
                 int vectorLoopCount2 = 0;
-                for (; vectorLoopCount2 < bufferLength4; vectorLoopCount2++)
+                for (; vectorLoopCount2 < alignedLength2; vectorLoopCount2 += 16)
+                {
+                    __m128i px[3];
+                    rpp_simd_load(rpp_load48_i8pln3_to_i8pln3, srcPtrTempR2, srcPtrTempG2, srcPtrTempB2, px); // simd loads
+                    rpp_simd_store(rpp_store48_i8pln3_to_i8pkd3, dstPtrTemp, px);                             // simd stores
+                    srcPtrTempR2 += 16;
+                    srcPtrTempG2 += 16;
+                    srcPtrTempB2 += 16;
+                    dstPtrTemp += 48;
+                }
+                for (; vectorLoopCount2 < bufferLength2; vectorLoopCount2++)
                 {
                     dstPtrTemp[0] = *srcPtrTempR2;
                     dstPtrTemp[1] = *srcPtrTempG2;
@@ -6973,6 +6990,16 @@ RppStatus ricap_i8_i8_host_tensor(Rpp8s *srcPtr,
                 dstPtrTemp = dstPtrRow;
 
                 int vectorLoopCount3 = 0;
+                for (; vectorLoopCount3 < alignedLength3; vectorLoopCount3 += 16)
+                {
+                    __m128i px[3];
+                    rpp_simd_load(rpp_load48_i8pln3_to_i8pln3, srcPtrTempR3, srcPtrTempG3, srcPtrTempB3, px); // simd loads
+                    rpp_simd_store(rpp_store48_i8pln3_to_i8pkd3, dstPtrTemp, px);                             // simd stores
+                    srcPtrTempR3 += 16;
+                    srcPtrTempG3 += 16;
+                    srcPtrTempB3 += 16;
+                    dstPtrTemp += 48;
+                }
                 for (; vectorLoopCount3 < bufferLength3; vectorLoopCount3++)
                 {
                     dstPtrTemp[0] = *srcPtrTempR3;
@@ -6986,6 +7013,16 @@ RppStatus ricap_i8_i8_host_tensor(Rpp8s *srcPtr,
                 }
 
                 int vectorLoopCount4 = 0;
+                for (; vectorLoopCount4 < alignedLength4; vectorLoopCount4 += 16)
+                {
+                    __m128i px[3];
+                    rpp_simd_load(rpp_load48_i8pln3_to_i8pln3, srcPtrTempR4, srcPtrTempG4, srcPtrTempB4, px); // simd loads
+                    rpp_simd_store(rpp_store48_i8pln3_to_i8pkd3, dstPtrTemp, px);                             // simd stores
+                    srcPtrTempR4 += 16;
+                    srcPtrTempG4 += 16;
+                    srcPtrTempB4 += 16;
+                    dstPtrTemp += 48;
+                }
                 for (; vectorLoopCount4 < bufferLength4; vectorLoopCount4++)
                 {
                     dstPtrTemp[0] = *srcPtrTempR4;
@@ -7008,10 +7045,9 @@ RppStatus ricap_i8_i8_host_tensor(Rpp8s *srcPtr,
             }
         }
 
-        */
         // ricap without fused output-layout toggle (NHWC -> NHWC or NCHW -> NCHW)
-        // else //TODO: To be removed
-        // {     //TODO: To be removed
+        else
+        {
 
             for (int c = 0; c < layoutParams.channelParam; c++)
             {
@@ -7064,7 +7100,7 @@ RppStatus ricap_i8_i8_host_tensor(Rpp8s *srcPtr,
                 srcPtrChannel4 += srcDescPtr->strides.cStride;
                 dstPtrChannel += dstDescPtr->strides.cStride;
             }
-        // } // TODO: To be removed
+        }
     }
 
     return RPP_SUCCESS;
