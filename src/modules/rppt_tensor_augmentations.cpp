@@ -857,6 +857,7 @@ rppt_box_filter_gpu(RppPtr_t srcPtr,
 
     return RPP_SUCCESS;
 }
+
 /******************** ricap ********************/
 
 RppStatus
@@ -874,15 +875,15 @@ rppt_ricap_host(RppPtr_t srcPtr,
 
     if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
     {
-        ricap_u8_u8_host_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
-                                     srcDescPtr,
-                                     static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
-                                     dstDescPtr,
-                                     permutedIndices,
-                                     roiPtrInputCropRegion,
-                                     roiTensorPtrSrc,
-                                     roiType,
-                                     layoutParams);
+        ricap_u8_u8_host_tensor(static_cast<Rpp8u *>(srcPtr) + srcDescPtr->offsetInBytes,
+                                srcDescPtr,
+                                static_cast<Rpp8u *>(dstPtr) + dstDescPtr->offsetInBytes,
+                                dstDescPtr,
+                                permutedIndices,
+                                roiPtrInputCropRegion,
+                                roiTensorPtrSrc,
+                                roiType,
+                                layoutParams);
     }
 
     return RPP_SUCCESS;

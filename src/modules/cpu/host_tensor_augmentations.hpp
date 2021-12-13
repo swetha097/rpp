@@ -5277,6 +5277,19 @@ RppStatus ricap_u8_u8_host_tensor(Rpp8u *srcPtr,
                                   RpptRoiType roiType,
                                   RppLayoutParams layoutParams)
 {
+
+    // RICAP output image profile
+    // |---img-roi-1---|----------img-roi-2----------|
+    // |---img-roi-1---|----------img-roi-2----------|
+    // |---img-roi-1---|----------img-roi-2----------|
+    // |---img-roi-1---|----------img-roi-2----------|
+    // |---img-roi-1---|----------img-roi-2----------|
+    // |---img-roi-1---|----------img-roi-2----------|
+    // |---img-roi-1---|----------img-roi-2----------|
+    // |---img-roi-3---|----------img-roi-4----------|
+    // |---img-roi-3---|----------img-roi-4----------|
+    // |---img-roi-3---|----------img-roi-4----------|
+
     RpptROI roiDefault;
     RpptROIPtr roiPtrDefault;
     roiPtrDefault = &roiDefault;
@@ -5291,46 +5304,37 @@ RppStatus ricap_u8_u8_host_tensor(Rpp8u *srcPtr,
     {
         RpptROI roi1, roi2, roi3, roi4;
         RpptROIPtr roiPtr1, roiPtr2, roiPtr3, roiPtr4;
-        if (&roiTensorPtrSrc[batchCount] == NULL)
-        {
-            roiPtr1 = roiPtrDefault;
-            roiPtr2 = roiPtrDefault;
-            roiPtr3 = roiPtrDefault;
-            roiPtr4 = roiPtrDefault;
-        }
-        else
-        {
-            RpptROI roiImage1, roiImage2, roiImage3, roiImage4;
-            RpptROIPtr roiPtrImage1, roiPtrImage2, roiPtrImage3, roiPtrImage4;
 
-            if (roiType == RpptRoiType::LTRB)
-            {
-                roiPtrImage1 = &roiImage1;
-                compute_xywh_from_ltrb_host(&roiPtrInputCropRegion[0], roiPtrImage1);
-                roiPtrImage2 = &roiImage2;
-                compute_xywh_from_ltrb_host(&roiPtrInputCropRegion[1], roiPtrImage2);
-                roiPtrImage3 = &roiImage3;
-                compute_xywh_from_ltrb_host(&roiPtrInputCropRegion[2], roiPtrImage3);
-                roiPtrImage4 = &roiImage4;
-                compute_xywh_from_ltrb_host(&roiPtrInputCropRegion[3], roiPtrImage4);
-            }
-            else if (roiType == RpptRoiType::XYWH)
-            {
-                roiPtrImage1 = &roiPtrInputCropRegion[0];
-                roiPtrImage2 = &roiPtrInputCropRegion[1];
-                roiPtrImage3 = &roiPtrInputCropRegion[2];
-                roiPtrImage4 = &roiPtrInputCropRegion[3];
-            }
+        RpptROI roiImage1, roiImage2, roiImage3, roiImage4;
+        RpptROIPtr roiPtrImage1, roiPtrImage2, roiPtrImage3, roiPtrImage4;
 
-            roiPtr1 = &roi1;
-            roiPtr2 = &roi2;
-            roiPtr3 = &roi3;
-            roiPtr4 = &roi4;
-            compute_roi_boundary_check_host(roiPtrImage1, roiPtr1, roiPtrDefault);
-            compute_roi_boundary_check_host(roiPtrImage2, roiPtr2, roiPtrDefault);
-            compute_roi_boundary_check_host(roiPtrImage3, roiPtr3, roiPtrDefault);
-            compute_roi_boundary_check_host(roiPtrImage4, roiPtr4, roiPtrDefault);
+        if (roiType == RpptRoiType::LTRB)
+        {
+            roiPtrImage1 = &roiImage1;
+            compute_xywh_from_ltrb_host(&roiPtrInputCropRegion[0], roiPtrImage1);
+            roiPtrImage2 = &roiImage2;
+            compute_xywh_from_ltrb_host(&roiPtrInputCropRegion[1], roiPtrImage2);
+            roiPtrImage3 = &roiImage3;
+            compute_xywh_from_ltrb_host(&roiPtrInputCropRegion[2], roiPtrImage3);
+            roiPtrImage4 = &roiImage4;
+            compute_xywh_from_ltrb_host(&roiPtrInputCropRegion[3], roiPtrImage4);
         }
+        else if (roiType == RpptRoiType::XYWH)
+        {
+            roiPtrImage1 = &roiPtrInputCropRegion[0];
+            roiPtrImage2 = &roiPtrInputCropRegion[1];
+            roiPtrImage3 = &roiPtrInputCropRegion[2];
+            roiPtrImage4 = &roiPtrInputCropRegion[3];
+        }
+
+        roiPtr1 = &roi1;
+        roiPtr2 = &roi2;
+        roiPtr3 = &roi3;
+        roiPtr4 = &roi4;
+        compute_roi_boundary_check_host(roiPtrImage1, roiPtr1, roiPtrDefault);
+        compute_roi_boundary_check_host(roiPtrImage2, roiPtr2, roiPtrDefault);
+        compute_roi_boundary_check_host(roiPtrImage3, roiPtr3, roiPtrDefault);
+        compute_roi_boundary_check_host(roiPtrImage4, roiPtr4, roiPtrDefault);
 
         Rpp8u *srcPtr1, *srcPtr2, *srcPtr3, *srcPtr4;
         srcPtr1 = srcPtr2 = srcPtr3 = srcPtr4 = srcPtr;
@@ -5646,57 +5650,16 @@ RppStatus ricap_u8_u8_host_tensor(Rpp8u *srcPtr,
 
                 for (int i = 0; i < roiPtr1->xywhROI.roiHeight; i++)
                 {
-                    Rpp8u *srcPtrTemp1, *srcPtrTemp2, *srcPtrTemp3, *srcPtrTemp4, *dstPtrTemp; // put it outside the loop
+                    Rpp8u *srcPtrTemp1, *srcPtrTemp2, *srcPtrTemp3, *srcPtrTemp4, *dstPtrTemp;
                     srcPtrTemp1 = srcPtrRow1;
                     srcPtrTemp2 = srcPtrRow2;
                     srcPtrTemp3 = srcPtrRow3;
                     srcPtrTemp4 = srcPtrRow4;
                     dstPtrTemp = dstPtrRow;
 
-                    //|---img-1---|----------img-2----------|
-                    //|---img-1---|----------img-2----------|
-                    //|---img-1---|----------img-2----------|
-                    //|---img-1---|----------img-2----------|
-                    //|---img-1---|----------img-2----------|
-                    //|---img-1---|----------img-2----------|
-                    //|---img-1---|----------img-2----------|
-                    //|---img-3---|----------img-4----------|
-                    //|---img-3---|----------img-4----------|
-                    //|---img-3---|----------img-4----------|
-
-                    // img-1 loop
-                    int vectorLoopCount1 = 0;
-                    for (; vectorLoopCount1 < alignedLength1; vectorLoopCount1 += 16)
-                    {
-                        __m128i px;
-                        px = _mm_loadu_si128((__m128i *)srcPtrTemp1); /* load pixels 0-15 */
-                        _mm_storeu_si128((__m128i *)dstPtrTemp, px);  /* store pixels 0-15 */
-                        srcPtrTemp1 += 16;
-                        dstPtrTemp += 16;
-                    }
-                    for (; vectorLoopCount1 < bufferLength1; vectorLoopCount1++)
-                    {
-                        *dstPtrTemp = *srcPtrTemp1;
-                        srcPtrTemp1++;
-                        dstPtrTemp++;
-                    }
-
-                    // img-2 loop
-                    int vectorLoopCount2 = 0;
-                    for (; vectorLoopCount2 < alignedLength2; vectorLoopCount2 += 16)
-                    {
-                        __m128i px;
-                        px = _mm_loadu_si128((__m128i *)srcPtrTemp2); /* load pixels 0-15 */
-                        _mm_storeu_si128((__m128i *)dstPtrTemp, px);  /* store pixels 0-15 */
-                        srcPtrTemp2 += 16;
-                        dstPtrTemp += 16;
-                    }
-                    for (; vectorLoopCount2 < bufferLength2; vectorLoopCount2++)
-                    {
-                        *dstPtrTemp = *srcPtrTemp2;
-                        srcPtrTemp2++;
-                        dstPtrTemp++;
-                    }
+                    memcpy(dstPtrTemp, srcPtrTemp1, bufferLength1);
+                    dstPtrTemp += bufferLength1;
+                    memcpy(dstPtrTemp, srcPtrTemp2, bufferLength2);
 
                     srcPtrRow1 += srcDescPtr->strides.hStride;
                     srcPtrRow2 += srcDescPtr->strides.hStride;
@@ -5705,58 +5668,16 @@ RppStatus ricap_u8_u8_host_tensor(Rpp8u *srcPtr,
 
                 for (int i = 0; i < roiPtr3->xywhROI.roiHeight; i++)
                 {
-                    Rpp8u *srcPtrTemp1, *srcPtrTemp2, *srcPtrTemp3, *srcPtrTemp4, *dstPtrTemp; // put the variable declaration outisde the loop later
+                    Rpp8u *srcPtrTemp1, *srcPtrTemp2, *srcPtrTemp3, *srcPtrTemp4, *dstPtrTemp;
                     srcPtrTemp1 = srcPtrRow1;
                     srcPtrTemp2 = srcPtrRow2;
                     srcPtrTemp3 = srcPtrRow3;
                     srcPtrTemp4 = srcPtrRow4;
                     dstPtrTemp = dstPtrRow;
 
-                    //     //|---img-1---|----------img-2----------|
-                    //     //|---img-1---|----------img-2----------|
-                    //     //|---img-1---|----------img-2----------|
-                    //     //|---img-1---|----------img-2----------|
-                    //     //|---img-1---|----------img-2----------|
-                    //     //|---img-1---|----------img-2----------|
-                    //     //|---img-1---|----------img-2----------|
-                    //     //|---img-3---|----------img-4----------|
-                    //     //|---img-3---|----------img-4----------|
-                    //     //|---img-3---|----------img-4----------|
-
-                    //img-3 loop
-                    int vectorLoopCount3 = 0;
-                    for (; vectorLoopCount3 < alignedLength3; vectorLoopCount3 += 16)
-                    {
-                        // Load & Store 16 pixels from src to dst
-                        __m128i px;
-                        px = _mm_loadu_si128((__m128i *)srcPtrTemp3); /* load pixels 0-15 */
-                        _mm_storeu_si128((__m128i *)dstPtrTemp, px);  /* store pixels 0-15 */
-                        srcPtrTemp3 += 16;
-                        dstPtrTemp += 16;
-                    }
-                    for (; vectorLoopCount3 < bufferLength3; vectorLoopCount3++)
-                    {
-                        *dstPtrTemp = *srcPtrTemp3;
-                        srcPtrTemp3++;
-                        dstPtrTemp++;
-                    }
-
-                    //img-4 loop
-                    int vectorLoopCount4 = 0;
-                    for (; vectorLoopCount4 < alignedLength4; vectorLoopCount4 += 16)
-                    {
-                        __m128i px;
-                        px = _mm_loadu_si128((__m128i *)srcPtrTemp4); /* load pixels 0-15 */
-                        _mm_storeu_si128((__m128i *)dstPtrTemp, px);  /* store pixels 0-15 */
-                        srcPtrTemp4 += 16;
-                        dstPtrTemp += 16;
-                    }
-                    for (; vectorLoopCount4 < bufferLength4; vectorLoopCount4++)
-                    {
-                        *dstPtrTemp = *srcPtrTemp4;
-                        srcPtrTemp4++;
-                        dstPtrTemp++;
-                    }
+                    memcpy(dstPtrTemp, srcPtrTemp3, bufferLength3);
+                    dstPtrTemp += bufferLength1;
+                    memcpy(dstPtrTemp, srcPtrTemp4, bufferLength4);
 
                     srcPtrRow3 += srcDescPtr->strides.hStride;
                     srcPtrRow4 += srcDescPtr->strides.hStride;
