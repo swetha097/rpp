@@ -677,15 +677,15 @@ int main(int argc, char **argv)
             if (ip_bitDepth == 0)
                 rppt_ricap_host(input, srcDescPtr, output, dstDescPtr, permutedArray, roiPtrInputCropRegion, roiTensorPtrSrc, roiTypeSrc, handle);
             else if (ip_bitDepth == 1)
-                missingFuncFlag = 1; // rppt_ricap_host(inputf16, srcDescPtr, outputf16, dstDescPtr, permutedArray, roiPtrInputCropRegion, roiTensorPtrSrc, roiTypeSrc, handle);
+                rppt_ricap_host(inputf16, srcDescPtr, outputf16, dstDescPtr, permutedArray, roiPtrInputCropRegion, roiTensorPtrSrc, roiTypeSrc, handle);
             else if (ip_bitDepth == 2)
-                missingFuncFlag = 1; // rppt_ricap_host(inputf32, srcDescPtr, outputf32, dstDescPtr, permutedArray, roiPtrInputCropRegion, roiTensorPtrSrc, roiTypeSrc, handle);
+                rppt_ricap_host(inputf32, srcDescPtr, outputf32, dstDescPtr, permutedArray, roiPtrInputCropRegion, roiTensorPtrSrc, roiTypeSrc, handle);
             else if (ip_bitDepth == 3)
                 missingFuncFlag = 1;
             else if (ip_bitDepth == 4)
                 missingFuncFlag = 1;
             else if (ip_bitDepth == 5)
-                missingFuncFlag = 1; // rppt_ricap_host(inputi8, srcDescPtr, outputi8, dstDescPtr, permutedArray, roiPtrInputCropRegion, roiTensorPtrSrc, roiTypeSrc, handle);
+                rppt_ricap_host(inputi8, srcDescPtr, outputi8, dstDescPtr, permutedArray, roiPtrInputCropRegion, roiTensorPtrSrc, roiTypeSrc, handle);
             else if (ip_bitDepth == 6)
                 missingFuncFlag = 1;
             else
