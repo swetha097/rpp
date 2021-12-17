@@ -950,6 +950,7 @@ int main(int argc, char **argv)
         Rpp32u permuted_array2[images];
         Rpp32u permuted_array3[images];
         Rpp32u permuted_array4[images];
+        Rpp32u permuted_array[images * 4];
 
         uint src_width = roiTensorPtrSrc[0].xywhROI.roiWidth;
         uint src_height = roiTensorPtrSrc[0].xywhROI.roiHeight;
@@ -986,6 +987,15 @@ int main(int argc, char **argv)
         memcpy(permuted_array3, initial_permute_array, images * sizeof(Rpp32u));
         randomize(initial_permute_array, images);
         memcpy(permuted_array4, initial_permute_array, images * sizeof(Rpp32u));
+
+        // for(int i = 0; i < images; i++)
+        // {
+        //     uint idx =  i * 4;
+        //     permuted_array[idx++] = permuted_array1[i];
+        //     permuted_array[idx++] = permuted_array2[i];
+        //     permuted_array[idx++] = permuted_array3[i];
+        //     permuted_array[idx++] = permuted_array4[i];
+        // }
 
         // Change RpptRoiType for ltrbROI override sample
         // roiTypeSrc = RpptRoiType::LTRB;
