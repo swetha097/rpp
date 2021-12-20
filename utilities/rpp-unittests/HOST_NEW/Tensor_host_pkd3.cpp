@@ -734,12 +734,8 @@ int main(int argc, char **argv)
             uint32_t iX = maxDstWidth;
             uint32_t iY = maxDstWidth;
 
-            Rpp32u initialPermuteArray[images];
-            Rpp32u permutedArray[images * 4];
-            Rpp32u cropRegion1[4];
-            Rpp32u cropRegion2[4];
-            Rpp32u cropRegion3[4];
-            Rpp32u cropRegion4[4];
+            Rpp32u initialPermuteArray[images], permutedArray[images * 4], permutedArrayOrderChanged[images * 4], cropRegion1[4], cropRegion2[4], cropRegion3[4], cropRegion4[4];
+            
             for (uint i = 0; i < images; i++)
             {
                 initialPermuteArray[i] = i;
@@ -753,72 +749,80 @@ int main(int argc, char **argv)
             randomize(initialPermuteArray, images);
             memcpy(permutedArray + (images * 3), initialPermuteArray, images * sizeof(Rpp32u));
 
+            for (uint i = 0, j = 0; i < images, j < images * 4; i++, j += 4)
+            {
+                permutedArrayOrderChanged[j] = permutedArray[i];
+                permutedArrayOrderChanged[j + 1] = permutedArray[i + images];
+                permutedArrayOrderChanged[j + 2] = permutedArray[i + (images * 2)];
+                permutedArrayOrderChanged[j + 3] = permutedArray[i + (images * 3)];
+            }
+
             RpptROI *roiPtrInputCropRegion = (RpptROI *)calloc(4, sizeof(RpptROI));
 
             // xywhROI override sample
-            // roiPtrInputCropRegion[0].xywhROI.roiWidth = std::round(randFromDist * iX);                    // w1
-            // roiPtrInputCropRegion[0].xywhROI.roiHeight = std::round(randFromDist1 * iY);                  // h1
-            // roiPtrInputCropRegion[1].xywhROI.roiWidth = iX - roiPtrInputCropRegion[0].xywhROI.roiWidth;   // w2
-            // roiPtrInputCropRegion[1].xywhROI.roiHeight = roiPtrInputCropRegion[0].xywhROI.roiHeight;      // h2
-            // roiPtrInputCropRegion[2].xywhROI.roiWidth = roiPtrInputCropRegion[0].xywhROI.roiWidth;        // w3
-            // roiPtrInputCropRegion[2].xywhROI.roiHeight = iY - roiPtrInputCropRegion[0].xywhROI.roiHeight; // h3
-            // roiPtrInputCropRegion[3].xywhROI.roiWidth = iX - roiPtrInputCropRegion[0].xywhROI.roiWidth;   // w4
-            // roiPtrInputCropRegion[3].xywhROI.roiHeight = iY - roiPtrInputCropRegion[0].xywhROI.roiHeight; // h4
+            roiPtrInputCropRegion[0].xywhROI.roiWidth = std::round(randFromDist * iX);                    // w1
+            roiPtrInputCropRegion[0].xywhROI.roiHeight = std::round(randFromDist1 * iY);                  // h1
+            roiPtrInputCropRegion[1].xywhROI.roiWidth = iX - roiPtrInputCropRegion[0].xywhROI.roiWidth;   // w2
+            roiPtrInputCropRegion[1].xywhROI.roiHeight = roiPtrInputCropRegion[0].xywhROI.roiHeight;      // h2
+            roiPtrInputCropRegion[2].xywhROI.roiWidth = roiPtrInputCropRegion[0].xywhROI.roiWidth;        // w3
+            roiPtrInputCropRegion[2].xywhROI.roiHeight = iY - roiPtrInputCropRegion[0].xywhROI.roiHeight; // h3
+            roiPtrInputCropRegion[3].xywhROI.roiWidth = iX - roiPtrInputCropRegion[0].xywhROI.roiWidth;   // w4
+            roiPtrInputCropRegion[3].xywhROI.roiHeight = iY - roiPtrInputCropRegion[0].xywhROI.roiHeight; // h4
 
-            // roiPtrInputCropRegion[0].xywhROI.xy.x = random_val(0, iX - roiPtrInputCropRegion[0].xywhROI.roiWidth);  // x1
-            // roiPtrInputCropRegion[0].xywhROI.xy.y = random_val(0, iY - roiPtrInputCropRegion[0].xywhROI.roiHeight); // y1
-            // roiPtrInputCropRegion[1].xywhROI.xy.x = random_val(0, iX - roiPtrInputCropRegion[1].xywhROI.roiWidth);  // x2
-            // roiPtrInputCropRegion[1].xywhROI.xy.y = random_val(0, iY - roiPtrInputCropRegion[1].xywhROI.roiHeight); // y2
-            // roiPtrInputCropRegion[2].xywhROI.xy.x = random_val(0, iX - roiPtrInputCropRegion[2].xywhROI.roiWidth);  // x3
-            // roiPtrInputCropRegion[2].xywhROI.xy.y = random_val(0, iY - roiPtrInputCropRegion[2].xywhROI.roiHeight); // y3
-            // roiPtrInputCropRegion[3].xywhROI.xy.x = random_val(0, iX - roiPtrInputCropRegion[3].xywhROI.roiWidth);  // x4
-            // roiPtrInputCropRegion[3].xywhROI.xy.y = random_val(0, iY - roiPtrInputCropRegion[3].xywhROI.roiHeight); // y4
+            roiPtrInputCropRegion[0].xywhROI.xy.x = random_val(0, iX - roiPtrInputCropRegion[0].xywhROI.roiWidth);  // x1
+            roiPtrInputCropRegion[0].xywhROI.xy.y = random_val(0, iY - roiPtrInputCropRegion[0].xywhROI.roiHeight); // y1
+            roiPtrInputCropRegion[1].xywhROI.xy.x = random_val(0, iX - roiPtrInputCropRegion[1].xywhROI.roiWidth);  // x2
+            roiPtrInputCropRegion[1].xywhROI.xy.y = random_val(0, iY - roiPtrInputCropRegion[1].xywhROI.roiHeight); // y2
+            roiPtrInputCropRegion[2].xywhROI.xy.x = random_val(0, iX - roiPtrInputCropRegion[2].xywhROI.roiWidth);  // x3
+            roiPtrInputCropRegion[2].xywhROI.xy.y = random_val(0, iY - roiPtrInputCropRegion[2].xywhROI.roiHeight); // y3
+            roiPtrInputCropRegion[3].xywhROI.xy.x = random_val(0, iX - roiPtrInputCropRegion[3].xywhROI.roiWidth);  // x4
+            roiPtrInputCropRegion[3].xywhROI.xy.y = random_val(0, iY - roiPtrInputCropRegion[3].xywhROI.roiHeight); // y4
 
             // Change RpptRoiType for ltrbROI override sample
-            roiTypeSrc = RpptRoiType::LTRB;
-            roiTypeDst = RpptRoiType::LTRB;
-            double w1, h1, w2, h2, w3, h3, w4, h4;
-            double r1, b1, r2, b2, r3, b3, r4, b4;
-            w1 = std::round(randFromDist * iX);                             // w1
-            h1 = std::round(randFromDist1 * iY);                            // h1
-            w2 = iX - w1;                                                   // w2
-            h2 = h1;                                                        // h2
-            w3 = w1;                                                        // w3
-            h3 = iY - h1;                                                   // h3
-            w4 = iX - w1;                                                   // w4
-            h4 = iY - h1;                                                   // h4
-            roiPtrInputCropRegion[0].ltrbROI.lt.x = random_val(0, iX - w1); // l1
-            roiPtrInputCropRegion[0].ltrbROI.lt.y = random_val(0, iY - h1); // t1
-            roiPtrInputCropRegion[1].ltrbROI.lt.x = random_val(0, iX - w2); // l2
-            roiPtrInputCropRegion[1].ltrbROI.lt.y = random_val(0, iY - h2); // t2
-            roiPtrInputCropRegion[2].ltrbROI.lt.x = random_val(0, iX - w3); // l3
-            roiPtrInputCropRegion[2].ltrbROI.lt.y = random_val(0, iY - h3); // t3
-            roiPtrInputCropRegion[3].ltrbROI.lt.x = random_val(0, iX - w4); // l4
-            roiPtrInputCropRegion[3].ltrbROI.lt.y = random_val(0, iY - h4); // t4
+            // roiTypeSrc = RpptRoiType::LTRB;
+            // roiTypeDst = RpptRoiType::LTRB;
+            // double w1, h1, w2, h2, w3, h3, w4, h4;
+            // double r1, b1, r2, b2, r3, b3, r4, b4;
+            // w1 = std::round(randFromDist * iX);                             // w1
+            // h1 = std::round(randFromDist1 * iY);                            // h1
+            // w2 = iX - w1;                                                   // w2
+            // h2 = h1;                                                        // h2
+            // w3 = w1;                                                        // w3
+            // h3 = iY - h1;                                                   // h3
+            // w4 = iX - w1;                                                   // w4
+            // h4 = iY - h1;                                                   // h4
+            // roiPtrInputCropRegion[0].ltrbROI.lt.x = random_val(0, iX - w1); // l1
+            // roiPtrInputCropRegion[0].ltrbROI.lt.y = random_val(0, iY - h1); // t1
+            // roiPtrInputCropRegion[1].ltrbROI.lt.x = random_val(0, iX - w2); // l2
+            // roiPtrInputCropRegion[1].ltrbROI.lt.y = random_val(0, iY - h2); // t2
+            // roiPtrInputCropRegion[2].ltrbROI.lt.x = random_val(0, iX - w3); // l3
+            // roiPtrInputCropRegion[2].ltrbROI.lt.y = random_val(0, iY - h3); // t3
+            // roiPtrInputCropRegion[3].ltrbROI.lt.x = random_val(0, iX - w4); // l4
+            // roiPtrInputCropRegion[3].ltrbROI.lt.y = random_val(0, iY - h4); // t4
 
-            roiPtrInputCropRegion[0].ltrbROI.rb.x = roiPtrInputCropRegion[0].ltrbROI.lt.x + w1 - 1; // r1
-            roiPtrInputCropRegion[0].ltrbROI.rb.y = roiPtrInputCropRegion[0].ltrbROI.lt.y + h1 - 1; // b1
-            roiPtrInputCropRegion[1].ltrbROI.rb.x = roiPtrInputCropRegion[1].ltrbROI.lt.x + w2 - 1; // r2
-            roiPtrInputCropRegion[1].ltrbROI.rb.y = roiPtrInputCropRegion[1].ltrbROI.lt.y + h2 - 1; // b2
-            roiPtrInputCropRegion[2].ltrbROI.rb.x = roiPtrInputCropRegion[2].ltrbROI.lt.x + w3 - 1; // r3
-            roiPtrInputCropRegion[2].ltrbROI.rb.y = roiPtrInputCropRegion[2].ltrbROI.lt.y + h3 - 1; // b3
-            roiPtrInputCropRegion[3].ltrbROI.rb.x = roiPtrInputCropRegion[3].ltrbROI.lt.x + w4 - 1; // r4
-            roiPtrInputCropRegion[3].ltrbROI.rb.y = roiPtrInputCropRegion[3].ltrbROI.lt.y + h4 - 1; // b4
+            // roiPtrInputCropRegion[0].ltrbROI.rb.x = roiPtrInputCropRegion[0].ltrbROI.lt.x + w1 - 1; // r1
+            // roiPtrInputCropRegion[0].ltrbROI.rb.y = roiPtrInputCropRegion[0].ltrbROI.lt.y + h1 - 1; // b1
+            // roiPtrInputCropRegion[1].ltrbROI.rb.x = roiPtrInputCropRegion[1].ltrbROI.lt.x + w2 - 1; // r2
+            // roiPtrInputCropRegion[1].ltrbROI.rb.y = roiPtrInputCropRegion[1].ltrbROI.lt.y + h2 - 1; // b2
+            // roiPtrInputCropRegion[2].ltrbROI.rb.x = roiPtrInputCropRegion[2].ltrbROI.lt.x + w3 - 1; // r3
+            // roiPtrInputCropRegion[2].ltrbROI.rb.y = roiPtrInputCropRegion[2].ltrbROI.lt.y + h3 - 1; // b3
+            // roiPtrInputCropRegion[3].ltrbROI.rb.x = roiPtrInputCropRegion[3].ltrbROI.lt.x + w4 - 1; // r4
+            // roiPtrInputCropRegion[3].ltrbROI.rb.y = roiPtrInputCropRegion[3].ltrbROI.lt.y + h4 - 1; // b4
 
             start_omp = omp_get_wtime();
             start = clock();
             if (ip_bitDepth == 0)
-                rppt_ricap_host(input, srcDescPtr, output, dstDescPtr, permutedArray, roiPtrInputCropRegion, roiTensorPtrSrc, roiTypeSrc, handle);
+                rppt_ricap_host(input, srcDescPtr, output, dstDescPtr, permutedArrayOrderChanged, roiPtrInputCropRegion, roiTensorPtrSrc, roiTypeSrc, handle);
             else if (ip_bitDepth == 1)
-                rppt_ricap_host(inputf16, srcDescPtr, outputf16, dstDescPtr, permutedArray, roiPtrInputCropRegion, roiTensorPtrSrc, roiTypeSrc, handle);
+                rppt_ricap_host(inputf16, srcDescPtr, outputf16, dstDescPtr, permutedArrayOrderChanged, roiPtrInputCropRegion, roiTensorPtrSrc, roiTypeSrc, handle);
             else if (ip_bitDepth == 2)
-                rppt_ricap_host(inputf32, srcDescPtr, outputf32, dstDescPtr, permutedArray, roiPtrInputCropRegion, roiTensorPtrSrc, roiTypeSrc, handle);
+                rppt_ricap_host(inputf32, srcDescPtr, outputf32, dstDescPtr, permutedArrayOrderChanged, roiPtrInputCropRegion, roiTensorPtrSrc, roiTypeSrc, handle);
             else if (ip_bitDepth == 3)
                 missingFuncFlag = 1;
             else if (ip_bitDepth == 4)
                 missingFuncFlag = 1;
             else if (ip_bitDepth == 5)
-                rppt_ricap_host(inputi8, srcDescPtr, outputi8, dstDescPtr, permutedArray, roiPtrInputCropRegion, roiTensorPtrSrc, roiTypeSrc, handle);
+                rppt_ricap_host(inputi8, srcDescPtr, outputi8, dstDescPtr, permutedArrayOrderChanged, roiPtrInputCropRegion, roiTensorPtrSrc, roiTypeSrc, handle);
             else if (ip_bitDepth == 6)
                 missingFuncFlag = 1;
             else

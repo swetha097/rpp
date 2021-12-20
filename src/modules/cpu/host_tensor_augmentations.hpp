@@ -5339,10 +5339,11 @@ RppStatus ricap_u8_u8_host_tensor(Rpp8u *srcPtr,
         Rpp8u *srcPtr1, *srcPtr2, *srcPtr3, *srcPtr4;
         srcPtr1 = srcPtr2 = srcPtr3 = srcPtr4 = srcPtr;
         Rpp8u *srcPtrImage1, *srcPtrImage2, *srcPtrImage3, *srcPtrImage4, *dstPtrImage;
-        srcPtrImage1 = srcPtr + (permutedIndices[batchCount] * srcDescPtr->strides.nStride);
-        srcPtrImage2 = srcPtr + (permutedIndices[batchCount + dstDescPtr->n] * srcDescPtr->strides.nStride);
-        srcPtrImage3 = srcPtr + (permutedIndices[batchCount + (dstDescPtr->n * 2)] * srcDescPtr->strides.nStride);
-        srcPtrImage4 = srcPtr + (permutedIndices[batchCount + (dstDescPtr->n * 3)] * srcDescPtr->strides.nStride);
+        int permutedCount = batchCount * 4;
+        srcPtrImage1 = srcPtr + (permutedIndices[permutedCount] * srcDescPtr->strides.nStride);
+        srcPtrImage2 = srcPtr + (permutedIndices[permutedCount + 1] * srcDescPtr->strides.nStride);
+        srcPtrImage3 = srcPtr + (permutedIndices[permutedCount + 2] * srcDescPtr->strides.nStride);
+        srcPtrImage4 = srcPtr + (permutedIndices[permutedCount + 3] * srcDescPtr->strides.nStride);
         dstPtrImage = dstPtr + batchCount * dstDescPtr->strides.nStride;
 
         Rpp32u bufferLength1 = roiPtr1->xywhROI.roiWidth * layoutParams.bufferMultiplier;
