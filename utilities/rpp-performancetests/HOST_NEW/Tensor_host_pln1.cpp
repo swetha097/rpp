@@ -25,6 +25,25 @@ typedef half Rpp16f;
 #define RPPMAX2(a,b) ((a > b) ? a : b)
 #define RPPMIN2(a,b) ((a < b) ? a : b)
 
+void swap (unsigned int *a, unsigned int *b)
+{
+    unsigned int temp = *a;
+    *a = *b;
+    *b = temp;
+}
+
+void randomize (unsigned int arr[], unsigned int n)
+{
+    // Use a different seed value each time
+    srand (time(NULL));
+    for (unsigned int i = n - 1; i > 0; i--)
+    {
+        // Pick a random index from 0 to i
+        unsigned int j = rand() % (i + 1);
+        swap(&arr[i], &arr[j]);
+    }
+}
+
 int main(int argc, char **argv)
 {
     // Handle inputs
@@ -34,7 +53,7 @@ int main(int argc, char **argv)
     if (argc < MIN_ARG_COUNT)
     {
         printf("\nImproper Usage! Needs all arguments!\n");
-        printf("\nUsage: ./Tensor_host_pln1 <src1 folder> <src2 folder (place same as src1 folder for single image functionalities)> <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <outputFormatToggle (pkd->pkd = 0 / pkd->pln = 1)> <case number = 0:81> <verbosity = 0/1>\n");
+        printf("\nUsage: ./Tensor_host_pln1 <src1 folder> <src2 folder (place same as src1 folder for single image functionalities)> <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <outputFormatToggle (pkd->pkd = 0 / pkd->pln = 1)> <case number = 0:82> <verbosity = 0/1>\n");
         return -1;
     }
     if (atoi(argv[4]) != 0)
@@ -50,7 +69,7 @@ int main(int argc, char **argv)
         printf("\nsrc2 = %s", argv[2]);
         printf("\nu8 / f16 / f32 / u8->f16 / u8->f32 / i8 / u8->i8 (0/1/2/3/4/5/6) = %s", argv[3]);
         printf("\noutputFormatToggle (pkd->pkd = 0 / pkd->pln = 1) = %s", argv[4]);
-        printf("\ncase number (0:81) = %s", argv[5]);
+        printf("\ncase number (0:82) = %s", argv[5]);
     }
 
     char *src = argv[1];
@@ -82,6 +101,9 @@ int main(int argc, char **argv)
         break;
     case 81:
         strcpy(funcName, "color_jitter");
+        break;
+    case 82:
+        strcpy(funcName, "ricap");
         break;
     default:
         strcpy(funcName, "test_case");
@@ -572,6 +594,98 @@ int main(int argc, char **argv)
                 missingFuncFlag = 1;
             else if (ip_bitDepth == 5)
                 rppt_blend_host(inputi8, inputi8_second, srcDescPtr, outputi8, dstDescPtr, alpha, roiTensorPtrSrc, roiTypeSrc, handle);
+            else if (ip_bitDepth == 6)
+                missingFuncFlag = 1;
+            else
+                missingFuncFlag = 1;
+            end = clock();
+            end_omp = omp_get_wtime();
+
+            break;
+        }
+        case 82:
+        {
+            test_case_name = "ricap";
+            Rpp32u initialPermuteArray[images];
+            Rpp32u permutedArray[images * 4];
+            Rpp32u cropRegion1[4];
+            Rpp32u cropRegion2[4];
+            Rpp32u cropRegion3[4];
+            Rpp32u cropRegion4[4];
+            for (uint i = 0; i < images; i++)
+            {
+                initialPermuteArray[i] = i;
+            }
+            randomize(initialPermuteArray, images);
+            memcpy(permutedArray, initialPermuteArray, images * sizeof(Rpp32u));
+            randomize(initialPermuteArray, images);
+            memcpy(permutedArray + images, initialPermuteArray, images * sizeof(Rpp32u));
+            randomize(initialPermuteArray, images);
+            memcpy(permutedArray + (images * 2), initialPermuteArray, images * sizeof(Rpp32u));
+            randomize(initialPermuteArray, images);
+            memcpy(permutedArray + (images * 3), initialPermuteArray, images * sizeof(Rpp32u));
+
+            // Change RpptRoiType for ltrbROI override sample
+            // roiTypeSrc = RpptRoiType::LTRB;
+            // roiTypeDst = RpptRoiType::LTRB;
+
+            cropRegion1[0] = 3; //x1
+            cropRegion1[1] = 17;    //y1
+            cropRegion1[2] = 250;   //w1
+            cropRegion1[3] = 238;   //h1
+
+            cropRegion2[0] = 7;  //x2
+            cropRegion2[1] = 16;  //y2
+            cropRegion2[2] = 50;  //w2
+            cropRegion2[3] = 238; //h2
+
+            cropRegion3[0] = 7;   //x3
+            cropRegion3[1] = 106; //y3
+            cropRegion3[2] = 250; //w3
+            cropRegion3[3] = 62;  //h3
+
+            cropRegion4[0] = 103; //x4
+            cropRegion4[1] = 12;  //y4
+            cropRegion4[2] = 50;  //w4
+            cropRegion4[3] = 62;  //h4
+
+            RpptROI *roiPtrInputCropRegion = (RpptROI *) calloc(4, sizeof(RpptROI));
+
+            // xywhROI override sample
+            roiPtrInputCropRegion[0].xywhROI.xy.x = 3;
+            roiPtrInputCropRegion[0].xywhROI.xy.y = 17;
+            roiPtrInputCropRegion[0].xywhROI.roiWidth = 250;
+            roiPtrInputCropRegion[0].xywhROI.roiHeight = 238;
+
+            roiPtrInputCropRegion[1].xywhROI.xy.x = 7;
+            roiPtrInputCropRegion[1].xywhROI.xy.y = 16;
+            roiPtrInputCropRegion[1].xywhROI.roiWidth = 50;
+            roiPtrInputCropRegion[1].xywhROI.roiHeight = 238;
+
+            roiPtrInputCropRegion[2].xywhROI.xy.x = 7;
+            roiPtrInputCropRegion[2].xywhROI.xy.y = 106;
+            roiPtrInputCropRegion[2].xywhROI.roiWidth = 250;
+            roiPtrInputCropRegion[2].xywhROI.roiHeight = 62;
+
+            roiPtrInputCropRegion[3].xywhROI.xy.x = 103;
+            roiPtrInputCropRegion[3].xywhROI.xy.y = 12;
+            roiPtrInputCropRegion[3].xywhROI.roiWidth = 50;
+            roiPtrInputCropRegion[3].xywhROI.roiHeight = 62;
+
+            start_omp = omp_get_wtime();
+            start = clock();
+            if (ip_bitDepth == 0)
+                rppt_ricap_host(input, srcDescPtr, output, dstDescPtr, permutedArray, roiPtrInputCropRegion, roiTensorPtrSrc, roiTypeSrc, handle);
+            else if (ip_bitDepth == 1)
+                rppt_ricap_host(inputf16, srcDescPtr, outputf16, dstDescPtr, permutedArray, roiPtrInputCropRegion, roiTensorPtrSrc, roiTypeSrc, handle);
+            else if (ip_bitDepth == 2)
+                rppt_ricap_host(inputf32, srcDescPtr, outputf32, dstDescPtr, permutedArray, roiPtrInputCropRegion, roiTensorPtrSrc, roiTypeSrc, handle);
+            else if (ip_bitDepth == 3)
+                missingFuncFlag = 1;
+            else if (ip_bitDepth == 4)
+                missingFuncFlag = 1;
+            else if (ip_bitDepth == 5)
+                rppt_ricap_host(inputi8, srcDescPtr, outputi8, dstDescPtr, permutedArray, roiPtrInputCropRegion, roiTensorPtrSrc, roiTypeSrc, handle);
             else if (ip_bitDepth == 6)
                 missingFuncFlag = 1;
             else

@@ -24,6 +24,25 @@ typedef half Rpp16f;
 #define RPPMAX2(a,b) ((a > b) ? a : b)
 #define RPPMIN2(a,b) ((a < b) ? a : b)
 
+void swap (unsigned int *a, unsigned int *b)
+{
+    unsigned int temp = *a;
+    *a = *b;
+    *b = temp;
+}
+
+void randomize (unsigned int arr[], unsigned int n)
+{
+    // Use a different seed value each time
+    srand (time(NULL));
+    for (unsigned int i = n - 1; i > 0; i--)
+    {
+        // Pick a random index from 0 to i
+        unsigned int j = rand() % (i + 1);
+        swap(&arr[i], &arr[j]);
+    }
+}
+
 int main(int argc, char **argv)
 {
     // Handle inputs
@@ -76,6 +95,9 @@ int main(int argc, char **argv)
         break;
     case 81:
         strcpy(funcName, "color_jitter");
+        break;
+    case 82:
+        strcpy(funcName, "ricap");
         break;
     default:
         strcpy(funcName, "test_case");
@@ -768,11 +790,80 @@ int main(int argc, char **argv)
 
             break;
         }
-        default:
-            missingFuncFlag = 1;
+
+
+        case 82:
+        {
+            test_case_name = "ricap";
+            Rpp32u initialPermuteArray[images];
+            Rpp32u permutedArray[images * 4];
+            Rpp32u cropRegion1[4];
+            Rpp32u cropRegion2[4];
+            Rpp32u cropRegion3[4];
+            Rpp32u cropRegion4[4];
+            for (uint i = 0; i < images; i++)
+            {
+                initialPermuteArray[i] = i;
+            }
+            randomize(initialPermuteArray, images);
+            memcpy(permutedArray, initialPermuteArray, images * sizeof(Rpp32u));
+            randomize(initialPermuteArray, images);
+            memcpy(permutedArray + images, initialPermuteArray, images * sizeof(Rpp32u));
+            randomize(initialPermuteArray, images);
+            memcpy(permutedArray + (images * 2), initialPermuteArray, images * sizeof(Rpp32u));
+            randomize(initialPermuteArray, images);
+            memcpy(permutedArray + (images * 3), initialPermuteArray, images * sizeof(Rpp32u));
+
+            RpptROI *roiPtrInputCropRegion = (RpptROI *)calloc(4, sizeof(RpptROI));
+
+            // xywhROI override sample
+            roiPtrInputCropRegion[0].xywhROI.xy.x = 3;
+            roiPtrInputCropRegion[0].xywhROI.xy.y = 17;
+            roiPtrInputCropRegion[0].xywhROI.roiWidth = 250;
+            roiPtrInputCropRegion[0].xywhROI.roiHeight = 238;
+
+            roiPtrInputCropRegion[1].xywhROI.xy.x = 7;
+            roiPtrInputCropRegion[1].xywhROI.xy.y = 16;
+            roiPtrInputCropRegion[1].xywhROI.roiWidth = 50;
+            roiPtrInputCropRegion[1].xywhROI.roiHeight = 238;
+
+            roiPtrInputCropRegion[2].xywhROI.xy.x = 7;
+            roiPtrInputCropRegion[2].xywhROI.xy.y = 106;
+            roiPtrInputCropRegion[2].xywhROI.roiWidth = 250;
+            roiPtrInputCropRegion[2].xywhROI.roiHeight = 62;
+
+            roiPtrInputCropRegion[3].xywhROI.xy.x = 103;
+            roiPtrInputCropRegion[3].xywhROI.xy.y = 12;
+            roiPtrInputCropRegion[3].xywhROI.roiWidth = 50;
+            roiPtrInputCropRegion[3].xywhROI.roiHeight = 62;
+
+            start_omp = omp_get_wtime();
+            start = clock();
+            if (ip_bitDepth == 0)
+                rppt_ricap_host(input, srcDescPtr, output, dstDescPtr, permutedArray, roiPtrInputCropRegion, roiTensorPtrSrc, roiTypeSrc, handle);
+            else if (ip_bitDepth == 1)
+                rppt_ricap_host(inputf16, srcDescPtr, outputf16, dstDescPtr, permutedArray, roiPtrInputCropRegion, roiTensorPtrSrc, roiTypeSrc, handle);
+            else if (ip_bitDepth == 2)
+                rppt_ricap_host(inputf32, srcDescPtr, outputf32, dstDescPtr, permutedArray, roiPtrInputCropRegion, roiTensorPtrSrc, roiTypeSrc, handle);
+            else if (ip_bitDepth == 3)
+                missingFuncFlag = 1;
+            else if (ip_bitDepth == 4)
+                missingFuncFlag = 1;
+            else if (ip_bitDepth == 5)
+                rppt_ricap_host(inputi8, srcDescPtr, outputi8, dstDescPtr, permutedArray, roiPtrInputCropRegion, roiTensorPtrSrc, roiTypeSrc, handle);
+            else if (ip_bitDepth == 6)
+                missingFuncFlag = 1;
+            else
+                missingFuncFlag = 1;
+            end = clock();
+            end_omp = omp_get_wtime();
+
             break;
         }
-
+        default:
+        missingFuncFlag = 1;
+        break;
+        }
         if (missingFuncFlag == 1)
         {
             printf("\nThe functionality %s doesn't yet exist in RPP\n", func);
