@@ -1188,7 +1188,7 @@ rppt_ricap_host(RppPtr_t srcPtr,
                 RpptDescPtr srcDescPtr,
                 RppPtr_t dstPtr,
                 RpptDescPtr dstDescPtr,
-                Rpp32u *permutedIndices,
+                Rpp32u *permutationTensor,
                 RpptROIPtr roiPtrInputCropRegion,
                 RpptROIPtr roiTensorPtrSrc,
                 RpptRoiType roiType,
@@ -1202,23 +1202,11 @@ rppt_ricap_host(RppPtr_t srcPtr,
                                 srcDescPtr,
                                 static_cast<Rpp8u *>(dstPtr) + dstDescPtr->offsetInBytes,
                                 dstDescPtr,
-                                permutedIndices,
+                                permutationTensor,
                                 roiPtrInputCropRegion,
                                 roiTensorPtrSrc,
                                 roiType,
                                 layoutParams);
-    }
-    else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
-    {
-        ricap_f32_f32_host_tensor((Rpp32f*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
-                                   srcDescPtr,
-                                   (Rpp32f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
-                                   dstDescPtr,
-                                   permutedIndices,
-                                   roiPtrInputCropRegion,
-                                   roiTensorPtrSrc,
-                                   roiType,
-                                   layoutParams);
     }
     else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
     {
@@ -1226,7 +1214,19 @@ rppt_ricap_host(RppPtr_t srcPtr,
                                   srcDescPtr,
                                   (Rpp16f *)(static_cast<Rpp8u *>(dstPtr) + dstDescPtr->offsetInBytes),
                                   dstDescPtr,
-                                  permutedIndices,
+                                  permutationTensor,
+                                  roiPtrInputCropRegion,
+                                  roiTensorPtrSrc,
+                                  roiType,
+                                  layoutParams);
+    }
+    else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
+    {
+        ricap_f32_f32_host_tensor((Rpp32f*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                                  srcDescPtr,
+                                  (Rpp32f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                                  dstDescPtr,
+                                  permutationTensor,
                                   roiPtrInputCropRegion,
                                   roiTensorPtrSrc,
                                   roiType,
@@ -1238,7 +1238,7 @@ rppt_ricap_host(RppPtr_t srcPtr,
                                 srcDescPtr,
                                 static_cast<Rpp8s *>(dstPtr) + dstDescPtr->offsetInBytes,
                                 dstDescPtr,
-                                permutedIndices,
+                                permutationTensor,
                                 roiPtrInputCropRegion,
                                 roiTensorPtrSrc,
                                 roiType,
