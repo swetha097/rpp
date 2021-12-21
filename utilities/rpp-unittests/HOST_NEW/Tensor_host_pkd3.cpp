@@ -28,7 +28,7 @@ typedef half Rpp16f;
 #define RPPMAX2(a,b) ((a > b) ? a : b)
 #define RPPMIN2(a,b) ((a < b) ? a : b)
 
-void randomize (unsigned int arr[], unsigned int n)
+void randomize(unsigned int arr[], unsigned int n)
 {
     // Use a different seed value each time
     srand (time(NULL));
@@ -849,20 +849,20 @@ int main(int argc, char **argv)
         float _beta_param = 0.3;
         std::random_device rd;
         std::mt19937 gen(rd());
-        static std::uniform_real_distribution<double> unif(0, 1);
+        static std::uniform_real_distribution<double> unif(0.3, 0.7);
         double p = unif(gen);
         double randFromDist = boost::math::ibeta_inv(_beta_param, _beta_param, p);
 
         std::random_device rd1;
         std::mt19937 gen1(rd1());
-        static std::uniform_real_distribution<double> unif1(0, 1);
+        static std::uniform_real_distribution<double> unif1(0.3, 0.7);
         double p1 = unif1(gen1);
         double randFromDist1 = boost::math::ibeta_inv(_beta_param, _beta_param, p1);
 
         uint32_t iX = maxDstWidth;
         uint32_t iY = maxDstWidth;
 
-        Rpp32u initialPermuteArray[images], permutedArray[images * 4], permutedArrayOrderChanged[images * 4], cropRegion1[4], cropRegion2[4], cropRegion3[4], cropRegion4[4];
+        Rpp32u initialPermuteArray[images], permutedArray[images * 4], permutationTensor[images * 4];
         for (uint i = 0; i < images; i++)
         {
             initialPermuteArray[i] = i;
@@ -878,13 +878,13 @@ int main(int argc, char **argv)
 
         for (uint i = 0, j = 0; i < images, j < images * 4; i++, j += 4)
         {
-            permutedArrayOrderChanged[j] = permutedArray[i];
-            permutedArrayOrderChanged[j + 1] = permutedArray[i + images];
-            permutedArrayOrderChanged[j + 2] = permutedArray[i + (images * 2)];
-            permutedArrayOrderChanged[j + 3] = permutedArray[i + (images * 3)];
+            permutationTensor[j] = permutedArray[i];
+            permutationTensor[j + 1] = permutedArray[i + images];
+            permutationTensor[j + 2] = permutedArray[i + (images * 2)];
+            permutationTensor[j + 3] = permutedArray[i + (images * 3)];
         }
 
-        RpptROI *roiPtrInputCropRegion = (RpptROI *)calloc(4, sizeof(RpptROI));
+        RpptROI roiPtrInputCropRegion[4];
 
         // Uncomment to run test case with an xywhROI override
         // /*
@@ -941,17 +941,17 @@ int main(int argc, char **argv)
         start_omp = omp_get_wtime();
         start = clock();
         if (ip_bitDepth == 0)
-            rppt_ricap_host(input, srcDescPtr, output, dstDescPtr, permutedArrayOrderChanged, roiPtrInputCropRegion, roiTensorPtrSrc, roiTypeSrc, handle);
+            rppt_ricap_host(input, srcDescPtr, output, dstDescPtr, permutationTensor, roiPtrInputCropRegion, roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 1)
-            rppt_ricap_host(inputf16, srcDescPtr, outputf16, dstDescPtr, permutedArrayOrderChanged, roiPtrInputCropRegion, roiTensorPtrSrc, roiTypeSrc, handle);
+            rppt_ricap_host(inputf16, srcDescPtr, outputf16, dstDescPtr, permutationTensor, roiPtrInputCropRegion, roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 2)
-            rppt_ricap_host(inputf32, srcDescPtr, outputf32, dstDescPtr, permutedArrayOrderChanged, roiPtrInputCropRegion, roiTensorPtrSrc, roiTypeSrc, handle);
+            rppt_ricap_host(inputf32, srcDescPtr, outputf32, dstDescPtr, permutationTensor, roiPtrInputCropRegion, roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 3)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 4)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 5)
-            rppt_ricap_host(inputi8, srcDescPtr, outputi8, dstDescPtr, permutedArrayOrderChanged, roiPtrInputCropRegion, roiTensorPtrSrc, roiTypeSrc, handle);
+            rppt_ricap_host(inputi8, srcDescPtr, outputi8, dstDescPtr, permutationTensor, roiPtrInputCropRegion, roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 6)
             missingFuncFlag = 1;
         else
