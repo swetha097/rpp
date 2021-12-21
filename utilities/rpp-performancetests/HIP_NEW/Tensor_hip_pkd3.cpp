@@ -87,6 +87,9 @@ int main(int argc, char **argv)
     case 31:
         strcpy(funcName, "color_cast");
         break;
+    case 37:
+        strcpy(funcName, "crop");
+        break;
     case 40:
         strcpy(funcName, "erode");
         break;
@@ -96,8 +99,11 @@ int main(int argc, char **argv)
     case 49:
         strcpy(funcName, "box_filter");
         break;
-    case 80:
+    case 82:
         strcpy(funcName, "ricap");
+        break;
+    case 83:
+        strcpy(funcName, "gridmask");
         break;
     default:
         strcpy(funcName, "test_case");
@@ -774,6 +780,56 @@ int main(int argc, char **argv)
 
             break;
         }
+        case 37:
+        {
+            test_case_name = "crop";
+
+            // Uncomment to run test case with an xywhROI override
+            for (i = 0; i < images; i++)
+            {
+                roiTensorPtrSrc[i].xywhROI.xy.x = 0;
+                roiTensorPtrSrc[i].xywhROI.xy.y = 0;
+                roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
+                roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
+            }
+
+            // Uncomment to run test case with an ltrbROI override
+            /*for (i = 0; i < images; i++)
+                roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
+                roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
+                roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
+                roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
+            }
+            roiTypeSrc = RpptRoiType::LTRB;
+            roiTypeDst = RpptRoiType::LTRB;*/
+
+            hipMemcpy(d_roiTensorPtrSrc, roiTensorPtrSrc, images * sizeof(RpptROI), hipMemcpyHostToDevice);
+
+            start = clock();
+
+            if (ip_bitDepth == 0)
+                rppt_crop_gpu(d_input, srcDescPtr, d_output, dstDescPtr, d_roiTensorPtrSrc, roiTypeSrc, handle);
+            else if (ip_bitDepth == 1)
+                rppt_crop_gpu(d_inputf16, srcDescPtr, d_outputf16, dstDescPtr, d_roiTensorPtrSrc, roiTypeSrc, handle);
+            else if (ip_bitDepth == 2)
+                rppt_crop_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, d_roiTensorPtrSrc, roiTypeSrc, handle);
+            else if (ip_bitDepth == 3)
+                missingFuncFlag = 1;
+            else if (ip_bitDepth == 4)
+                missingFuncFlag = 1;
+            else if (ip_bitDepth == 5)
+                rppt_crop_gpu(d_inputi8, srcDescPtr, d_outputi8, dstDescPtr, d_roiTensorPtrSrc, roiTypeSrc, handle);
+            else if (ip_bitDepth == 6)
+                missingFuncFlag = 1;
+            else
+                missingFuncFlag = 1;
+
+            hipDeviceSynchronize();
+
+            end = clock();
+
+            break;
+        }
         case 40:
         {
             test_case_name = "erode";
@@ -930,7 +986,7 @@ int main(int argc, char **argv)
 
             break;
         }
-        case 80:
+        case 82:
         {
             test_case_name = "ricap";
             uint no_of_crops = 4;
@@ -943,6 +999,7 @@ int main(int argc, char **argv)
             Rpp32u permuted_array2[images];
             Rpp32u permuted_array3[images];
             Rpp32u permuted_array4[images];
+            Rpp32u permuted_array[images * 4];
 
             uint src_width = roiTensorPtrSrc[0].xywhROI.roiWidth;
             uint src_height = roiTensorPtrSrc[0].xywhROI.roiHeight;
@@ -980,6 +1037,15 @@ int main(int argc, char **argv)
             randomize(initial_permute_array, images);
             memcpy(permuted_array4, initial_permute_array, images * sizeof(Rpp32u));
 
+            for(int i = 0; i < images; i++)
+            {
+                uint idx =  i * 4;
+                permuted_array[idx++] = permuted_array1[i];
+                permuted_array[idx++] = permuted_array2[i];
+                permuted_array[idx++] = permuted_array3[i];
+                permuted_array[idx++] = permuted_array4[i];
+            }
+
             // Change RpptRoiType for ltrbROI override sample
             // roiTypeSrc = RpptRoiType::LTRB;
             // roiTypeDst = RpptRoiType::LTRB;
@@ -999,17 +1065,74 @@ int main(int argc, char **argv)
             start = clock();
 
             if (ip_bitDepth == 0)
-                rppt_ricap_gpu(d_input, srcDescPtr, d_output, dstDescPtr, permuted_array1, permuted_array2, permuted_array3, permuted_array4, d_cropregion, d_roiTensorPtrSrc, roiTypeSrc, handle);
+                rppt_ricap_gpu(d_input, srcDescPtr, d_output, dstDescPtr, permuted_array, d_cropregion, d_roiTensorPtrSrc, roiTypeSrc, handle);
             else if (ip_bitDepth == 1)
-                rppt_ricap_gpu(d_inputf16, srcDescPtr, d_outputf16, dstDescPtr, permuted_array1, permuted_array2, permuted_array3, permuted_array4, d_cropregion, d_roiTensorPtrSrc, roiTypeSrc, handle);
+                rppt_ricap_gpu(d_inputf16, srcDescPtr, d_outputf16, dstDescPtr, permuted_array, d_cropregion, d_roiTensorPtrSrc, roiTypeSrc, handle);
             else if (ip_bitDepth == 2)
-                rppt_ricap_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, permuted_array1, permuted_array2, permuted_array3, permuted_array4, d_cropregion, d_roiTensorPtrSrc, roiTypeSrc, handle);
+                rppt_ricap_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, permuted_array, d_cropregion, d_roiTensorPtrSrc, roiTypeSrc, handle);
             else if (ip_bitDepth == 3)
                 missingFuncFlag = 1;
             else if (ip_bitDepth == 4)
                 missingFuncFlag = 1;
             else if (ip_bitDepth == 5)
-                rppt_ricap_gpu(d_inputi8, srcDescPtr, d_outputi8, dstDescPtr, permuted_array1, permuted_array2, permuted_array3, permuted_array4, d_cropregion, d_roiTensorPtrSrc, roiTypeSrc, handle);
+                rppt_ricap_gpu(d_inputi8, srcDescPtr, d_outputi8, dstDescPtr, permuted_array, d_cropregion, d_roiTensorPtrSrc, roiTypeSrc, handle);
+            else
+                missingFuncFlag = 1;
+
+            hipDeviceSynchronize();
+
+            end = clock();
+
+            break;
+
+        }
+        case 83:
+        {
+            test_case_name = "gridmask";
+
+            Rpp32u tileWidth = 40;
+            Rpp32f gridRatio = 0.6;
+            Rpp32f gridAngle = 0.5;
+            RpptUintVector2D translateVector;
+            translateVector.x = 0.0;
+            translateVector.y = 0.0;
+
+            // Uncomment to run test case with an xywhROI override
+            /*for (i = 0; i < images; i++)
+            {
+                roiTensorPtrSrc[i].xywhROI.xy.x = 0;
+                roiTensorPtrSrc[i].xywhROI.xy.y = 0;
+                roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
+                roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
+            }*/
+
+            // Uncomment to run test case with an ltrbROI override
+            /*for (i = 0; i < images; i++)
+                roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
+                roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
+                roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
+                roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
+            }
+            roiTypeSrc = RpptRoiType::LTRB;
+            roiTypeDst = RpptRoiType::LTRB;*/
+
+
+            hipMemcpy(d_roiTensorPtrSrc, roiTensorPtrSrc, images * sizeof(RpptROI), hipMemcpyHostToDevice);
+
+            start = clock();
+
+            if (ip_bitDepth == 0)
+                rppt_gridmask_gpu(d_input, srcDescPtr, d_output, dstDescPtr, tileWidth, gridRatio, gridAngle, translateVector, d_roiTensorPtrSrc, roiTypeSrc, handle);
+            else if (ip_bitDepth == 1)
+                rppt_gridmask_gpu(d_inputf16, srcDescPtr, d_outputf16, dstDescPtr, tileWidth, gridRatio, gridAngle, translateVector, d_roiTensorPtrSrc, roiTypeSrc, handle);
+            else if (ip_bitDepth == 2)
+                rppt_gridmask_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, tileWidth, gridRatio, gridAngle, translateVector, d_roiTensorPtrSrc, roiTypeSrc, handle);
+            else if (ip_bitDepth == 3)
+                missingFuncFlag = 1;
+            else if (ip_bitDepth == 4)
+                missingFuncFlag = 1;
+            else if (ip_bitDepth == 5)
+                rppt_gridmask_gpu(d_inputi8, srcDescPtr, d_outputi8, dstDescPtr, tileWidth, gridRatio, gridAngle, translateVector, d_roiTensorPtrSrc, roiTypeSrc, handle);
             else if (ip_bitDepth == 6)
                 missingFuncFlag = 1;
             else

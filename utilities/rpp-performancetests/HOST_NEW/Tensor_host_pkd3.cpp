@@ -13,6 +13,10 @@
 #include <omp.h>
 #include <half.hpp>
 #include <fstream>
+#include <random>
+#include <boost/math/distributions.hpp>
+#include <boost/math/special_functions/beta.hpp>
+using namespace boost::math;
 
 using namespace cv;
 using namespace std;
@@ -21,8 +25,25 @@ using half_float::half;
 typedef half Rpp16f;
 
 #define RPPPIXELCHECK(pixel) (pixel < (Rpp32f)0) ? ((Rpp32f)0) : ((pixel < (Rpp32f)255) ? pixel : ((Rpp32f)255))
-#define RPPMAX2(a,b) ((a > b) ? a : b)
-#define RPPMIN2(a,b) ((a < b) ? a : b)
+#define RPPMAX2(a, b) ((a > b) ? a : b)
+#define RPPMIN2(a, b) ((a < b) ? a : b)
+
+void randomize(unsigned int arr[], unsigned int n)
+{
+    // Use a different seed value each time
+    srand (time(NULL));
+    for (unsigned int i = n - 1; i > 0; i--)
+    {
+        // Pick a random index from 0 to i
+        unsigned int j = rand() % (i + 1);
+        std::swap(arr[i], arr[j]);
+    }
+}
+
+int inline random_val(int min, int max)
+{
+    return rand() % (max - min + 1) + min;
+}
 
 int main(int argc, char **argv)
 {
@@ -74,8 +95,20 @@ int main(int argc, char **argv)
     case 31:
         strcpy(funcName, "color_cast");
         break;
+    case 36:
+        strcpy(funcName, "color_twist");
+        break;
+    case 37:
+        strcpy(funcName, "crop");
+        break;
     case 81:
         strcpy(funcName, "color_jitter");
+        break;
+    case 82:
+        strcpy(funcName, "ricap");
+        break;
+    case 83:
+        strcpy(funcName, "gridmask");
         break;
     default:
         strcpy(funcName, "test_case");
@@ -191,8 +224,8 @@ int main(int argc, char **argv)
 
     // Initialize ROI tensors for src/dst
 
-    RpptROI *roiTensorPtrSrc = (RpptROI *) calloc(noOfImages, sizeof(RpptROI));
-    RpptROI *roiTensorPtrDst = (RpptROI *) calloc(noOfImages, sizeof(RpptROI));
+    RpptROI *roiTensorPtrSrc = (RpptROI *)calloc(noOfImages, sizeof(RpptROI));
+    RpptROI *roiTensorPtrDst = (RpptROI *)calloc(noOfImages, sizeof(RpptROI));
 
     // Set ROI tensors types for src/dst
 
@@ -338,8 +371,8 @@ int main(int argc, char **argv)
 
         for (j = 0; j < roiTensorPtrSrc[i].xywhROI.roiHeight; j++)
         {
-            memcpy(input_temp, ip_image, elementsInRow * sizeof (Rpp8u));
-            memcpy(input_second_temp, ip_image_second, elementsInRow * sizeof (Rpp8u));
+            memcpy(input_temp, ip_image, elementsInRow * sizeof(Rpp8u));
+            memcpy(input_second_temp, ip_image_second, elementsInRow * sizeof(Rpp8u));
             ip_image += elementsInRow;
             ip_image_second += elementsInRow;
             input_temp += srcDescPtr->strides.hStride;
@@ -407,8 +440,8 @@ int main(int argc, char **argv)
 
         for (int i = 0; i < ioBufferSize; i++)
         {
-            *inputi8Temp = (Rpp8s) (((Rpp32s) *inputTemp) - 128);
-            *inputi8_secondTemp = (Rpp8s) (((Rpp32s) *input_secondTemp) - 128);
+            *inputi8Temp = (Rpp8s)(((Rpp32s)*inputTemp) - 128);
+            *inputi8_secondTemp = (Rpp8s)(((Rpp32s)*input_secondTemp) - 128);
             inputTemp++;
             inputi8Temp++;
             input_secondTemp++;
@@ -444,23 +477,26 @@ int main(int argc, char **argv)
             {
                 alpha[i] = 1.75;
                 beta[i] = 50;
-
-                // xywhROI override sample
-                // roiTensorPtrSrc[i].xywhROI.xy.x = 0;
-                // roiTensorPtrSrc[i].xywhROI.xy.y = 0;
-                // roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
-                // roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
-
-                // ltrbROI override sample
-                // roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
-                // roiTensorPtrSrc[i].ltrbROI.lt.y = 50;
-                // roiTensorPtrSrc[i].ltrbROI.rb.x = 199;
-                // roiTensorPtrSrc[i].ltrbROI.rb.y = 149;
             }
 
-            // Change RpptRoiType for ltrbROI override sample
-            // roiTypeSrc = RpptRoiType::LTRB;
-            // roiTypeDst = RpptRoiType::LTRB;
+            // Uncomment to run test case with an xywhROI override
+            /*for (i = 0; i < images; i++)
+            {
+                roiTensorPtrSrc[i].xywhROI.xy.x = 0;
+                roiTensorPtrSrc[i].xywhROI.xy.y = 0;
+                roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
+                roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
+            }*/
+
+            // Uncomment to run test case with an ltrbROI override
+            /*for (i = 0; i < images; i++)
+                roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
+                roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
+                roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
+                roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
+            }
+            roiTypeSrc = RpptRoiType::LTRB;
+            roiTypeDst = RpptRoiType::LTRB;*/
 
             start_omp = omp_get_wtime();
             start = clock();
@@ -493,23 +529,26 @@ int main(int argc, char **argv)
             for (i = 0; i < images; i++)
             {
                 gammaVal[i] = 1.9;
-
-                // xywhROI override sample
-                // roiTensorPtrSrc[i].xywhROI.xy.x = 0;
-                // roiTensorPtrSrc[i].xywhROI.xy.y = 0;
-                // roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
-                // roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
-
-                // ltrbROI override sample
-                // roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
-                // roiTensorPtrSrc[i].ltrbROI.lt.y = 50;
-                // roiTensorPtrSrc[i].ltrbROI.rb.x = 199;
-                // roiTensorPtrSrc[i].ltrbROI.rb.y = 149;
             }
 
-            // Change RpptRoiType for ltrbROI override sample
-            // roiTypeSrc = RpptRoiType::LTRB;
-            // roiTypeDst = RpptRoiType::LTRB;
+            // Uncomment to run test case with an xywhROI override
+            /*for (i = 0; i < images; i++)
+            {
+                roiTensorPtrSrc[i].xywhROI.xy.x = 0;
+                roiTensorPtrSrc[i].xywhROI.xy.y = 0;
+                roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
+                roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
+            }*/
+
+            // Uncomment to run test case with an ltrbROI override
+            /*for (i = 0; i < images; i++)
+                roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
+                roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
+                roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
+                roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
+            }
+            roiTypeSrc = RpptRoiType::LTRB;
+            roiTypeDst = RpptRoiType::LTRB;*/
 
             start_omp = omp_get_wtime();
             start = clock();
@@ -542,23 +581,26 @@ int main(int argc, char **argv)
             for (i = 0; i < images; i++)
             {
                 alpha[i] = 0.4;
-
-                // xywhROI override sample
-                // roiTensorPtrSrc[i].xywhROI.xy.x = 0;
-                // roiTensorPtrSrc[i].xywhROI.xy.y = 0;
-                // roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
-                // roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
-
-                // ltrbROI override sample
-                // roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
-                // roiTensorPtrSrc[i].ltrbROI.lt.y = 50;
-                // roiTensorPtrSrc[i].ltrbROI.rb.x = 199;
-                // roiTensorPtrSrc[i].ltrbROI.rb.y = 149;
             }
 
-            // Change RpptRoiType for ltrbROI override sample
-            // roiTypeSrc = RpptRoiType::LTRB;
-            // roiTypeDst = RpptRoiType::LTRB;
+            // Uncomment to run test case with an xywhROI override
+            /*for (i = 0; i < images; i++)
+            {
+                roiTensorPtrSrc[i].xywhROI.xy.x = 0;
+                roiTensorPtrSrc[i].xywhROI.xy.y = 0;
+                roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
+                roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
+            }*/
+
+            // Uncomment to run test case with an ltrbROI override
+            /*for (i = 0; i < images; i++)
+                roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
+                roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
+                roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
+                roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
+            }
+            roiTypeSrc = RpptRoiType::LTRB;
+            roiTypeDst = RpptRoiType::LTRB;*/
 
             start_omp = omp_get_wtime();
             start = clock();
@@ -589,30 +631,32 @@ int main(int argc, char **argv)
 
             RpptRGB rgbTensor[images];
             Rpp32f alphaTensor[images];
-
             for (i = 0; i < images; i++)
             {
                 rgbTensor[i].R = 0;
                 rgbTensor[i].G = 0;
                 rgbTensor[i].B = 100;
                 alphaTensor[i] = 0.5;
-
-                // xywhROI override sample
-                // roiTensorPtrSrc[i].xywhROI.xy.x = 0;
-                // roiTensorPtrSrc[i].xywhROI.xy.y = 0;
-                // roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
-                // roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
-
-                // ltrbROI override sample
-                // roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
-                // roiTensorPtrSrc[i].ltrbROI.lt.y = 50;
-                // roiTensorPtrSrc[i].ltrbROI.rb.x = 199;
-                // roiTensorPtrSrc[i].ltrbROI.rb.y = 149;
             }
 
-            // Change RpptRoiType for ltrbROI override sample
-            // roiTypeSrc = RpptRoiType::LTRB;
-            // roiTypeDst = RpptRoiType::LTRB;
+            // Uncomment to run test case with an xywhROI override
+            /*for (i = 0; i < images; i++)
+            {
+                roiTensorPtrSrc[i].xywhROI.xy.x = 0;
+                roiTensorPtrSrc[i].xywhROI.xy.y = 0;
+                roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
+                roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
+            }*/
+
+            // Uncomment to run test case with an ltrbROI override
+            /*for (i = 0; i < images; i++)
+                roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
+                roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
+                roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
+                roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
+            }
+            roiTypeSrc = RpptRoiType::LTRB;
+            roiTypeDst = RpptRoiType::LTRB;*/
 
             start_omp = omp_get_wtime();
             start = clock();
@@ -637,6 +681,110 @@ int main(int argc, char **argv)
 
             break;
         }
+        case 36:
+        {
+            test_case_name = "color_twist";
+
+            Rpp32f brightness[images];
+            Rpp32f contrast[images];
+            Rpp32f hue[images];
+            Rpp32f saturation[images];
+            for (i = 0; i < images; i++)
+            {
+                brightness[i] = 1.4;
+                contrast[i] = 0.0;
+                hue[i] = 60.0;
+                saturation[i] = 1.9;
+            }
+
+            // Uncomment to run test case with an xywhROI override
+            /*for (i = 0; i < images; i++)
+            {
+                roiTensorPtrSrc[i].xywhROI.xy.x = 0;
+                roiTensorPtrSrc[i].xywhROI.xy.y = 0;
+                roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
+                roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
+            }*/
+
+            // Uncomment to run test case with an ltrbROI override
+            /*for (i = 0; i < images; i++)
+                roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
+                roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
+                roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
+                roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
+            }
+            roiTypeSrc = RpptRoiType::LTRB;
+            roiTypeDst = RpptRoiType::LTRB;*/
+
+            start_omp = omp_get_wtime();
+            start = clock();
+            if (ip_bitDepth == 0)
+                rppt_color_twist_host(input, srcDescPtr, output, dstDescPtr, brightness, contrast, hue, saturation, roiTensorPtrSrc, roiTypeSrc, handle);
+            else if (ip_bitDepth == 1)
+                rppt_color_twist_host(inputf16, srcDescPtr, outputf16, dstDescPtr, brightness, contrast, hue, saturation, roiTensorPtrSrc, roiTypeSrc, handle);
+            else if (ip_bitDepth == 2)
+                rppt_color_twist_host(inputf32, srcDescPtr, outputf32, dstDescPtr, brightness, contrast, hue, saturation, roiTensorPtrSrc, roiTypeSrc, handle);
+            else if (ip_bitDepth == 3)
+                missingFuncFlag = 1;
+            else if (ip_bitDepth == 4)
+                missingFuncFlag = 1;
+            else if (ip_bitDepth == 5)
+                rppt_color_twist_host(inputi8, srcDescPtr, outputi8, dstDescPtr, brightness, contrast, hue, saturation, roiTensorPtrSrc, roiTypeSrc, handle);
+            else if (ip_bitDepth == 6)
+                missingFuncFlag = 1;
+            else
+                missingFuncFlag = 1;
+            end = clock();
+            end_omp = omp_get_wtime();
+
+            break;
+        }
+        case 37:
+        {
+            test_case_name = "crop";
+
+            // Uncomment to run test case with an xywhROI override
+            for (i = 0; i < images; i++)
+            {
+                roiTensorPtrSrc[i].xywhROI.xy.x = 0;
+                roiTensorPtrSrc[i].xywhROI.xy.y = 0;
+                roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
+                roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
+            }
+
+            // Uncomment to run test case with an ltrbROI override
+            /*for (i = 0; i < images; i++)
+                roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
+                roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
+                roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
+                roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
+            }
+            roiTypeSrc = RpptRoiType::LTRB;
+            roiTypeDst = RpptRoiType::LTRB;*/
+
+            start_omp = omp_get_wtime();
+            start = clock();
+            if (ip_bitDepth == 0)
+                rppt_crop_host(input, srcDescPtr, output, dstDescPtr, roiTensorPtrSrc, roiTypeSrc, handle);
+            else if (ip_bitDepth == 1)
+                rppt_crop_host(inputf16, srcDescPtr, outputf16, dstDescPtr, roiTensorPtrSrc, roiTypeSrc, handle);
+            else if (ip_bitDepth == 2)
+                rppt_crop_host(inputf32, srcDescPtr, outputf32, dstDescPtr, roiTensorPtrSrc, roiTypeSrc, handle);
+            else if (ip_bitDepth == 3)
+                missingFuncFlag = 1;
+            else if (ip_bitDepth == 4)
+                missingFuncFlag = 1;
+            else if (ip_bitDepth == 5)
+                rppt_crop_host(inputi8, srcDescPtr, outputi8, dstDescPtr, roiTensorPtrSrc, roiTypeSrc, handle);
+            else if (ip_bitDepth == 6)
+                missingFuncFlag = 1;
+            else
+                missingFuncFlag = 1;
+            end = clock();
+            end_omp = omp_get_wtime();
+
+            break;
+        }
         case 81:
         {
             test_case_name = "color_jitter";
@@ -651,23 +799,26 @@ int main(int argc, char **argv)
                 contrast[i] = 1.1;
                 hue[i] = 0.02;
                 saturation[i] = 1.3;
-
-                // xywhROI override sample
-                // roiTensorPtrSrc[i].xywhROI.xy.x = 0;
-                // roiTensorPtrSrc[i].xywhROI.xy.y = 0;
-                // roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
-                // roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
-
-                // ltrbROI override sample
-                // roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
-                // roiTensorPtrSrc[i].ltrbROI.lt.y = 50;
-                // roiTensorPtrSrc[i].ltrbROI.rb.x = 199;
-                // roiTensorPtrSrc[i].ltrbROI.rb.y = 149;
             }
 
-            // Change RpptRoiType for ltrbROI override sample
-            // roiTypeSrc = RpptRoiType::LTRB;
-            // roiTypeDst = RpptRoiType::LTRB;
+            // Uncomment to run test case with an xywhROI override
+            /*for (i = 0; i < images; i++)
+            {
+                roiTensorPtrSrc[i].xywhROI.xy.x = 0;
+                roiTensorPtrSrc[i].xywhROI.xy.y = 0;
+                roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
+                roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
+            }*/
+
+            // Uncomment to run test case with an ltrbROI override
+            /*for (i = 0; i < images; i++)
+                roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
+                roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
+                roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
+                roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
+            }
+            roiTypeSrc = RpptRoiType::LTRB;
+            roiTypeDst = RpptRoiType::LTRB;*/
 
             start_omp = omp_get_wtime();
             start = clock();
@@ -683,6 +834,178 @@ int main(int argc, char **argv)
                 missingFuncFlag = 1;
             else if (ip_bitDepth == 5)
                 rppt_color_jitter_host(inputi8, srcDescPtr, outputi8, dstDescPtr, brightness, contrast, hue, saturation, roiTensorPtrSrc, roiTypeSrc, handle);
+            else if (ip_bitDepth == 6)
+                missingFuncFlag = 1;
+            else
+                missingFuncFlag = 1;
+            end = clock();
+            end_omp = omp_get_wtime();
+
+            break;
+        }
+        case 82:
+        {
+            test_case_name = "ricap";
+
+            float _beta_param = 0.3;
+            std::random_device rd;
+            std::mt19937 gen(rd());
+            static std::uniform_real_distribution<double> unif(0.3, 0.7);
+            double p = unif(gen);
+            double randFromDist = boost::math::ibeta_inv(_beta_param, _beta_param, p);
+
+            std::random_device rd1;
+            std::mt19937 gen1(rd1());
+            static std::uniform_real_distribution<double> unif1(0.3, 0.7);
+            double p1 = unif1(gen1);
+            double randFromDist1 = boost::math::ibeta_inv(_beta_param, _beta_param, p1);
+
+            uint32_t iX = maxDstWidth;
+            uint32_t iY = maxDstWidth;
+
+            Rpp32u initialPermuteArray[images], permutedArray[images * 4], permutationTensor[images * 4];
+            for (uint i = 0; i < images; i++)
+            {
+                initialPermuteArray[i] = i;
+            }
+            randomize(initialPermuteArray, images);
+            memcpy(permutedArray, initialPermuteArray, images * sizeof(Rpp32u));
+            randomize(initialPermuteArray, images);
+            memcpy(permutedArray + images, initialPermuteArray, images * sizeof(Rpp32u));
+            randomize(initialPermuteArray, images);
+            memcpy(permutedArray + (images * 2), initialPermuteArray, images * sizeof(Rpp32u));
+            randomize(initialPermuteArray, images);
+            memcpy(permutedArray + (images * 3), initialPermuteArray, images * sizeof(Rpp32u));
+
+            for (uint i = 0, j = 0; i < images, j < images * 4; i++, j += 4)
+            {
+                permutationTensor[j] = permutedArray[i];
+                permutationTensor[j + 1] = permutedArray[i + images];
+                permutationTensor[j + 2] = permutedArray[i + (images * 2)];
+                permutationTensor[j + 3] = permutedArray[i + (images * 3)];
+            }
+
+            RpptROI roiPtrInputCropRegion[4];
+
+            // Uncomment to run test case with an xywhROI override
+            // /*
+            roiPtrInputCropRegion[0].xywhROI.roiWidth = std::round(randFromDist * iX);                    // w1
+            roiPtrInputCropRegion[0].xywhROI.roiHeight = std::round(randFromDist1 * iY);                  // h1
+            roiPtrInputCropRegion[1].xywhROI.roiWidth = iX - roiPtrInputCropRegion[0].xywhROI.roiWidth;   // w2
+            roiPtrInputCropRegion[1].xywhROI.roiHeight = roiPtrInputCropRegion[0].xywhROI.roiHeight;      // h2
+            roiPtrInputCropRegion[2].xywhROI.roiWidth = roiPtrInputCropRegion[0].xywhROI.roiWidth;        // w3
+            roiPtrInputCropRegion[2].xywhROI.roiHeight = iY - roiPtrInputCropRegion[0].xywhROI.roiHeight; // h3
+            roiPtrInputCropRegion[3].xywhROI.roiWidth = iX - roiPtrInputCropRegion[0].xywhROI.roiWidth;   // w4
+            roiPtrInputCropRegion[3].xywhROI.roiHeight = iY - roiPtrInputCropRegion[0].xywhROI.roiHeight; // h4
+            roiPtrInputCropRegion[0].xywhROI.xy.x = random_val(0, iX - roiPtrInputCropRegion[0].xywhROI.roiWidth);  // x1
+            roiPtrInputCropRegion[0].xywhROI.xy.y = random_val(0, iY - roiPtrInputCropRegion[0].xywhROI.roiHeight); // y1
+            roiPtrInputCropRegion[1].xywhROI.xy.x = random_val(0, iX - roiPtrInputCropRegion[1].xywhROI.roiWidth);  // x2
+            roiPtrInputCropRegion[1].xywhROI.xy.y = random_val(0, iY - roiPtrInputCropRegion[1].xywhROI.roiHeight); // y2
+            roiPtrInputCropRegion[2].xywhROI.xy.x = random_val(0, iX - roiPtrInputCropRegion[2].xywhROI.roiWidth);  // x3
+            roiPtrInputCropRegion[2].xywhROI.xy.y = random_val(0, iY - roiPtrInputCropRegion[2].xywhROI.roiHeight); // y3
+            roiPtrInputCropRegion[3].xywhROI.xy.x = random_val(0, iX - roiPtrInputCropRegion[3].xywhROI.roiWidth);  // x4
+            roiPtrInputCropRegion[3].xywhROI.xy.y = random_val(0, iY - roiPtrInputCropRegion[3].xywhROI.roiHeight); // y4
+            // */
+
+            // Uncomment to run test case with an ltrbROI override
+            /*
+            double w1, h1, w2, h2, w3, h3, w4, h4;
+            double r1, b1, r2, b2, r3, b3, r4, b4;
+            w1 = std::round(randFromDist * iX);                             // w1
+            h1 = std::round(randFromDist1 * iY);                            // h1
+            w2 = iX - w1;                                                   // w2
+            h2 = h1;                                                        // h2
+            w3 = w1;                                                        // w3
+            h3 = iY - h1;                                                   // h3
+            w4 = iX - w1;                                                   // w4
+            h4 = iY - h1;                                                   // h4
+            roiPtrInputCropRegion[0].ltrbROI.lt.x = random_val(0, iX - w1); // l1
+            roiPtrInputCropRegion[0].ltrbROI.lt.y = random_val(0, iY - h1); // t1
+            roiPtrInputCropRegion[1].ltrbROI.lt.x = random_val(0, iX - w2); // l2
+            roiPtrInputCropRegion[1].ltrbROI.lt.y = random_val(0, iY - h2); // t2
+            roiPtrInputCropRegion[2].ltrbROI.lt.x = random_val(0, iX - w3); // l3
+            roiPtrInputCropRegion[2].ltrbROI.lt.y = random_val(0, iY - h3); // t3
+            roiPtrInputCropRegion[3].ltrbROI.lt.x = random_val(0, iX - w4); // l4
+            roiPtrInputCropRegion[3].ltrbROI.lt.y = random_val(0, iY - h4); // t4
+            roiPtrInputCropRegion[0].ltrbROI.rb.x = roiPtrInputCropRegion[0].ltrbROI.lt.x + w1 - 1; // r1
+            roiPtrInputCropRegion[0].ltrbROI.rb.y = roiPtrInputCropRegion[0].ltrbROI.lt.y + h1 - 1; // b1
+            roiPtrInputCropRegion[1].ltrbROI.rb.x = roiPtrInputCropRegion[1].ltrbROI.lt.x + w2 - 1; // r2
+            roiPtrInputCropRegion[1].ltrbROI.rb.y = roiPtrInputCropRegion[1].ltrbROI.lt.y + h2 - 1; // b2
+            roiPtrInputCropRegion[2].ltrbROI.rb.x = roiPtrInputCropRegion[2].ltrbROI.lt.x + w3 - 1; // r3
+            roiPtrInputCropRegion[2].ltrbROI.rb.y = roiPtrInputCropRegion[2].ltrbROI.lt.y + h3 - 1; // b3
+            roiPtrInputCropRegion[3].ltrbROI.rb.x = roiPtrInputCropRegion[3].ltrbROI.lt.x + w4 - 1; // r4
+            roiPtrInputCropRegion[3].ltrbROI.rb.y = roiPtrInputCropRegion[3].ltrbROI.lt.y + h4 - 1; // b4
+            roiTypeSrc = RpptRoiType::LTRB;
+            roiTypeDst = RpptRoiType::LTRB;
+            */
+
+            start_omp = omp_get_wtime();
+            start = clock();
+            if (ip_bitDepth == 0)
+                rppt_ricap_host(input, srcDescPtr, output, dstDescPtr, permutationTensor, roiPtrInputCropRegion, roiTensorPtrSrc, roiTypeSrc, handle);
+            else if (ip_bitDepth == 1)
+                rppt_ricap_host(inputf16, srcDescPtr, outputf16, dstDescPtr, permutationTensor, roiPtrInputCropRegion, roiTensorPtrSrc, roiTypeSrc, handle);
+            else if (ip_bitDepth == 2)
+                rppt_ricap_host(inputf32, srcDescPtr, outputf32, dstDescPtr, permutationTensor, roiPtrInputCropRegion, roiTensorPtrSrc, roiTypeSrc, handle);
+            else if (ip_bitDepth == 3)
+                missingFuncFlag = 1;
+            else if (ip_bitDepth == 4)
+                missingFuncFlag = 1;
+            else if (ip_bitDepth == 5)
+                rppt_ricap_host(inputi8, srcDescPtr, outputi8, dstDescPtr, permutationTensor, roiPtrInputCropRegion, roiTensorPtrSrc, roiTypeSrc, handle);
+            else if (ip_bitDepth == 6)
+                missingFuncFlag = 1;
+            else
+                missingFuncFlag = 1;
+            end = clock();
+            end_omp = omp_get_wtime();
+
+            break;
+        }
+        case 83:
+        {
+            test_case_name = "gridmask";
+
+            Rpp32u tileWidth = 40;
+            Rpp32f gridRatio = 0.6;
+            Rpp32f gridAngle = 0.5;
+            RpptUintVector2D translateVector;
+            translateVector.x = 0.0;
+            translateVector.y = 0.0;
+
+            // Uncomment to run test case with an xywhROI override
+            /*for (i = 0; i < images; i++)
+            {
+                roiTensorPtrSrc[i].xywhROI.xy.x = 0;
+                roiTensorPtrSrc[i].xywhROI.xy.y = 0;
+                roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
+                roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
+            }*/
+
+            // Uncomment to run test case with an ltrbROI override
+            /*for (i = 0; i < images; i++)
+                roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
+                roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
+                roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
+                roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
+            }
+            roiTypeSrc = RpptRoiType::LTRB;
+            roiTypeDst = RpptRoiType::LTRB;*/
+
+            start_omp = omp_get_wtime();
+            start = clock();
+            if (ip_bitDepth == 0)
+                rppt_gridmask_host(input, srcDescPtr, output, dstDescPtr, tileWidth, gridRatio, gridAngle, translateVector, roiTensorPtrSrc, roiTypeSrc, handle);
+            else if (ip_bitDepth == 1)
+                rppt_gridmask_host(inputf16, srcDescPtr, outputf16, dstDescPtr, tileWidth, gridRatio, gridAngle, translateVector, roiTensorPtrSrc, roiTypeSrc, handle);
+            else if (ip_bitDepth == 2)
+                rppt_gridmask_host(inputf32, srcDescPtr, outputf32, dstDescPtr, tileWidth, gridRatio, gridAngle, translateVector, roiTensorPtrSrc, roiTypeSrc, handle);
+            else if (ip_bitDepth == 3)
+                missingFuncFlag = 1;
+            else if (ip_bitDepth == 4)
+                missingFuncFlag = 1;
+            else if (ip_bitDepth == 5)
+                rppt_gridmask_host(inputi8, srcDescPtr, outputi8, dstDescPtr, tileWidth, gridRatio, gridAngle, translateVector, roiTensorPtrSrc, roiTypeSrc, handle);
             else if (ip_bitDepth == 6)
                 missingFuncFlag = 1;
             else
