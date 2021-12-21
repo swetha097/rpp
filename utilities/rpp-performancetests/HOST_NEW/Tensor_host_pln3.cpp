@@ -13,6 +13,10 @@
 #include <omp.h>
 #include <half.hpp>
 #include <fstream>
+#include <random>
+#include <boost/math/distributions.hpp>
+#include <boost/math/special_functions/beta.hpp>
+using namespace boost::math;
 
 using namespace cv;
 using namespace std;
@@ -24,14 +28,7 @@ typedef half Rpp16f;
 #define RPPMAX2(a,b) ((a > b) ? a : b)
 #define RPPMIN2(a,b) ((a < b) ? a : b)
 
-void swap (unsigned int *a, unsigned int *b)
-{
-    unsigned int temp = *a;
-    *a = *b;
-    *b = temp;
-}
-
-void randomize (unsigned int arr[], unsigned int n)
+void randomize(unsigned int arr[], unsigned int n)
 {
     // Use a different seed value each time
     srand (time(NULL));
@@ -39,8 +36,13 @@ void randomize (unsigned int arr[], unsigned int n)
     {
         // Pick a random index from 0 to i
         unsigned int j = rand() % (i + 1);
-        swap(&arr[i], &arr[j]);
+        std::swap(arr[i], arr[j]);
     }
+}
+
+int inline random_val(int min, int max)
+{
+    return rand() % (max - min + 1) + min;
 }
 
 int main(int argc, char **argv)
@@ -1042,10 +1044,7 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
             break;
         }
-        default:
-        missingFuncFlag = 1;
-        break;
-        }
+
         if (missingFuncFlag == 1)
         {
             printf("\nThe functionality %s doesn't yet exist in RPP\n", func);
