@@ -125,8 +125,8 @@ if (( "$#" < 1 )); then
     echo
     echo "Syntax: ./rawLogsGenScript.sh <P> <S> <E>"
     echo "P     PROFILING_OPTION (0 = Run without profiling (end to end api time) / 1 = Run with profiling (kernel time))"
-    echo "S     CASE_START (Starting case# (0-81))"
-    echo "E     CASE_END (Ending case# (0-81))"
+    echo "S     CASE_START (Starting case# (0-83))"
+    echo "E     CASE_END (Ending case# (0-83))"
     exit 1
 fi
 
@@ -137,13 +137,13 @@ if [ "$1" -ne 0 ]; then
     fi
 fi
 
-if [[ "$2" -lt 0 ]] | [[ "$2" -gt 81 ]]; then
-    echo "The starting case# must be in the 0-81 range!"
+if [[ "$2" -lt 0 ]] | [[ "$2" -gt 83 ]]; then
+    echo "The starting case# must be in the 0-83 range!"
     exit 1
 fi
 
-if [[ "$3" -lt 0 ]] | [[ "$3" -gt 81 ]]; then
-    echo "The ending case# must be in the 0-81 range!"
+if [[ "$3" -lt 0 ]] | [[ "$3" -gt 83 ]]; then
+    echo "The ending case# must be in the 0-83 range!"
     exit 1
 fi
 
@@ -174,7 +174,7 @@ echo "##########################################################################
 echo "Running all PKD3 Inputs..."
 echo "##########################################################################################"
 
-printf "\n\nUsage: ./BatchPD_hip_pkd3 <src1 folder> <src2 folder (place same as src1 folder for single image functionalities)> <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <outputFormatToggle (pkd->pkd = 0 / pkd->pln = 1)> <case number = 0:81> <verbosity = 0/1>"
+printf "\n\nUsage: ./BatchPD_hip_pkd3 <src1 folder> <src2 folder (place same as src1 folder for single image functionalities)> <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <outputFormatToggle (pkd->pkd = 0 / pkd->pln = 1)> <case number = 0:83> <verbosity = 0/1>"
 
 for ((case=$CASE_START;case<=$CASE_END;case++))
 do
@@ -207,7 +207,7 @@ do
 
             if [[ "$PROFILING_OPTION" -eq 0 ]]
             then
-                if [ "$case" -eq 49 ]
+                if [ "$case" -eq 40 ] || [ "$case" -eq 41 ] || [ "$case" -eq 49 ]
                 then
                     for ((kernelSize=3;kernelSize<=9;kernelSize+=2))
                     do
@@ -220,7 +220,7 @@ do
                 fi
             elif [[ "$PROFILING_OPTION" -eq 1 ]]
             then
-                if [ "$case" -eq 49 ]
+                if [ "$case" -eq 40 ] || [ "$case" -eq 41 ] || [ "$case" -eq 49 ]
                 then
                     for ((kernelSize=3;kernelSize<=9;kernelSize+=2))
                     do
@@ -249,7 +249,7 @@ echo "##########################################################################
 echo "Running all PLN1 Inputs..."
 echo "##########################################################################################"
 
-printf "\n\nUsage: ./BatchPD_hip_pln1 <src1 folder> <src2 folder (place same as src1 folder for single image functionalities)> <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <outputFormatToggle (pkd->pkd = 0 / pkd->pln = 1)> <case number = 0:81> <verbosity = 0/1>"
+printf "\n\nUsage: ./BatchPD_hip_pln1 <src1 folder> <src2 folder (place same as src1 folder for single image functionalities)> <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <outputFormatToggle (pkd->pkd = 0 / pkd->pln = 1)> <case number = 0:83> <verbosity = 0/1>"
 
 for ((case=$CASE_START;case<=$CASE_END;case++))
 do
@@ -282,7 +282,7 @@ do
 
             if [[ "$PROFILING_OPTION" -eq 0 ]]
             then
-                if [ "$case" -eq 49 ]
+                if [ "$case" -eq 40 ] || [ "$case" -eq 41 ] || [ "$case" -eq 49 ]
                 then
                     for ((kernelSize=3;kernelSize<=9;kernelSize+=2))
                     do
@@ -295,7 +295,7 @@ do
                 fi
             elif [[ "$PROFILING_OPTION" -eq 1 ]]
             then
-                if [ "$case" -eq 49 ]
+                if [ "$case" -eq 40 ] || [ "$case" -eq 41 ] || [ "$case" -eq 49 ]
                 then
                     for ((kernelSize=3;kernelSize<=9;kernelSize+=2))
                     do
@@ -324,7 +324,7 @@ echo "##########################################################################
 echo "Running all PLN3 Inputs..."
 echo "##########################################################################################"
 
-printf "\n\nUsage: ./BatchPD_hip_pln3 <src1 folder> <src2 folder (place same as src1 folder for single image functionalities)> <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <outputFormatToggle (pkd->pkd = 0 / pkd->pln = 1)> <case number = 0:81> <verbosity = 0/1>"
+printf "\n\nUsage: ./BatchPD_hip_pln3 <src1 folder> <src2 folder (place same as src1 folder for single image functionalities)> <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <outputFormatToggle (pkd->pkd = 0 / pkd->pln = 1)> <case number = 0:83> <verbosity = 0/1>"
 
 for ((case=$CASE_START;case<=$CASE_END;case++))
 do
@@ -357,7 +357,7 @@ do
 
             if [[ "$PROFILING_OPTION" -eq 0 ]]
             then
-                if [ "$case" -eq 49 ]
+                if [ "$case" -eq 40 ] || [ "$case" -eq 41 ] || [ "$case" -eq 49 ]
                 then
                     for ((kernelSize=3;kernelSize<=9;kernelSize+=2))
                     do
@@ -370,7 +370,7 @@ do
                 fi
             elif [[ "$PROFILING_OPTION" -eq 1 ]]
             then
-                if [ "$case" -eq 49 ]
+                if [ "$case" -eq 40 ] || [ "$case" -eq 41 ] || [ "$case" -eq 49 ]
                 then
                     for ((kernelSize=3;kernelSize<=9;kernelSize+=2))
                     do

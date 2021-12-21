@@ -3,8 +3,8 @@ import subprocess
 import argparse
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--case_start', type=str, default='0', help='Testing range starting case # - (0-82)')
-parser.add_argument('--case_end', type=str, default='82', help='Testing range ending case # - (0-82)')
+parser.add_argument('--case_start', type=str, default='0', help='Testing range starting case # - (0-83)')
+parser.add_argument('--case_end', type=str, default='83', help='Testing range ending case # - (0-83)')
 args = parser.parse_args()
 
 caseStart = args.case_start
@@ -14,12 +14,12 @@ if caseEnd < caseStart:
     print("Ending case# must be greater than starting case#. Aborting!")
     exit(0)
 
-if caseStart < "0" or caseStart > "82":
-    print("Starting case# must be in the 0-82 range. Aborting!")
+if caseStart < "0" or caseStart > "83":
+    print("Starting case# must be in the 0-83 range. Aborting!")
     exit(0)
 
-if caseEnd < "0" or caseEnd > "82":
-    print("Ending case# must be in the 0-82 range. Aborting!")
+if caseEnd < "0" or caseEnd > "83":
+    print("Ending case# must be in the 0-83 range. Aborting!")
     exit(0)
 
 subprocess.call(["./rawLogsGenScript.sh", caseStart, caseEnd])
@@ -50,8 +50,12 @@ functionality_group_list = [
 for log_file in log_file_list:
 
     # Opening log file
-    f = open(log_file,"r")
-    print("\n\n\nOpened log file -> ", log_file)
+    try:
+        f = open(log_file,"r")
+        print("\n\n\nOpened log file -> ", log_file)
+    except IOError:
+        print("Skipping file -> ", log_file)
+        continue
 
     stats = []
     maxVals = []
