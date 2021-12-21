@@ -213,11 +213,16 @@ RppStatus ricap_hip_tensor(T *srcPtr,
                                 RpptDescPtr srcDescPtr,
                                 T *dstPtr,
                                 RpptDescPtr dstDescPtr,
+                                Rpp32u *permutedIndices,
                                 RpptROIPtr roiTensorPtrSrc,
                                 RpptRoiType roiType,
                                 RpptROIPtr cropRegion,
                                 rpp::Handle& handle)
 {
+    Rpp32u* permuted_hip_indices;
+    hipMalloc(&permuted_hip_indices, sizeof(Rpp32u)* 4 * handle.GetBatchSize());
+    hipMemcpy(permuted_hip_indices,permutedIndices,sizeof(Rpp32u)* 4 * handle.GetBatchSize(),hipMemcpyHostToDevice);
+
     if (roiType == RpptRoiType::LTRB)
     {
         hip_exec_roi_converison_ltrb_to_xywh(roiTensorPtrSrc,
@@ -228,6 +233,7 @@ RppStatus ricap_hip_tensor(T *srcPtr,
                                srcDescPtr,
                                dstPtr,
                                dstDescPtr,
+                               permuted_hip_indices,
                                roiTensorPtrSrc,
                                cropRegion,
                                handle);

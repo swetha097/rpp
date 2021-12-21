@@ -1031,10 +1031,7 @@ rppt_ricap_gpu(RppPtr_t srcPtr,
                     RpptDescPtr srcDescPtr,
                     RppPtr_t dstPtr,
                     RpptDescPtr dstDescPtr,
-                    Rpp32u *permutedIndices1,
-                    Rpp32u *permutedIndices2,
-                    Rpp32u *permutedIndices3,
-                    Rpp32u *permutedIndices4,
+                    Rpp32u *permutedIndices,
                     RpptROIPtr cropRegion,
                     RpptROIPtr roiTensorPtrSrc,
                     RpptRoiType roiType,
@@ -1044,12 +1041,6 @@ rppt_ricap_gpu(RppPtr_t srcPtr,
 
 #elif defined (HIP_COMPILE)
 
-    Rpp32u paramIndex = 0;
-    copy_param_uint(permutedIndices1, rpp::deref(rppHandle), paramIndex++);
-    copy_param_uint(permutedIndices2, rpp::deref(rppHandle), paramIndex++);
-    copy_param_uint(permutedIndices3, rpp::deref(rppHandle), paramIndex++);
-    copy_param_uint(permutedIndices4, rpp::deref(rppHandle), paramIndex++);
-
     if (srcDescPtr->dataType == RpptDataType::U8)
     {
         if (dstDescPtr->dataType == RpptDataType::U8)
@@ -1058,6 +1049,7 @@ rppt_ricap_gpu(RppPtr_t srcPtr,
                                   srcDescPtr,
                                   static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
                                   dstDescPtr,
+                                  permutedIndices,
                                   roiTensorPtrSrc,
                                   roiType,
                                   cropRegion,
@@ -1072,6 +1064,7 @@ rppt_ricap_gpu(RppPtr_t srcPtr,
                                   srcDescPtr,
                                   (half*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
                                   dstDescPtr,
+                                  permutedIndices,
                                   roiTensorPtrSrc,
                                   roiType,
                                   cropRegion,
@@ -1086,6 +1079,7 @@ rppt_ricap_gpu(RppPtr_t srcPtr,
                                   srcDescPtr,
                                   (Rpp32f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
                                   dstDescPtr,
+                                  permutedIndices,
                                   roiTensorPtrSrc,
                                   roiType,
                                   cropRegion,
@@ -1100,6 +1094,7 @@ rppt_ricap_gpu(RppPtr_t srcPtr,
                                   srcDescPtr,
                                   static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
                                   dstDescPtr,
+                                  permutedIndices,
                                   roiTensorPtrSrc,
                                   roiType,
                                   cropRegion,
