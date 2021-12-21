@@ -9203,7 +9203,6 @@ RppStatus ricap_u8_u8_host_tensor(Rpp8u *srcPtr,
                                   RpptRoiType roiType,
                                   RppLayoutParams layoutParams)
 {
-
     // RICAP output image profile
     // |---img-roi-1---|----------img-roi-2----------|
     // |---img-roi-1---|----------img-roi-2----------|
@@ -9262,8 +9261,6 @@ RppStatus ricap_u8_u8_host_tensor(Rpp8u *srcPtr,
         compute_roi_boundary_check_host(roiPtrImage3, roiPtr3, roiPtrDefault);
         compute_roi_boundary_check_host(roiPtrImage4, roiPtr4, roiPtrDefault);
 
-        Rpp8u *srcPtr1, *srcPtr2, *srcPtr3, *srcPtr4;
-        srcPtr1 = srcPtr2 = srcPtr3 = srcPtr4 = srcPtr;
         Rpp8u *srcPtrImage1, *srcPtrImage2, *srcPtrImage3, *srcPtrImage4, *dstPtrImage;
         int permutedCount = batchCount * 4;
         srcPtrImage1 = srcPtr + (permutedIndices[permutedCount] * srcDescPtr->strides.nStride);
@@ -9633,7 +9630,6 @@ RppStatus ricap_f32_f32_host_tensor(Rpp32f *srcPtr,
                                     RpptRoiType roiType,
                                     RppLayoutParams layoutParams)
 {
-
     // RICAP output image profile
     // |---img-roi-1---|----------img-roi-2----------|
     // |---img-roi-1---|----------img-roi-2----------|
@@ -9692,8 +9688,6 @@ RppStatus ricap_f32_f32_host_tensor(Rpp32f *srcPtr,
         compute_roi_boundary_check_host(roiPtrImage3, roiPtr3, roiPtrDefault);
         compute_roi_boundary_check_host(roiPtrImage4, roiPtr4, roiPtrDefault);
 
-        Rpp32f *srcPtr1, *srcPtr2, *srcPtr3, *srcPtr4;
-        srcPtr1 = srcPtr2 = srcPtr3 = srcPtr4 = srcPtr;
         Rpp32f *srcPtrImage1, *srcPtrImage2, *srcPtrImage3, *srcPtrImage4, *dstPtrImage;
         srcPtrImage1 = srcPtr + (permutedIndices[batchCount] * srcDescPtr->strides.nStride);
         srcPtrImage2 = srcPtr + (permutedIndices[batchCount + dstDescPtr->n] * srcDescPtr->strides.nStride);
@@ -10105,7 +10099,6 @@ RppStatus ricap_f16_f16_host_tensor(Rpp16f *srcPtr,
                                     RpptRoiType roiType,
                                     RppLayoutParams layoutParams)
 {
-
     // RICAP output image profile
     // |---img-roi-1---|----------img-roi-2----------|
     // |---img-roi-1---|----------img-roi-2----------|
@@ -10164,8 +10157,6 @@ RppStatus ricap_f16_f16_host_tensor(Rpp16f *srcPtr,
         compute_roi_boundary_check_host(roiPtrImage3, roiPtr3, roiPtrDefault);
         compute_roi_boundary_check_host(roiPtrImage4, roiPtr4, roiPtrDefault);
 
-        Rpp16f *srcPtr1, *srcPtr2, *srcPtr3, *srcPtr4;
-        srcPtr1 = srcPtr2 = srcPtr3 = srcPtr4 = srcPtr;
         Rpp16f *srcPtrImage1, *srcPtrImage2, *srcPtrImage3, *srcPtrImage4, *dstPtrImage;
         srcPtrImage1 = srcPtr + (permutedIndices[batchCount] * srcDescPtr->strides.nStride);
         srcPtrImage2 = srcPtr + (permutedIndices[batchCount + dstDescPtr->n] * srcDescPtr->strides.nStride);
@@ -10691,7 +10682,6 @@ RppStatus ricap_i8_i8_host_tensor(Rpp8s *srcPtr,
                                   RpptRoiType roiType,
                                   RppLayoutParams layoutParams)
 {
-
     // RICAP output image profile
     // |---img-roi-1---|----------img-roi-2----------|
     // |---img-roi-1---|----------img-roi-2----------|
@@ -10750,8 +10740,6 @@ RppStatus ricap_i8_i8_host_tensor(Rpp8s *srcPtr,
         compute_roi_boundary_check_host(roiPtrImage3, roiPtr3, roiPtrDefault);
         compute_roi_boundary_check_host(roiPtrImage4, roiPtr4, roiPtrDefault);
 
-        Rpp8s *srcPtr1, *srcPtr2, *srcPtr3, *srcPtr4;
-        srcPtr1 = srcPtr2 = srcPtr3 = srcPtr4 = srcPtr;
         Rpp8s *srcPtrImage1, *srcPtrImage2, *srcPtrImage3, *srcPtrImage4, *dstPtrImage;
         srcPtrImage1 = srcPtr + (permutedIndices[batchCount] * srcDescPtr->strides.nStride);
         srcPtrImage2 = srcPtr + (permutedIndices[batchCount + dstDescPtr->n] * srcDescPtr->strides.nStride);
