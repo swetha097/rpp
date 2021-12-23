@@ -216,23 +216,23 @@ RppStatus ricap_hip_tensor(T *srcPtr,
                                 RpptDescPtr srcDescPtr,
                                 T *dstPtr,
                                 RpptDescPtr dstDescPtr,
-                                Rpp32u *permutedIndices,
+                                Rpp32u *permutationTensor,
                                 RpptROIPtr roiTensorPtrSrc,
                                 RpptRoiType roiType,
                                 RpptROIPtr cropRegion,
                                 rpp::Handle& handle)
 {
-    Rpp32u* permuted_hip_indices;
-    hipMalloc(&permuted_hip_indices, sizeof(Rpp32u)* 4 * handle.GetBatchSize());
-    hipMemcpy(permuted_hip_indices,permutedIndices,sizeof(Rpp32u)* 4 * handle.GetBatchSize(),hipMemcpyHostToDevice);
-        hip_exec_ricap_tensor(srcPtr,
-                               srcDescPtr,
-                               dstPtr,
-                               dstDescPtr,
-                               permuted_hip_indices,
-                               roiTensorPtrSrc,
-                               cropRegion,
-                               handle);
+    Rpp32u* permutationHipTensor;
+    hipMalloc(&permutationHipTensor, sizeof(Rpp32u)* 4 * handle.GetBatchSize());
+    hipMemcpy(permutationHipTensor,permutationTensor,sizeof(Rpp32u)* 4 * handle.GetBatchSize(),hipMemcpyHostToDevice);
+    hip_exec_ricap_tensor(srcPtr,
+                            srcDescPtr,
+                            dstPtr,
+                            dstDescPtr,
+                            permutationHipTensor,
+                            roiTensorPtrSrc,
+                            cropRegion,
+                            handle);
 
     return RPP_SUCCESS;
 }
@@ -254,7 +254,7 @@ RppStatus crop_hip_tensor(T *srcPtr,
                                              handle);
     }
 
-        hip_exec_crop_tensor(srcPtr,
+    hip_exec_crop_tensor(srcPtr,
                          srcDescPtr,
                          dstPtr,
                          dstDescPtr,
