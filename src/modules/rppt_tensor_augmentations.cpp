@@ -1196,10 +1196,10 @@ rppt_ricap_host(RppPtr_t srcPtr,
 {
     RppLayoutParams layoutParams = get_layout_params(srcDescPtr->layout, srcDescPtr->c);
 
-    if ((check_roi_out_of_bounds(&roiPtrInputCropRegion[0],srcDescPtr,roiType) == -1)
-    || (check_roi_out_of_bounds(&roiPtrInputCropRegion[1],srcDescPtr,roiType) == -1)
-    || (check_roi_out_of_bounds(&roiPtrInputCropRegion[2],srcDescPtr,roiType) == -1)
-    || (check_roi_out_of_bounds(&roiPtrInputCropRegion[3],srcDescPtr,roiType) == -1))
+    if ((check_roi_out_of_bounds(&roiPtrInputCropRegion[0], srcDescPtr, roiType) == -1) ||
+        (check_roi_out_of_bounds(&roiPtrInputCropRegion[1], srcDescPtr, roiType) == -1) ||
+        (check_roi_out_of_bounds(&roiPtrInputCropRegion[2], srcDescPtr, roiType) == -1) ||
+        (check_roi_out_of_bounds(&roiPtrInputCropRegion[3], srcDescPtr, roiType) == -1))
     {
         return RPP_ERROR_OUT_OF_BOUND_SRC_ROI;
     }
