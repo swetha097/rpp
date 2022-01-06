@@ -178,7 +178,7 @@ RppStatus hip_exec_ricap_tensor(T *srcPtr,
                                 RpptDescPtr dstDescPtr,
                                 Rpp32u *permutationTensor,
                                 RpptROIPtr roiTensorPtrSrc,
-                                RpptROIPtr cropRegion,
+                                RpptROIPtr roiPtrInputCropRegion,
                                 rpp::Handle &handle)
 {
     int localThreads_x = 16;
@@ -200,7 +200,7 @@ RppStatus hip_exec_ricap_tensor(T *srcPtr,
                            dstPtr,
                            make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
                            permutationTensor,
-                           cropRegion,
+                           roiPtrInputCropRegion,
                            roiTensorPtrSrc);
     }
     else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
@@ -216,7 +216,7 @@ RppStatus hip_exec_ricap_tensor(T *srcPtr,
                            make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
                            dstDescPtr->c,
                            permutationTensor,
-                           cropRegion,
+                           roiPtrInputCropRegion,
                            roiTensorPtrSrc);
     }
     else if ((srcDescPtr->c == 3) && (dstDescPtr->c == 3))
@@ -233,7 +233,7 @@ RppStatus hip_exec_ricap_tensor(T *srcPtr,
                                dstPtr,
                                make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
                                permutationTensor,
-                               cropRegion,
+                               roiPtrInputCropRegion,
                                roiTensorPtrSrc);
         }
         else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
@@ -249,7 +249,7 @@ RppStatus hip_exec_ricap_tensor(T *srcPtr,
                                dstPtr,
                                make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
                                permutationTensor,
-                               cropRegion,
+                               roiPtrInputCropRegion,
                                roiTensorPtrSrc);
         }
     }

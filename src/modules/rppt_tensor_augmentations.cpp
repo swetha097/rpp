@@ -1248,20 +1248,34 @@ rppt_ricap_host(RppPtr_t srcPtr,
     return RPP_SUCCESS;
 }
 
-/******************** ricap ********************/
-
 RppStatus
 rppt_ricap_gpu(RppPtr_t srcPtr,
                 RpptDescPtr srcDescPtr,
                 RppPtr_t dstPtr,
                 RpptDescPtr dstDescPtr,
                 Rpp32u *permutationTensor,
-                RpptROIPtr cropRegion,
+                RpptROIPtr roiPtrInputCropRegion,
                 RpptROIPtr roiTensorPtrSrc,
                 RpptRoiType roiType,
                 rppHandle_t rppHandle)
 {
 #ifdef HIP_COMPILE
+
+    RpptROI roiHostPtrInputCropRegion[4];
+    hipError_t err = hipMemcpy(roiHostPtrInputCropRegion, roiPtrInputCropRegion,  4 * sizeof(RpptROI), hipMemcpyDeviceToHost);
+    if (err)
+    {
+        std::cerr<<"\n RICAP roiPtrInputCropRegion hipMemcpy failed with err "<<err;
+        exit(0);
+    }
+
+    if ((check_roi_out_of_bounds(&roiHostPtrInputCropRegion[0],srcDescPtr,roiType) == -1)
+    || (check_roi_out_of_bounds(&roiHostPtrInputCropRegion[1],srcDescPtr,roiType) == -1)
+    || (check_roi_out_of_bounds(&roiHostPtrInputCropRegion[2],srcDescPtr,roiType) == -1)
+    || (check_roi_out_of_bounds(&roiHostPtrInputCropRegion[3],srcDescPtr,roiType) == -1))
+    {
+        return RPP_ERROR_OUT_OF_BOUND_SRC_ROI;
+    }
 
     if((srcDescPtr->dataType == RpptDataType::U8) &&  (dstDescPtr->dataType == RpptDataType::U8))
     {
@@ -1272,7 +1286,7 @@ rppt_ricap_gpu(RppPtr_t srcPtr,
                                 permutationTensor,
                                 roiTensorPtrSrc,
                                 roiType,
-                                cropRegion,
+                                roiPtrInputCropRegion,
                                 rpp::deref(rppHandle));
     }
     else if((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
@@ -1284,7 +1298,7 @@ rppt_ricap_gpu(RppPtr_t srcPtr,
                                 permutationTensor,
                                 roiTensorPtrSrc,
                                 roiType,
-                                cropRegion,
+                                roiPtrInputCropRegion,
                                 rpp::deref(rppHandle));
     }
     else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
@@ -1296,7 +1310,7 @@ rppt_ricap_gpu(RppPtr_t srcPtr,
                                 permutationTensor,
                                 roiTensorPtrSrc,
                                 roiType,
-                                cropRegion,
+                                roiPtrInputCropRegion,
                                 rpp::deref(rppHandle));
     }
     else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
@@ -1308,7 +1322,7 @@ rppt_ricap_gpu(RppPtr_t srcPtr,
                                 permutationTensor,
                                 roiTensorPtrSrc,
                                 roiType,
-                                cropRegion,
+                                roiPtrInputCropRegion,
                                 rpp::deref(rppHandle));
     }
 #endif //BACKEND
