@@ -217,7 +217,6 @@ RppStatus ricap_hip_tensor(T *srcPtr,
                                 T *dstPtr,
                                 RpptDescPtr dstDescPtr,
                                 Rpp32u *permutationTensor,
-                                RpptROIPtr roiTensorPtrSrc,
                                 RpptRoiType roiType,
                                 RpptROIPtr roiPtrInputCropRegion,
                                 rpp::Handle& handle)
@@ -230,7 +229,6 @@ RppStatus ricap_hip_tensor(T *srcPtr,
                             dstPtr,
                             dstDescPtr,
                             permutationHipTensor,
-                            roiTensorPtrSrc,
                             roiPtrInputCropRegion,
                             handle);
 

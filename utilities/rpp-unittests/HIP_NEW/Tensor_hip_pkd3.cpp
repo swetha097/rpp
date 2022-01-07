@@ -1105,12 +1105,13 @@ int main(int argc, char **argv)
         */
 
         hipError_t err;
-        err = hipMemcpy(d_roiTensorPtrSrc, roiTensorPtrSrc, images * sizeof(RpptROI), hipMemcpyHostToDevice);
-        if (err)
-        {
-            std::cerr<<"\n RICAP roiTensorPtrSrc hipMemcpy failed with err "<<err;
-            exit(0);
-        }
+        // std::cerr<<"\n roiTensorPtrSrc";
+        // for(int i = 0; i < 4; i++)
+        // {
+        //     std::cerr<<"\n "<< roiTensorPtrSrc[i].xywhROI.xy.x <<" "<<roiTensorPtrSrc[i].xywhROI.xy.y;
+        //     std::cerr<<" "<<roiTensorPtrSrc[i].xywhROI.roiWidth<<" "<<roiTensorPtrSrc[i].xywhROI.roiHeight;
+
+        // }
         err = hipMemcpy(d_roiPtrInputCropRegion, roiPtrInputCropRegion, 4 * sizeof(RpptROI), hipMemcpyHostToDevice);
         if (err)
         {
@@ -1121,17 +1122,17 @@ int main(int argc, char **argv)
         start = clock();
 
         if (ip_bitDepth == 0)
-            rppt_ricap_gpu(d_input, srcDescPtr, d_output, dstDescPtr, permutationTensor, d_roiPtrInputCropRegion, d_roiTensorPtrSrc, roiTypeSrc, handle);
+            rppt_ricap_gpu(d_input, srcDescPtr, d_output, dstDescPtr, permutationTensor, d_roiPtrInputCropRegion, roiTypeSrc, handle);
         else if (ip_bitDepth == 1)
-            rppt_ricap_gpu(d_inputf16, srcDescPtr, d_outputf16, dstDescPtr, permutationTensor, d_roiPtrInputCropRegion, d_roiTensorPtrSrc, roiTypeSrc, handle);
+            rppt_ricap_gpu(d_inputf16, srcDescPtr, d_outputf16, dstDescPtr, permutationTensor, d_roiPtrInputCropRegion, roiTypeSrc, handle);
         else if (ip_bitDepth == 2)
-            rppt_ricap_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, permutationTensor, d_roiPtrInputCropRegion, d_roiTensorPtrSrc, roiTypeSrc, handle);
+            rppt_ricap_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, permutationTensor, d_roiPtrInputCropRegion, roiTypeSrc, handle);
         else if (ip_bitDepth == 3)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 4)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 5)
-            rppt_ricap_gpu(d_inputi8, srcDescPtr, d_outputi8, dstDescPtr, permutationTensor, d_roiPtrInputCropRegion, d_roiTensorPtrSrc, roiTypeSrc, handle);
+            rppt_ricap_gpu(d_inputi8, srcDescPtr, d_outputi8, dstDescPtr, permutationTensor, d_roiPtrInputCropRegion, roiTypeSrc, handle);
         else if (ip_bitDepth == 6)
             missingFuncFlag = 1;
         else

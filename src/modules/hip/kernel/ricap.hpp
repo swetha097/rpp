@@ -8,7 +8,7 @@ __global__ void ricap_pkd_tensor(T *srcPtr,
                                  uint2 dstStridesNH,
                                  uint *permutedIndices,
                                  RpptROIPtr crop_region,
-                                 RpptROIPtr roiTensorPtrSrc)
+                                 uint2 srcWH)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
@@ -17,7 +17,7 @@ __global__ void ricap_pkd_tensor(T *srcPtr,
     uint srcIdx, dstIdx, permuteIdx;
     d_float8 pix_f8;
 
-    if ((id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth * 3))
+    if ((id_y >= srcWH.y) || (id_x >= srcWH.x * 3))
     {
         return;
     }
@@ -25,13 +25,13 @@ __global__ void ricap_pkd_tensor(T *srcPtr,
     permuteIdx = id_z * 4;
 
     if ((id_x >= 0) && (id_y >= 0) && (id_y <= crop_region[0].xywhROI.roiHeight) && (id_x <= crop_region[0].xywhROI.roiWidth * 3))
-        srcIdx = (permutedIndices[permuteIdx] * srcStridesNH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x * 3);
-    else if ((id_y >= 0) && (id_x >= crop_region[0].xywhROI.roiWidth * 3) && (id_y <= (crop_region[1].xywhROI.roiHeight)) && (id_x <= (roiTensorPtrSrc[id_z].xywhROI.roiWidth * 3)))
-        srcIdx = (permutedIndices[permuteIdx + 1] * srcStridesNH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x * 3);
-    else if ((id_y >= crop_region[1].xywhROI.roiHeight) && (id_x >= 0) && (id_y <= (roiTensorPtrSrc[id_z].xywhROI.roiHeight)) && (id_x <= crop_region[2].xywhROI.roiWidth * 3))
-        srcIdx = (permutedIndices[permuteIdx + 2] * srcStridesNH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x * 3);
-    else if ((id_y >= crop_region[1].xywhROI.roiHeight) && (id_x >= crop_region[2].xywhROI.roiWidth * 3) && (id_y <= (roiTensorPtrSrc[id_z].xywhROI.roiHeight)) && (id_x <= (roiTensorPtrSrc[id_z].xywhROI.roiWidth * 3)))
-        srcIdx = (permutedIndices[permuteIdx + 3] * srcStridesNH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x * 3);
+        srcIdx = (permutedIndices[permuteIdx] * srcStridesNH.x) + ((id_y) * srcStridesNH.y) + (id_x);
+    else if ((id_y >= 0) && (id_x >= crop_region[0].xywhROI.roiWidth * 3) && (id_y <= (crop_region[1].xywhROI.roiHeight)) && (id_x <= (srcWH.x * 3)))
+        srcIdx = (permutedIndices[permuteIdx + 1] * srcStridesNH.x) + ((id_y) * srcStridesNH.y) + (id_x);
+    else if ((id_y >= crop_region[1].xywhROI.roiHeight) && (id_x >= 0) && (id_y <= (srcWH.y)) && (id_x <= crop_region[2].xywhROI.roiWidth * 3))
+        srcIdx = (permutedIndices[permuteIdx + 2] * srcStridesNH.x) + ((id_y) * srcStridesNH.y) + (id_x);
+    else if ((id_y >= crop_region[1].xywhROI.roiHeight) && (id_x >= crop_region[2].xywhROI.roiWidth * 3) && (id_y <= (srcWH.y)) && (id_x <= (srcWH.x * 3)))
+        srcIdx = (permutedIndices[permuteIdx + 3] * srcStridesNH.x) + ((id_y) * srcStridesNH.y) + (id_x);
 
     dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x;
 
@@ -47,7 +47,7 @@ __global__ void ricap_pln_tensor(T *srcPtr,
                                  int channelsDst,
                                  uint *permutedIndices,
                                  RpptROIPtr crop_region,
-                                 RpptROIPtr roiTensorPtrSrc)
+                                 uint2 srcWH)
 {
 
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
@@ -57,7 +57,7 @@ __global__ void ricap_pln_tensor(T *srcPtr,
     uint srcIdx, dstIdx, permuteIdx;
     d_float8 pix_f8;
 
-    if ((id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth))
+    if ((id_y >= srcWH.y) || (id_x >= srcWH.x))
     {
         return;
     }
@@ -65,13 +65,13 @@ __global__ void ricap_pln_tensor(T *srcPtr,
     permuteIdx = id_z * 4;
 
     if ((id_x >= 0) && (id_y >= 0) && (id_y <= crop_region[0].xywhROI.roiHeight) && (id_x <= crop_region[0].xywhROI.roiWidth))
-        srcIdx = (permutedIndices[permuteIdx] * srcStridesNCH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
-    else if ((id_y >= 0) && (id_x >= crop_region[0].xywhROI.roiWidth) && (id_y <= (crop_region[1].xywhROI.roiHeight)) && (id_x <= (roiTensorPtrSrc[id_z].xywhROI.roiWidth)))
-        srcIdx = (permutedIndices[permuteIdx + 1] * srcStridesNCH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
-    else if ((id_y >= crop_region[1].xywhROI.roiHeight) && (id_x >= 0) && (id_y <= (roiTensorPtrSrc[id_z].xywhROI.roiHeight)) && (id_x <= crop_region[2].xywhROI.roiWidth))
-        srcIdx = (permutedIndices[permuteIdx + 2] * srcStridesNCH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
-    else if ((id_y >= crop_region[1].xywhROI.roiHeight) && (id_x >= crop_region[2].xywhROI.roiWidth) && (id_y <= (roiTensorPtrSrc[id_z].xywhROI.roiHeight)) && (id_x <= (roiTensorPtrSrc[id_z].xywhROI.roiWidth)))
-        srcIdx = (permutedIndices[permuteIdx + 3] * srcStridesNCH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
+        srcIdx = (permutedIndices[permuteIdx] * srcStridesNCH.x) + ((id_y ) * srcStridesNCH.z) + (id_x);
+    else if ((id_y >= 0) && (id_x >= crop_region[0].xywhROI.roiWidth) && (id_y <= (crop_region[1].xywhROI.roiHeight)) && (id_x <= (srcWH.x)))
+        srcIdx = (permutedIndices[permuteIdx + 1] * srcStridesNCH.x) + ((id_y ) * srcStridesNCH.z) + (id_x);
+    else if ((id_y >= crop_region[1].xywhROI.roiHeight) && (id_x >= 0) && (id_y <= (srcWH.y)) && (id_x <= crop_region[2].xywhROI.roiWidth))
+        srcIdx = (permutedIndices[permuteIdx + 2] * srcStridesNCH.x) + ((id_y ) * srcStridesNCH.z) + (id_x);
+    else if ((id_y >= crop_region[1].xywhROI.roiHeight) && (id_x >= crop_region[2].xywhROI.roiWidth) && (id_y <= (srcWH.y)) && (id_x <= (srcWH.x)))
+        srcIdx = (permutedIndices[permuteIdx + 3] * srcStridesNCH.x) + ((id_y ) * srcStridesNCH.z) + (id_x);
 
     dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
 
@@ -101,13 +101,13 @@ __global__ void ricap_pkd3_pln3_tensor(T *srcPtr,
                                        uint3 dstStridesNCH,
                                        uint *permutedIndices,
                                        RpptROIPtr crop_region,
-                                       RpptROIPtr roiTensorPtrSrc)
+                                       uint2 srcWH)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
-    if ((id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth))
+    if ((id_y >= srcWH.y) || (id_x >= srcWH.x))
     {
         return;
     }
@@ -119,13 +119,13 @@ __global__ void ricap_pkd3_pln3_tensor(T *srcPtr,
     permuteIdx = id_z * 4;
 
     if ((id_x >= 0) && (id_y >= 0) && (id_y <= crop_region[0].xywhROI.roiHeight) && (id_x <= crop_region[0].xywhROI.roiWidth))
-        srcIdx = (permutedIndices[permuteIdx] * srcStridesNH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + ((id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
-    else if ((id_y >= 0) && (id_x >= crop_region[0].xywhROI.roiWidth) && (id_y <= (crop_region[1].xywhROI.roiHeight)) && (id_x <= (roiTensorPtrSrc[id_z].xywhROI.roiWidth)))
-        srcIdx = (permutedIndices[permuteIdx + 1] * srcStridesNH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + ((id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
-    else if ((id_y >= crop_region[1].xywhROI.roiHeight) && (id_x >= 0) && (id_y <= (roiTensorPtrSrc[id_z].xywhROI.roiHeight)) && (id_x <= crop_region[2].xywhROI.roiWidth))
-        srcIdx = (permutedIndices[permuteIdx + 2] * srcStridesNH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + ((id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
-    else if ((id_y >= crop_region[1].xywhROI.roiHeight) && (id_x >= crop_region[2].xywhROI.roiWidth) && (id_y <= (roiTensorPtrSrc[id_z].xywhROI.roiHeight)) && (id_x <= (roiTensorPtrSrc[id_z].xywhROI.roiWidth)))
-        srcIdx = (permutedIndices[permuteIdx + 3] * srcStridesNH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + ((id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
+        srcIdx = (permutedIndices[permuteIdx] * srcStridesNH.x) + ((id_y ) * srcStridesNH.y) + ((id_x) * 3);
+    else if ((id_y >= 0) && (id_x >= crop_region[0].xywhROI.roiWidth) && (id_y <= (crop_region[1].xywhROI.roiHeight)) && (id_x <= (srcWH.x)))
+        srcIdx = (permutedIndices[permuteIdx + 1] * srcStridesNH.x) + ((id_y ) * srcStridesNH.y) + ((id_x) * 3);
+    else if ((id_y >= crop_region[1].xywhROI.roiHeight) && (id_x >= 0) && (id_y <= (srcWH.y)) && (id_x <= crop_region[2].xywhROI.roiWidth))
+        srcIdx = (permutedIndices[permuteIdx + 2] * srcStridesNH.x) + ((id_y ) * srcStridesNH.y) + ((id_x) * 3);
+    else if ((id_y >= crop_region[1].xywhROI.roiHeight) && (id_x >= crop_region[2].xywhROI.roiWidth) && (id_y <= (srcWH.y)) && (id_x <= (srcWH.x)))
+        srcIdx = (permutedIndices[permuteIdx + 3] * srcStridesNH.x) + ((id_y ) * srcStridesNH.y) + ((id_x) * 3);
 
     dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
 
@@ -140,13 +140,13 @@ __global__ void ricap_pln3_pkd3_tensor(T *srcPtr,
                                        uint2 dstStridesNH,
                                        uint *permutedIndices,
                                        RpptROIPtr crop_region,
-                                       RpptROIPtr roiTensorPtrSrc)
+                                       uint2 srcWH)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
-    if ((id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth))
+    if ((id_y >= srcWH.y) || (id_x >= srcWH.x))
     {
         return;
     }
@@ -157,13 +157,13 @@ __global__ void ricap_pln3_pkd3_tensor(T *srcPtr,
     permuteIdx = id_z * 4;
 
     if ((id_x >= 0) && (id_y >= 0) && (id_y <= crop_region[0].xywhROI.roiHeight) && (id_x <= crop_region[0].xywhROI.roiWidth))
-        srcIdx = (permutedIndices[permuteIdx] * srcStridesNCH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
-    else if ((id_y >= 0) && (id_x >= crop_region[0].xywhROI.roiWidth) && (id_y <= (crop_region[1].xywhROI.roiHeight)) && (id_x <= (roiTensorPtrSrc[id_z].xywhROI.roiWidth)))
-        srcIdx = (permutedIndices[permuteIdx + 1] * srcStridesNCH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
-    else if ((id_y >= crop_region[1].xywhROI.roiHeight) && (id_x >= 0) && (id_y <= (roiTensorPtrSrc[id_z].xywhROI.roiHeight)) && (id_x <= crop_region[2].xywhROI.roiWidth))
-        srcIdx = (permutedIndices[permuteIdx + 2] * srcStridesNCH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
-    else if ((id_y >= crop_region[1].xywhROI.roiHeight) && (id_x >= crop_region[2].xywhROI.roiWidth) && (id_y <= (roiTensorPtrSrc[id_z].xywhROI.roiHeight)) && (id_x <= (roiTensorPtrSrc[id_z].xywhROI.roiWidth)))
-        srcIdx = (permutedIndices[permuteIdx + 3] * srcStridesNCH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
+        srcIdx = (permutedIndices[permuteIdx] * srcStridesNCH.x) + ((id_y ) * srcStridesNCH.z) + (id_x);
+    else if ((id_y >= 0) && (id_x >= crop_region[0].xywhROI.roiWidth) && (id_y <= (crop_region[1].xywhROI.roiHeight)) && (id_x <= (srcWH.x)))
+        srcIdx = (permutedIndices[permuteIdx + 1] * srcStridesNCH.x) + ((id_y ) * srcStridesNCH.z) + (id_x);
+    else if ((id_y >= crop_region[1].xywhROI.roiHeight) && (id_x >= 0) && (id_y <= (srcWH.y)) && (id_x <= crop_region[2].xywhROI.roiWidth))
+        srcIdx = (permutedIndices[permuteIdx + 2] * srcStridesNCH.x) + ((id_y ) * srcStridesNCH.z) + (id_x);
+    else if ((id_y >= crop_region[1].xywhROI.roiHeight) && (id_x >= crop_region[2].xywhROI.roiWidth) && (id_y <= (srcWH.y)) && (id_x <= (srcWH.x)))
+        srcIdx = (permutedIndices[permuteIdx + 3] * srcStridesNCH.x) + ((id_y ) * srcStridesNCH.z) + (id_x);
 
     dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x * 3;
 
@@ -177,7 +177,6 @@ RppStatus hip_exec_ricap_tensor(T *srcPtr,
                                 T *dstPtr,
                                 RpptDescPtr dstDescPtr,
                                 Rpp32u *permutationTensor,
-                                RpptROIPtr roiTensorPtrSrc,
                                 RpptROIPtr roiPtrInputCropRegion,
                                 rpp::Handle &handle)
 {
@@ -201,7 +200,7 @@ RppStatus hip_exec_ricap_tensor(T *srcPtr,
                            make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
                            permutationTensor,
                            roiPtrInputCropRegion,
-                           roiTensorPtrSrc);
+                           make_uint2(srcDescPtr->w, srcDescPtr->h));
     }
     else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
     {
@@ -217,7 +216,7 @@ RppStatus hip_exec_ricap_tensor(T *srcPtr,
                            dstDescPtr->c,
                            permutationTensor,
                            roiPtrInputCropRegion,
-                           roiTensorPtrSrc);
+                           make_uint2(srcDescPtr->w, srcDescPtr->h));
     }
     else if ((srcDescPtr->c == 3) && (dstDescPtr->c == 3))
     {
@@ -234,7 +233,7 @@ RppStatus hip_exec_ricap_tensor(T *srcPtr,
                                make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
                                permutationTensor,
                                roiPtrInputCropRegion,
-                               roiTensorPtrSrc);
+                                make_uint2(srcDescPtr->w, srcDescPtr->h));
         }
         else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
@@ -250,7 +249,7 @@ RppStatus hip_exec_ricap_tensor(T *srcPtr,
                                make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
                                permutationTensor,
                                roiPtrInputCropRegion,
-                               roiTensorPtrSrc);
+                                make_uint2(srcDescPtr->w, srcDescPtr->h));
         }
     }
 
