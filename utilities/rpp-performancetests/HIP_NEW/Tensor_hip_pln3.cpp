@@ -1108,7 +1108,7 @@ int main(int argc, char **argv)
             randomize(initialPermuteArray, images);
             memcpy(permutedArray + (images * 3), initialPermuteArray, images * sizeof(Rpp32u));
 
-            for (uint i = 0, j = 0; i < images, j < images * 4; i++, j += 4)
+            for (uint i = 0, j = 0; i < images && j < images * 4; i++, j += 4)
             {
                 permutationTensor[j] = permutedArray[i];
                 permutationTensor[j + 1] = permutedArray[i + images];
