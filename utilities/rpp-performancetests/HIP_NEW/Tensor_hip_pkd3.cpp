@@ -13,6 +13,10 @@
 #include <omp.h>
 #include <hip/hip_fp16.h>
 #include <fstream>
+#include <random>
+#include <boost/math/distributions.hpp>
+#include <boost/math/special_functions/beta.hpp>
+using namespace boost::math;
 
 using namespace cv;
 using namespace std;
@@ -996,6 +1000,7 @@ int main(int argc, char **argv)
         case 82:
         {
             test_case_name = "ricap";
+
             float _beta_param = 0.3;
             std::random_device rd;
             std::mt19937 gen(rd());
@@ -1012,7 +1017,7 @@ int main(int argc, char **argv)
             uint32_t iX = maxDstWidth;
             uint32_t iY = maxDstHeight;
             srcDescPtr->w = maxDstWidth;
-            dstDescPtr->w = maxDstHeight;
+            dstDescPtr->h = maxDstHeight;
 
             Rpp32u initialPermuteArray[images], permutedArray[images * 4], permutationTensor[images * 4];
             for (uint i = 0; i < images; i++)
@@ -1028,7 +1033,7 @@ int main(int argc, char **argv)
             randomize(initialPermuteArray, images);
             memcpy(permutedArray + (images * 3), initialPermuteArray, images * sizeof(Rpp32u));
 
-            for (uint i = 0, j = 0; i < images, j < images * 4; i++, j += 4)
+            for (int i = 0, j = 0; i < images, j < images * 4; i++, j += 4)
             {
                 permutationTensor[j] = permutedArray[i];
                 permutationTensor[j + 1] = permutedArray[i + images];
@@ -1093,12 +1098,6 @@ int main(int argc, char **argv)
             */
 
             hipError_t err;
-            err = hipMemcpy(d_roiTensorPtrSrc, roiTensorPtrSrc, images * sizeof(RpptROI), hipMemcpyHostToDevice);
-            if (err)
-            {
-                std::cerr<<"\n RICAP roiTensorPtrSrc hipMemcpy failed with err "<<err;
-                exit(0);
-            }
             err = hipMemcpy(d_roiPtrInputCropRegion, roiPtrInputCropRegion, 4 * sizeof(RpptROI), hipMemcpyHostToDevice);
             if (err)
             {
@@ -1109,17 +1108,19 @@ int main(int argc, char **argv)
             start = clock();
 
             if (ip_bitDepth == 0)
-                rppt_ricap_gpu(d_input, srcDescPtr, d_output, dstDescPtr, permutationTensor, d_roiPtrInputCropRegion, d_roiTensorPtrSrc, roiTypeSrc, handle);
+                rppt_ricap_gpu(d_input, srcDescPtr, d_output, dstDescPtr, permutationTensor, d_roiPtrInputCropRegion, roiTypeSrc, handle);
             else if (ip_bitDepth == 1)
-                rppt_ricap_gpu(d_inputf16, srcDescPtr, d_outputf16, dstDescPtr, permutationTensor, d_roiPtrInputCropRegion, d_roiTensorPtrSrc, roiTypeSrc, handle);
+                rppt_ricap_gpu(d_inputf16, srcDescPtr, d_outputf16, dstDescPtr, permutationTensor, d_roiPtrInputCropRegion, roiTypeSrc, handle);
             else if (ip_bitDepth == 2)
-                rppt_ricap_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, permutationTensor, d_roiPtrInputCropRegion, d_roiTensorPtrSrc, roiTypeSrc, handle);
+                rppt_ricap_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, permutationTensor, d_roiPtrInputCropRegion, roiTypeSrc, handle);
             else if (ip_bitDepth == 3)
                 missingFuncFlag = 1;
             else if (ip_bitDepth == 4)
                 missingFuncFlag = 1;
             else if (ip_bitDepth == 5)
-                rppt_ricap_gpu(d_inputi8, srcDescPtr, d_outputi8, dstDescPtr, permutationTensor, d_roiPtrInputCropRegion, d_roiTensorPtrSrc, roiTypeSrc, handle);
+                rppt_ricap_gpu(d_inputi8, srcDescPtr, d_outputi8, dstDescPtr, permutationTensor, d_roiPtrInputCropRegion, roiTypeSrc, handle);
+            else if (ip_bitDepth == 6)
+                missingFuncFlag = 1;
             else
                 missingFuncFlag = 1;
 
@@ -1128,7 +1129,6 @@ int main(int argc, char **argv)
             end = clock();
 
             break;
-
         }
         case 83:
         {
