@@ -1248,82 +1248,76 @@ rppt_ricap_host(RppPtr_t srcPtr,
     return RPP_SUCCESS;
 }
 
-/******************** ricap ********************/
-
 RppStatus
 rppt_ricap_gpu(RppPtr_t srcPtr,
-                    RpptDescPtr srcDescPtr,
-                    RppPtr_t dstPtr,
-                    RpptDescPtr dstDescPtr,
-                    Rpp32u *permutedIndices,
-                    RpptROIPtr cropRegion,
-                    RpptROIPtr roiTensorPtrSrc,
-                    RpptRoiType roiType,
-                    rppHandle_t rppHandle)
+                RpptDescPtr srcDescPtr,
+                RppPtr_t dstPtr,
+                RpptDescPtr dstDescPtr,
+                Rpp32u *permutationTensor,
+                RpptROIPtr roiPtrInputCropRegion,
+                RpptRoiType roiType,
+                rppHandle_t rppHandle)
 {
-#ifdef OCL_COMPILE
+#ifdef HIP_COMPILE
+    RpptROI roiHostPtrInputCropRegion[4];
+    hipError_t err = hipMemcpy(roiHostPtrInputCropRegion, roiPtrInputCropRegion,  4 * sizeof(RpptROI), hipMemcpyDeviceToHost);
+    if (err)
+    {
+        std::cerr<<"\n RICAP roiPtrInputCropRegion hipMemcpy failed with err "<<err;
+        exit(0);
+    }
 
-#elif defined (HIP_COMPILE)
+    if ((check_roi_out_of_bounds(&roiHostPtrInputCropRegion[0],srcDescPtr,roiType) == -1)
+    || (check_roi_out_of_bounds(&roiHostPtrInputCropRegion[1],srcDescPtr,roiType) == -1)
+    || (check_roi_out_of_bounds(&roiHostPtrInputCropRegion[2],srcDescPtr,roiType) == -1)
+    || (check_roi_out_of_bounds(&roiHostPtrInputCropRegion[3],srcDescPtr,roiType) == -1))
+    {
+        return RPP_ERROR_OUT_OF_BOUND_SRC_ROI;
+    }
 
-    if (srcDescPtr->dataType == RpptDataType::U8)
+    if((srcDescPtr->dataType == RpptDataType::U8) &&  (dstDescPtr->dataType == RpptDataType::U8))
     {
-        if (dstDescPtr->dataType == RpptDataType::U8)
-        {
-            ricap_hip_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
-                                  srcDescPtr,
-                                  static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
-                                  dstDescPtr,
-                                  permutedIndices,
-                                  roiTensorPtrSrc,
-                                  roiType,
-                                  cropRegion,
-                                  rpp::deref(rppHandle));
-        }
+        ricap_hip_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
+                                                    srcDescPtr,
+                                                    static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
+                                                    dstDescPtr,
+                                                    permutationTensor,
+                                                    roiType,
+                                                    roiPtrInputCropRegion,
+                                                    rpp::deref(rppHandle));
     }
-    else if (srcDescPtr->dataType == RpptDataType::F16)
+    else if((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
     {
-        if (dstDescPtr->dataType == RpptDataType::F16)
-        {
-            ricap_hip_tensor((half*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
-                                  srcDescPtr,
-                                  (half*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
-                                  dstDescPtr,
-                                  permutedIndices,
-                                  roiTensorPtrSrc,
-                                  roiType,
-                                  cropRegion,
-                                 rpp::deref(rppHandle));
-        }
+        ricap_hip_tensor((half*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                                                    srcDescPtr,
+                                                    (half*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                                                    dstDescPtr,
+                                                    permutationTensor,
+                                                    roiType,
+                                                    roiPtrInputCropRegion,
+                                                    rpp::deref(rppHandle));
     }
-    else if (srcDescPtr->dataType == RpptDataType::F32)
+    else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
     {
-        if (dstDescPtr->dataType == RpptDataType::F32)
-        {
-            ricap_hip_tensor((Rpp32f*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
-                                  srcDescPtr,
-                                  (Rpp32f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
-                                  dstDescPtr,
-                                  permutedIndices,
-                                  roiTensorPtrSrc,
-                                  roiType,
-                                  cropRegion,
-                                  rpp::deref(rppHandle));
-        }
+        ricap_hip_tensor((Rpp32f*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                                                    srcDescPtr,
+                                                    (Rpp32f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                                                    dstDescPtr,
+                                                    permutationTensor,
+                                                    roiType,
+                                                    roiPtrInputCropRegion,
+                                                    rpp::deref(rppHandle));
     }
-    else if (srcDescPtr->dataType == RpptDataType::I8)
+    else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
     {
-        if (dstDescPtr->dataType == RpptDataType::I8)
-        {
-            ricap_hip_tensor(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offsetInBytes,
-                                  srcDescPtr,
-                                  static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
-                                  dstDescPtr,
-                                  permutedIndices,
-                                  roiTensorPtrSrc,
-                                  roiType,
-                                  cropRegion,
-                                  rpp::deref(rppHandle));
-        }
+        ricap_hip_tensor(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offsetInBytes,
+                                                    srcDescPtr,
+                                                    static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
+                                                    dstDescPtr,
+                                                    permutationTensor,
+                                                    roiType,
+                                                    roiPtrInputCropRegion,
+                                                    rpp::deref(rppHandle));
     }
 #endif //BACKEND
 
