@@ -43,6 +43,8 @@ void randomize(unsigned int arr[], unsigned int n)
 
 int inline random_val(int min, int max)
 {
+    if(max<0)
+        return -1;
     return rand() % (max - min + 1) + min;
 }
 
@@ -686,7 +688,9 @@ int main(int argc, char **argv)
         double randFromDist1 = boost::math::ibeta_inv(_beta_param, _beta_param, p1);
 
         uint32_t iX = maxDstWidth;
-        uint32_t iY = maxDstWidth;
+        uint32_t iY = maxDstHeight;
+        srcDescPtr->w = maxDstWidth;
+        dstDescPtr->w = maxDstHeight;
 
         Rpp32u initialPermuteArray[images], permutedArray[images * 4], permutationTensor[images * 4];
         for (uint i = 0; i < images; i++)
