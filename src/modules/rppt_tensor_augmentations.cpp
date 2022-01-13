@@ -1196,6 +1196,13 @@ rppt_ricap_host(RppPtr_t srcPtr,
 {
     RppLayoutParams layoutParams = get_layout_params(srcDescPtr->layout, srcDescPtr->c);
 
+    if ((check_roi_out_of_bounds(&roiPtrInputCropRegion[0], srcDescPtr, roiType) == -1) ||
+        (check_roi_out_of_bounds(&roiPtrInputCropRegion[1], srcDescPtr, roiType) == -1) ||
+        (check_roi_out_of_bounds(&roiPtrInputCropRegion[2], srcDescPtr, roiType) == -1) ||
+        (check_roi_out_of_bounds(&roiPtrInputCropRegion[3], srcDescPtr, roiType) == -1))
+    {
+        return RPP_ERROR_OUT_OF_BOUND_SRC_ROI;
+    }
     if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
     {
         ricap_u8_u8_host_tensor(static_cast<Rpp8u *>(srcPtr) + srcDescPtr->offsetInBytes,
