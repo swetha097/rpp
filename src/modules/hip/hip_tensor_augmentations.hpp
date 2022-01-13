@@ -213,13 +213,13 @@ RppStatus dilate_hip_tensor(T *srcPtr,
 
 template <typename T>
 RppStatus ricap_hip_tensor(T *srcPtr,
-                            RpptDescPtr srcDescPtr,
-                            T *dstPtr,
-                            RpptDescPtr dstDescPtr,
-                            Rpp32u *permutationTensor,
-                            RpptRoiType roiType,
-                            RpptROIPtr roiPtrInputCropRegion,
-                            rpp::Handle& handle)
+                           RpptDescPtr srcDescPtr,
+                           T *dstPtr,
+                           RpptDescPtr dstDescPtr,
+                           Rpp32u *permutationTensor,
+                           RpptRoiType roiType,
+                           RpptROIPtr roiPtrInputCropRegion,
+                           rpp::Handle& handle)
 {
     Rpp32u* permutationHipTensor;
     hipMalloc(&permutationHipTensor, sizeof(Rpp32u)* 4 * handle.GetBatchSize());

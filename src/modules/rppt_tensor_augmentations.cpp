@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2021 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2022 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -1278,46 +1278,46 @@ rppt_ricap_gpu(RppPtr_t srcPtr,
     if((srcDescPtr->dataType == RpptDataType::U8) &&  (dstDescPtr->dataType == RpptDataType::U8))
     {
         ricap_hip_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
-                                                    srcDescPtr,
-                                                    static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
-                                                    dstDescPtr,
-                                                    permutationTensor,
-                                                    roiType,
-                                                    roiPtrInputCropRegion,
-                                                    rpp::deref(rppHandle));
+                         srcDescPtr,
+                         static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
+                         dstDescPtr,
+                         permutationTensor,
+                         roiType,
+                         roiPtrInputCropRegion,
+                         rpp::deref(rppHandle));
     }
     else if((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
     {
-        ricap_hip_tensor((half*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
-                                                    srcDescPtr,
-                                                    (half*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
-                                                    dstDescPtr,
-                                                    permutationTensor,
-                                                    roiType,
-                                                    roiPtrInputCropRegion,
-                                                    rpp::deref(rppHandle));
+        ricap_hip_tensor((half*)(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                                 srcDescPtr,
+                                 (half*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                                 dstDescPtr,
+                                 permutationTensor,
+                                 roiType,
+                                 roiPtrInputCropRegion,
+                                 rpp::deref(rppHandle));
     }
     else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
     {
-        ricap_hip_tensor((Rpp32f*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
-                                                    srcDescPtr,
-                                                    (Rpp32f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
-                                                    dstDescPtr,
-                                                    permutationTensor,
-                                                    roiType,
-                                                    roiPtrInputCropRegion,
-                                                    rpp::deref(rppHandle));
+        ricap_hip_tensor((Rpp32f*)(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                                   srcDescPtr,
+                                   (Rpp32f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                                   dstDescPtr,
+                                   permutationTensor,
+                                   roiType,
+                                   roiPtrInputCropRegion,
+                                   rpp::deref(rppHandle));
     }
     else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
     {
         ricap_hip_tensor(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offsetInBytes,
-                                                    srcDescPtr,
-                                                    static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
-                                                    dstDescPtr,
-                                                    permutationTensor,
-                                                    roiType,
-                                                    roiPtrInputCropRegion,
-                                                    rpp::deref(rppHandle));
+                         srcDescPtr,
+                         static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
+                         dstDescPtr,
+                         permutationTensor,
+                         roiType,
+                         roiPtrInputCropRegion,
+                         rpp::deref(rppHandle));
     }
 #endif //BACKEND
 

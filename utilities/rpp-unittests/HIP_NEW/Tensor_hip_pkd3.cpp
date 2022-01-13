@@ -1105,13 +1105,6 @@ int main(int argc, char **argv)
         */
 
         hipError_t err;
-        // std::cerr<<"\n roiTensorPtrSrc";
-        // for(int i = 0; i < 4; i++)
-        // {
-        //     std::cerr<<"\n "<< roiTensorPtrSrc[i].xywhROI.xy.x <<" "<<roiTensorPtrSrc[i].xywhROI.xy.y;
-        //     std::cerr<<" "<<roiTensorPtrSrc[i].xywhROI.roiWidth<<" "<<roiTensorPtrSrc[i].xywhROI.roiHeight;
-
-        // }
         err = hipMemcpy(d_roiPtrInputCropRegion, roiPtrInputCropRegion, 4 * sizeof(RpptROI), hipMemcpyHostToDevice);
         if (err)
         {

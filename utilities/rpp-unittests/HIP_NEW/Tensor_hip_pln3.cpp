@@ -1179,12 +1179,6 @@ int main(int argc, char **argv)
         */
 
         hipError_t err;
-        err = hipMemcpy(d_roiTensorPtrSrc, roiTensorPtrSrc, images * sizeof(RpptROI), hipMemcpyHostToDevice);
-        if (err)
-        {
-            std::cerr<<"\n RICAP roiTensorPtrSrc hipMemcpy failed with err "<<err;
-            exit(0);
-        }
         err = hipMemcpy(d_roiPtrInputCropRegion, roiPtrInputCropRegion, 4 * sizeof(RpptROI), hipMemcpyHostToDevice);
         if (err)
         {
