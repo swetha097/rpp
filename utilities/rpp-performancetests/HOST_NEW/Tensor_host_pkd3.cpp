@@ -864,8 +864,6 @@ int main(int argc, char **argv)
 
             uint32_t iX = maxDstWidth;
             uint32_t iY = maxDstHeight;
-            srcDescPtr->w = maxDstWidth;
-            dstDescPtr->w = maxDstWidth;
 
             Rpp32u initialPermuteArray[images], permutedArray[images * 4], permutationTensor[images * 4];
             for (uint i = 0; i < images; i++)
