@@ -2656,8 +2656,8 @@ RppStatus ricap_host_batch(T *srcPtr, RppiSize *batch_srcSize, RppiSize *batch_s
             srcPtrImage4 = srcPtr + srcLoc4;
             dstPtrImage = dstPtr + dstLoc;
             Rpp32u width_srcSizeMax = batch_srcSizeMax[permutedIndices1[0]].width;
-           
-        if (outputFormatToggle == 1)
+
+            if (outputFormatToggle == 1)
             {
                 T *srcPtrImageRoiR1, *srcPtrImageRoiG1, *srcPtrImageRoiB1, *srcPtrImageRoiR2, *srcPtrImageRoiG2, *srcPtrImageRoiB2, *srcPtrImageRoiR3, *srcPtrImageRoiG3, *srcPtrImageRoiB3, *srcPtrImageRoiR4, *srcPtrImageRoiG4, *srcPtrImageRoiB4;
                 T *dstPtrImageTemp;
@@ -2681,9 +2681,9 @@ RppStatus ricap_host_batch(T *srcPtr, RppiSize *batch_srcSize, RppiSize *batch_s
                 dstPtrImageTemp = dstPtrImage;
                 Rpp32u incrementDst = (batch_srcSizeMax[batchCount].width - batch_srcSize[batchCount].width) * channel;
 
-                for(int i = 0; i < cropRegion1[3]; i++)
+                for (int i = 0; i < cropRegion1[3]; i++)
                 {
-                    for(int j = 0; j < cropRegion1[2]; j++)
+                    for (int j = 0; j < cropRegion1[2]; j++)
                     {
                         *dstPtrImageTemp = *srcPtrImageRoiR1;
                         srcPtrImageRoiR1++;
@@ -2701,7 +2701,7 @@ RppStatus ricap_host_batch(T *srcPtr, RppiSize *batch_srcSize, RppiSize *batch_s
                     srcPtrImageRoiG1 += (width_srcSizeMax - cropRegion1[2]);
                     srcPtrImageRoiB1 += (width_srcSizeMax - cropRegion1[2]);
 
-                    for(int j = 0; j < cropRegion2[2]; j++)
+                    for (int j = 0; j < cropRegion2[2]; j++)
                     {
                         *dstPtrImageTemp = *srcPtrImageRoiR2;
                         srcPtrImageRoiR2++;
@@ -2715,16 +2715,16 @@ RppStatus ricap_host_batch(T *srcPtr, RppiSize *batch_srcSize, RppiSize *batch_s
                         srcPtrImageRoiB2++;
                         dstPtrImageTemp++;
                     }
-                    
+
                     srcPtrImageRoiR2 += (width_srcSizeMax - cropRegion2[2]);
                     srcPtrImageRoiG2 += (width_srcSizeMax - cropRegion2[2]);
                     srcPtrImageRoiB2 += (width_srcSizeMax - cropRegion2[2]);
                     dstPtrImageTemp += incrementDst;
                 }
 
-                for(int i = 0; i < cropRegion3[3]; i++)
+                for (int i = 0; i < cropRegion3[3]; i++)
                 {
-                    for(int j = 0; j < cropRegion3[2]; j++)
+                    for (int j = 0; j < cropRegion3[2]; j++)
                     {
                         *dstPtrImageTemp = *srcPtrImageRoiR3;
                         srcPtrImageRoiR3++;
@@ -2742,7 +2742,7 @@ RppStatus ricap_host_batch(T *srcPtr, RppiSize *batch_srcSize, RppiSize *batch_s
                     srcPtrImageRoiG3 += (width_srcSizeMax - cropRegion3[2]);
                     srcPtrImageRoiB3 += (width_srcSizeMax - cropRegion3[2]);
 
-                    for(int j = 0; j < cropRegion4[2]; j++)
+                    for (int j = 0; j < cropRegion4[2]; j++)
                     {
                         *dstPtrImageTemp = *srcPtrImageRoiR4;
                         srcPtrImageRoiR4++;
@@ -2756,60 +2756,60 @@ RppStatus ricap_host_batch(T *srcPtr, RppiSize *batch_srcSize, RppiSize *batch_s
                         srcPtrImageRoiB4++;
                         dstPtrImageTemp++;
                     }
-                    
+
                     srcPtrImageRoiR4 += (width_srcSizeMax - cropRegion4[2]);
                     srcPtrImageRoiG4 += (width_srcSizeMax - cropRegion4[2]);
                     srcPtrImageRoiB4 += (width_srcSizeMax - cropRegion4[2]);
                     dstPtrImageTemp += incrementDst;
                 }
             }
-        
-        else
-        {
-            T *dstPtrChannel, *srcPtrChannelROI1, *srcPtrChannelROI2, *srcPtrChannelROI3, *srcPtrChannelROI4;
-            dstPtrChannel = dstPtrImage ;
-            srcPtrChannelROI1 = srcPtrImage1  + (cropRegion1[1] * width_srcSizeMax) + cropRegion1[0];
-            srcPtrChannelROI2 = srcPtrImage2  + (cropRegion2[1] * width_srcSizeMax) + cropRegion2[0];
-            srcPtrChannelROI3 = srcPtrImage3  + (cropRegion3[1] * width_srcSizeMax) + cropRegion3[0];
-            srcPtrChannelROI4 = srcPtrImage4  + (cropRegion4[1] * width_srcSizeMax) + cropRegion4[0];
 
-             T *tempDstPtrChannel, *tempSrcPtrChannelROI1, *tempSrcPtrChannelROI2, *tempSrcPtrChannelROI3, *tempSrcPtrChannelROI4;
-            tempDstPtrChannel = dstPtrChannel;
-
-            for (int c = 0; c < channel; c++)
+            else
             {
-            tempDstPtrChannel = dstPtrChannel;
-            tempSrcPtrChannelROI1 = srcPtrChannelROI1;
-            tempSrcPtrChannelROI2 = srcPtrChannelROI2;
-            tempSrcPtrChannelROI3 = srcPtrChannelROI3;
-            tempSrcPtrChannelROI4 = srcPtrChannelROI4;
+                T *dstPtrChannel, *srcPtrChannelROI1, *srcPtrChannelROI2, *srcPtrChannelROI3, *srcPtrChannelROI4;
+                dstPtrChannel = dstPtrImage;
+                srcPtrChannelROI1 = srcPtrImage1 + (cropRegion1[1] * width_srcSizeMax) + cropRegion1[0];
+                srcPtrChannelROI2 = srcPtrImage2 + (cropRegion2[1] * width_srcSizeMax) + cropRegion2[0];
+                srcPtrChannelROI3 = srcPtrImage3 + (cropRegion3[1] * width_srcSizeMax) + cropRegion3[0];
+                srcPtrChannelROI4 = srcPtrImage4 + (cropRegion4[1] * width_srcSizeMax) + cropRegion4[0];
 
-                for (int i = 0; i < cropRegion1[3]; i++)
-                {
-                    memcpy(tempDstPtrChannel, tempSrcPtrChannelROI1, cropBufferInBytes[0]);
-                    tempDstPtrChannel += cropRegion1[2];
-                    tempSrcPtrChannelROI1 += width_srcSizeMax;
-                    memcpy(tempDstPtrChannel, tempSrcPtrChannelROI2, cropBufferInBytes[1]);
-                    tempDstPtrChannel += cropRegion2[2];
-                    tempSrcPtrChannelROI2 += width_srcSizeMax;
-                }
+                T *tempDstPtrChannel, *tempSrcPtrChannelROI1, *tempSrcPtrChannelROI2, *tempSrcPtrChannelROI3, *tempSrcPtrChannelROI4;
+                tempDstPtrChannel = dstPtrChannel;
 
-                for (int i = 0; i < cropRegion3[3]; i++)
+                for (int c = 0; c < channel; c++)
                 {
-                    memcpy(tempDstPtrChannel, tempSrcPtrChannelROI3, cropBufferInBytes[2]);
-                    tempDstPtrChannel += cropRegion3[2];
-                    tempSrcPtrChannelROI3 += width_srcSizeMax;
-                    memcpy(tempDstPtrChannel, tempSrcPtrChannelROI4, cropBufferInBytes[3]);
-                    tempDstPtrChannel += cropRegion4[2];
-                    tempSrcPtrChannelROI4 += width_srcSizeMax;
+                    tempDstPtrChannel = dstPtrChannel;
+                    tempSrcPtrChannelROI1 = srcPtrChannelROI1;
+                    tempSrcPtrChannelROI2 = srcPtrChannelROI2;
+                    tempSrcPtrChannelROI3 = srcPtrChannelROI3;
+                    tempSrcPtrChannelROI4 = srcPtrChannelROI4;
+
+                    for (int i = 0; i < cropRegion1[3]; i++)
+                    {
+                        memcpy(tempDstPtrChannel, tempSrcPtrChannelROI1, cropBufferInBytes[0]);
+                        tempDstPtrChannel += cropRegion1[2];
+                        tempSrcPtrChannelROI1 += width_srcSizeMax;
+                        memcpy(tempDstPtrChannel, tempSrcPtrChannelROI2, cropBufferInBytes[1]);
+                        tempDstPtrChannel += cropRegion2[2];
+                        tempSrcPtrChannelROI2 += width_srcSizeMax;
+                    }
+
+                    for (int i = 0; i < cropRegion3[3]; i++)
+                    {
+                        memcpy(tempDstPtrChannel, tempSrcPtrChannelROI3, cropBufferInBytes[2]);
+                        tempDstPtrChannel += cropRegion3[2];
+                        tempSrcPtrChannelROI3 += width_srcSizeMax;
+                        memcpy(tempDstPtrChannel, tempSrcPtrChannelROI4, cropBufferInBytes[3]);
+                        tempDstPtrChannel += cropRegion4[2];
+                        tempSrcPtrChannelROI4 += width_srcSizeMax;
+                    }
+                    dstPtrChannel += srcAndDstImageDimMax;
+                    srcPtrChannelROI1 += srcAndDstImageDimMax;
+                    srcPtrChannelROI2 += srcAndDstImageDimMax;
+                    srcPtrChannelROI3 += srcAndDstImageDimMax;
+                    srcPtrChannelROI4 += srcAndDstImageDimMax;
                 }
-                dstPtrChannel += srcAndDstImageDimMax;
-                srcPtrChannelROI1 += srcAndDstImageDimMax;
-                srcPtrChannelROI2 += srcAndDstImageDimMax;
-                srcPtrChannelROI3 += srcAndDstImageDimMax;
-                srcPtrChannelROI4 += srcAndDstImageDimMax;
             }
-        }
         }
     }
     else if (chnFormat == RPPI_CHN_PACKED)
@@ -2836,6 +2836,7 @@ RppStatus ricap_host_batch(T *srcPtr, RppiSize *batch_srcSize, RppiSize *batch_s
 #pragma omp parallel for num_threads(nbatchSize)
         for (int batchCount = 0; batchCount < nbatchSize; batchCount++)
         {
+            Rpp32u srcAndDstImageDimMax = batch_srcSizeMax[batchCount].height * batch_srcSizeMax[batchCount].width;
 
             T *srcPtrImage1, *srcPtrImage2, *srcPtrImage3, *srcPtrImage4, *dstPtrImage;
             Rpp32u srcLoc1 = 0, srcLoc2 = 0, srcLoc3 = 0, srcLoc4 = 0, dstLoc = 0;
@@ -2849,32 +2850,124 @@ RppStatus ricap_host_batch(T *srcPtr, RppiSize *batch_srcSize, RppiSize *batch_s
             srcPtrImage3 = srcPtr + srcLoc3;
             srcPtrImage4 = srcPtr + srcLoc4;
             dstPtrImage = dstPtr + dstLoc;
-
-            T *dstPtrImageTemp, *srcPtrImageROI1, *srcPtrImageROI2, *srcPtrImageROI3, *srcPtrImageROI4;
-            dstPtrImageTemp = dstPtrImage;
-            srcPtrImageROI1 = srcPtrImage1 + cropRegionStartPtr[0];
-            srcPtrImageROI2 = srcPtrImage2 + cropRegionStartPtr[1];
-            srcPtrImageROI3 = srcPtrImage3 + cropRegionStartPtr[2];
-            srcPtrImageROI4 = srcPtrImage4 + cropRegionStartPtr[3];
-
-            for (int i = 0; i < cropRegion1[3]; i++)
+            if (outputFormatToggle == 1)
             {
-                memcpy(dstPtrImageTemp, srcPtrImageROI1, cropBufferInBytes[0]);
-                dstPtrImageTemp += srcElementsinRow[0];
-                srcPtrImageROI1 += width_srcSizeMax_channel;
-                memcpy(dstPtrImageTemp, srcPtrImageROI2, cropBufferInBytes[1]);
-                dstPtrImageTemp += srcElementsinRow[1];
-                srcPtrImageROI2 += width_srcSizeMax_channel;
+                T *srcPtrImageROI1, *srcPtrImageROI2, *srcPtrImageROI3, *srcPtrImageROI4;
+                srcPtrImageROI1 = srcPtrImage1 + cropRegionStartPtr[0];
+                srcPtrImageROI2 = srcPtrImage2 + cropRegionStartPtr[1];
+                srcPtrImageROI3 = srcPtrImage3 + cropRegionStartPtr[2];
+                srcPtrImageROI4 = srcPtrImage4 + cropRegionStartPtr[3];
+
+                T *dstPtrImageTempG, *dstPtrImageTempB, *dstPtrImageTempR;
+                dstPtrImageTempR = dstPtrImage;
+                dstPtrImageTempG = dstPtrImageTempR + (srcAndDstImageDimMax);
+                dstPtrImageTempB = dstPtrImageTempG + (srcAndDstImageDimMax);
+
+                Rpp32u increment = batch_srcSizeMax[batchCount].width - batch_srcSize[batchCount].width;
+
+                for (int i = 0; i < cropRegion1[3]; i++)
+                {
+                    T *srcPtrImageROITemp1, *srcPtrImageROITemp2;
+                    srcPtrImageROITemp1 = srcPtrImageROI1;
+                    srcPtrImageROITemp2 = srcPtrImageROI2;
+                    for (int j = 0; j < cropRegion1[2]; j++)
+                    {
+                        *dstPtrImageTempR = *srcPtrImageROITemp1;
+                        srcPtrImageROITemp1++;
+                        dstPtrImageTempR++;
+
+                        *dstPtrImageTempG = *srcPtrImageROITemp1;
+                        srcPtrImageROITemp1++;
+                        dstPtrImageTempG++;
+
+                        *dstPtrImageTempB = *srcPtrImageROITemp1;
+                        srcPtrImageROITemp1++;
+                        dstPtrImageTempB++;
+                    }
+                    for (int j = 0; j < cropRegion2[2]; j++)
+                    {
+                        *dstPtrImageTempR = *srcPtrImageROITemp2;
+                        srcPtrImageROITemp2++;
+                        dstPtrImageTempR++;
+
+                        *dstPtrImageTempG = *srcPtrImageROITemp2;
+                        srcPtrImageROITemp2++;
+                        dstPtrImageTempG++;
+
+                        *dstPtrImageTempB = *srcPtrImageROITemp2;
+                        srcPtrImageROITemp2++;
+                        dstPtrImageTempB++;
+                    }
+                    srcPtrImageROI1 += width_srcSizeMax_channel;
+                    srcPtrImageROI2 += width_srcSizeMax_channel;
+                }
+
+                for (int i = 0; i < cropRegion3[3]; i++)
+                {
+                    T *srcPtrImageROITemp3, *srcPtrImageROITemp4;
+                    srcPtrImageROITemp3 = srcPtrImageROI3;
+                    srcPtrImageROITemp4 = srcPtrImageROI4;
+                    for (int j = 0; j < cropRegion3[2]; j++)
+                    {
+                        *dstPtrImageTempR = *srcPtrImageROITemp3;
+                        srcPtrImageROITemp3++;
+                        dstPtrImageTempR++;
+
+                        *dstPtrImageTempG = *srcPtrImageROITemp3;
+                        srcPtrImageROITemp3++;
+                        dstPtrImageTempG++;
+
+                        *dstPtrImageTempB = *srcPtrImageROITemp3;
+                        srcPtrImageROITemp3++;
+                        dstPtrImageTempB++;
+                    }
+                    for (int j = 0; j < cropRegion4[2]; j++)
+                    {
+                        *dstPtrImageTempR = *srcPtrImageROITemp4;
+                        srcPtrImageROITemp4++;
+                        dstPtrImageTempR++;
+
+                        *dstPtrImageTempG = *srcPtrImageROITemp4;
+                        srcPtrImageROITemp4++;
+                        dstPtrImageTempG++;
+
+                        *dstPtrImageTempB = *srcPtrImageROITemp4;
+                        srcPtrImageROITemp4++;
+                        dstPtrImageTempB++;
+                    }
+                    srcPtrImageROI3 += width_srcSizeMax_channel;
+                    srcPtrImageROI4 += width_srcSizeMax_channel;
+                }
             }
-
-            for (int i = 0; i < cropRegion3[3]; i++)
+            else
             {
-                memcpy(dstPtrImageTemp, srcPtrImageROI3, cropBufferInBytes[2]);
-                dstPtrImageTemp += srcElementsinRow[2];
-                srcPtrImageROI3 += width_srcSizeMax_channel;
-                memcpy(dstPtrImageTemp, srcPtrImageROI4, cropBufferInBytes[3]);
-                dstPtrImageTemp += srcElementsinRow[3];
-                srcPtrImageROI4 += width_srcSizeMax_channel;
+
+                T *dstPtrImageTemp, *srcPtrImageROI1, *srcPtrImageROI2, *srcPtrImageROI3, *srcPtrImageROI4;
+                dstPtrImageTemp = dstPtrImage;
+                srcPtrImageROI1 = srcPtrImage1 + cropRegionStartPtr[0];
+                srcPtrImageROI2 = srcPtrImage2 + cropRegionStartPtr[1];
+                srcPtrImageROI3 = srcPtrImage3 + cropRegionStartPtr[2];
+                srcPtrImageROI4 = srcPtrImage4 + cropRegionStartPtr[3];
+
+                for (int i = 0; i < cropRegion1[3]; i++)
+                {
+                    memcpy(dstPtrImageTemp, srcPtrImageROI1, cropBufferInBytes[0]);
+                    dstPtrImageTemp += srcElementsinRow[0];
+                    srcPtrImageROI1 += width_srcSizeMax_channel;
+                    memcpy(dstPtrImageTemp, srcPtrImageROI2, cropBufferInBytes[1]);
+                    dstPtrImageTemp += srcElementsinRow[1];
+                    srcPtrImageROI2 += width_srcSizeMax_channel;
+                }
+
+                for (int i = 0; i < cropRegion3[3]; i++)
+                {
+                    memcpy(dstPtrImageTemp, srcPtrImageROI3, cropBufferInBytes[2]);
+                    dstPtrImageTemp += srcElementsinRow[2];
+                    srcPtrImageROI3 += width_srcSizeMax_channel;
+                    memcpy(dstPtrImageTemp, srcPtrImageROI4, cropBufferInBytes[3]);
+                    dstPtrImageTemp += srcElementsinRow[3];
+                    srcPtrImageROI4 += width_srcSizeMax_channel;
+                }
             }
         }
     }

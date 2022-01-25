@@ -390,7 +390,6 @@ int main(int argc, char **argv)
         break;
     case 82:
         strcpy(funcName, "ricap");
-        outputFormatToggle = 0;
         break;
     default:
         strcpy(funcName, "test_case");
