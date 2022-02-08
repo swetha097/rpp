@@ -762,6 +762,8 @@ int main(int argc, char **argv)
         roiPtrInputCropRegion[2].ltrbROI.rb.y = roiPtrInputCropRegion[2].ltrbROI.lt.y + h3 - 1; // b3
         roiPtrInputCropRegion[3].ltrbROI.rb.x = roiPtrInputCropRegion[3].ltrbROI.lt.x + w4 - 1; // r4
         roiPtrInputCropRegion[3].ltrbROI.rb.y = roiPtrInputCropRegion[3].ltrbROI.lt.y + h4 - 1; // b4
+        roiTypeSrc = RpptRoiType::LTRB;
+        roiTypeDst = RpptRoiType::LTRB;
         */
 
         start_omp = omp_get_wtime();
