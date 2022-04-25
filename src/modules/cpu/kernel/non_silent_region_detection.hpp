@@ -29,6 +29,7 @@ Rpp32f max_value(Rpp32f *values, uint size)
 }
 
 RppStatus non_silent_region_detection_host_tensor(Rpp32f *srcPtr,
+                                                  Rpp32u srcSize,
                                                   Rpp32u detectedIndex,
                                                   Rpp32u detectionLength,
                                                   Rpp32f cutOffDB,
@@ -37,8 +38,7 @@ RppStatus non_silent_region_detection_host_tensor(Rpp32f *srcPtr,
                                                   Rpp32u resetInterval,
                                                   bool referenceMax)
 {
-    //Get srcSize on input float array
-    Rpp32u srcSize = 10;
+    //set reset interval based on the user input    
     resetInterval = resetInterval == -1 ? srcSize : resetInterval;
 
     //Allocate intermediate buffer with given srcSize
@@ -101,5 +101,6 @@ RppStatus non_silent_region_detection_host_tensor(Rpp32f *srcPtr,
 
     detectedIndex = begin;
     detectionLength = end - begin + 1;
+    std::cout<<std::endl<<"Index, Length: "<<detectedIndex<<" "<<detectionLength;
     return RPP_SUCCESS;
 }

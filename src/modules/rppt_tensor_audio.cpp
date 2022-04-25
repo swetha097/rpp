@@ -27,6 +27,7 @@ THE SOFTWARE.
 
 
 RppStatus rppt_non_silent_region_detection_host(RppPtr_t srcPtr,
+                                                Rpp32u srcSize,
                                                 Rpp32u detectedIndex,
                                                 Rpp32u detectionLength,
                                                 Rpp32f cutOffDB,
@@ -37,6 +38,7 @@ RppStatus rppt_non_silent_region_detection_host(RppPtr_t srcPtr,
                                                 rppHandle_t rppHandle)
 {
     non_silent_region_detection_host_tensor((Rpp32f*) srcPtr,
+                                            srcSize,
                                             detectedIndex,
                                             detectionLength,
                                             cutOffDB,

@@ -1032,12 +1032,13 @@ case 21:
         bool referenceMax = true;
 
         float srcPtr[10] = {0, 0, 0, 0, 1000, -1000, 1000, 0, 0, 0};
+        Rpp32u srcSize = 10;
         
         start_omp = omp_get_wtime();
         start = clock();
         if (ip_bitDepth == 2)
         {
-            rppt_non_silent_region_detection_host(srcPtr, detectedIndex, detectionLength, cutOffDB, windowLength, referencePower, resetInterval, referenceMax, handle);
+            rppt_non_silent_region_detection_host(srcPtr, srcSize, detectedIndex, detectionLength, cutOffDB, windowLength, referencePower, resetInterval, referenceMax, handle);
         }
         else
             missingFuncFlag = 1;
