@@ -135,6 +135,9 @@ int main(int argc, char **argv)
     case 38:
         strcpy(funcName, "crop_mirror_normalize");
         break;
+    case 39:
+        strcpy(funcName, "audio_test");
+        break;
     case 81:
         strcpy(funcName, "color_jitter");
         break;
@@ -1015,6 +1018,29 @@ case 21:
         else
             missingFuncFlag = 1;
 
+        break;
+    }
+    case 39:
+    {
+        test_case_name = "audio_test";
+        Rpp32u detectedIndex = 0;
+        Rpp32u detectionLength = 0;
+        Rpp32f cutOffDB = -60.0;
+        Rpp32u windowLength = 3;
+        Rpp32f referencePower = 0.0;
+        Rpp32u resetInterval = -1;
+        bool referenceMax = true;
+
+        float srcPtr[10] = {0, 0, 0, 0, 1000, -1000, 1000, 0, 0, 0};
+        
+        start_omp = omp_get_wtime();
+        start = clock();
+        if (ip_bitDepth == 2)
+        {
+            rppt_non_silent_region_detection_host(srcPtr, detectedIndex, detectionLength, cutOffDB, windowLength, referencePower, resetInterval, referenceMax, handle);
+        }
+        else
+            missingFuncFlag = 1;
         break;
     }
     case 81:

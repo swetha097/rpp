@@ -20,22 +20,17 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#ifndef RPPT_H
-#define RPPT_H
-
+#ifndef RPPT_TENSOR_AUDIO_H
+#define RPPT_TENSOR_AUDIO_H
 #include "rpp.h"
+#include "rppdefs.h"
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include "rppt_tensor_color_augmentations.h"
-#include "rppt_tensor_effects_augmentations.h"
-#include "rppt_tensor_geometric_augmentations.h"
-#include "rppt_tensor_filter_augmentations.h"
-#include "rppt_tensor_morphological_operations.h"
-#include "rppt_tensor_audio.h"
+RppStatus rppt_non_silent_region_detection_host(RppPtr_t srcPtr, Rpp32u detectedIndex, Rpp32u detectionLength, Rpp32f cutOffDB, Rpp32u windowLength, Rpp32f referencePower, Rpp32u resetInterval, bool referenceMax, rppHandle_t handle);
 
 #ifdef __cplusplus
 }
 #endif
-#endif // RPPT_H
+#endif // RPPT_TENSOR_AUDIO_H
