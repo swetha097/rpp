@@ -3,14 +3,14 @@
 #include "cpu/rpp_cpu_common.hpp"
 
 
-Rpp32f Square(Rpp32f value) 
+Rpp64f Square(Rpp64f value) 
 {
   return (value * value);
 }
 
-Rpp32f CalcSumSquared(Rpp32f *values, uint start, uint n) 
+Rpp64f CalcSumSquared(Rpp64f *values, uint start, uint n) 
 {
-  Rpp32f sumsq = 0;
+  Rpp64f sumsq = 0;
   for (uint i = start ; i < n ; i++) 
   {
     sumsq += Square(values[i]);
@@ -18,40 +18,41 @@ Rpp32f CalcSumSquared(Rpp32f *values, uint start, uint n)
   return sumsq;
 }
 
-Rpp32f max_value(Rpp32f *values, uint size)
+Rpp64f max_value(std::vector<double> &values, uint length)
 {
-  Rpp32f max = values[0];
-  for (uint i = 1; i < size; i++) 
+  Rpp64f max = values[0];
+  for (uint i = 1; i < length; i++) 
   {
     max = std::max(max, values[i]);
   }
   return max;
 }
 
-RppStatus non_silent_region_detection_host_tensor(Rpp32f *srcPtr,
+RppStatus non_silent_region_detection_host_tensor(Rpp64f *srcPtr,
                                                   Rpp32u srcSize,
                                                   Rpp32u detectedIndex,
                                                   Rpp32u detectionLength,
-                                                  Rpp32f cutOffDB,
+                                                  Rpp64f cutOffDB,
                                                   Rpp32u windowLength,
-                                                  Rpp32f referencePower,
+                                                  Rpp64f referencePower,
                                                   Rpp32u resetInterval,
                                                   bool referenceMax)
 {
-    //set reset interval based on the user input    
+    //set reset interval based on the user input 
     resetInterval = resetInterval == -1 ? srcSize : resetInterval;
 
     //Allocate intermediate buffer with given srcSize
     Rpp32u tempBufferSize = srcSize - windowLength + 1;
-    Rpp32f tempBuffer[tempBufferSize];   
+    std::vector<double> tempBuffer;
+    tempBuffer.reserve(tempBufferSize);
     
     //Calculate moving mean square of input array and store in intermediate buffer
-    Rpp32u sumsq = 0;
-    Rpp32f meanFactor = 1.f / windowLength;
+    Rpp64f sumsq = 0;
+    Rpp64f meanFactor = (double)1.0 / windowLength;
     
     for (int window_begin = 0; window_begin <= srcSize - windowLength;) 
     {
-        sumsq = CalcSumSquared(srcPtr , window_begin, windowLength);
+        sumsq = CalcSumSquared(srcPtr, window_begin, windowLength);
         tempBuffer[window_begin] = sumsq * meanFactor;
         auto interval_end = std::min(window_begin + resetInterval, srcSize) - windowLength + 1;
         for (window_begin++; window_begin < interval_end; window_begin++) 
@@ -60,17 +61,12 @@ RppStatus non_silent_region_detection_host_tensor(Rpp32f *srcPtr,
             tempBuffer[window_begin] = sumsq * meanFactor;
         }
     }
-
-    // std::cout<<"Printing the moving mean square values:"<<std::endl;
-    // for(int i = 0; i < tempBufferSize; i++)
-    // {
-    //     std::cout<<tempBuffer[i]<<" ";
-    // }
-    
-    //Convert cutOff from DB to magnitude
-    Rpp32f base = (referenceMax) ?  max_value(tempBuffer, tempBufferSize) : referencePower;
-    Rpp32f cutOffMag = base * pow(10.0 , cutOffDB / 10.0);
-    
+ 
+    //Convert cutOff from DB to magnitude    
+    Rpp64f base = (referenceMax) ?  max_value(tempBuffer, tempBufferSize) : referencePower;
+    Rpp64f cutOffMag = base * pow(10.0 , cutOffDB / 10.0);
+    std::cout<<std::endl<<"cutOff magnitude: "<<cutOffMag;
+      
     //Calculate beginning index, length of non silent region from the intermediate buffer
     int end = tempBufferSize;
     int begin = end;
@@ -87,6 +83,7 @@ RppStatus non_silent_region_detection_host_tensor(Rpp32f *srcPtr,
     {
         detectedIndex = 0;
         detectionLength = 0;
+        std::cout<<std::endl<<"Index, Length: "<<detectedIndex<<" "<<detectionLength;
         return RPP_SUCCESS;
     }
 
@@ -102,5 +99,6 @@ RppStatus non_silent_region_detection_host_tensor(Rpp32f *srcPtr,
     detectedIndex = begin;
     detectionLength = end - begin + 1;
     std::cout<<std::endl<<"Index, Length: "<<detectedIndex<<" "<<detectionLength;
+    
     return RPP_SUCCESS;
 }

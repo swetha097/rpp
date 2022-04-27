@@ -14,6 +14,13 @@
 #include <half.hpp>
 #include <fstream>
 
+/* Include this header file to use functions from libsndfile. */
+#include <sndfile.h>
+#include <dirent.h>
+
+/* libsndfile can handle more than 6 channels but we'll restrict it to 6. */
+#define		MAX_CHANNELS	6
+
 using namespace cv;
 using namespace std;
 using half_float::half;
@@ -1025,20 +1032,62 @@ case 21:
         test_case_name = "audio_test";
         Rpp32u detectedIndex = 0;
         Rpp32u detectionLength = 0;
-        Rpp32f cutOffDB = -60.0;
+        Rpp64f cutOffDB = -60.0;
         Rpp32u windowLength = 3;
-        Rpp32f referencePower = 0.0;
+        Rpp64f referencePower = 1.0;
         Rpp32u resetInterval = -1;
         bool referenceMax = true;
 
-        float srcPtr[10] = {0, 0, 0, 0, 1000, -1000, 1000, 0, 0, 0};
-        Rpp32u srcSize = 10;
+        // float srcPtr[10] = {0, 0, 0, 0, 1000, -1000, 1000, 0, 0, 0};
+        // Rpp32u srcSize = 10;
+
+        SNDFILE	*infile;
+        SF_INFO sfinfo;
+        int	readcount;
+
+        string mono_output_path = "/media/sampath/sampath_rpp/utilities/rpp-unittests/HOST_NEW/sample_output/output.wav";
+        //The SF_INFO struct must be initialized before using it
+        memset (&sfinfo, 0, sizeof (sfinfo));
+        if (! (infile = sf_open (mono_output_path.c_str(), SFM_READ, &sfinfo)))
+        {	/* Open failed so print an error message. */
+            // printf ("Not able to open input file %s.\n", infilename1) ;
+            cerr<<"Not able to open input file"<<mono_output_path<<endl;
+            /* Print the error message from libsndfile. */
+            puts (sf_strerror (NULL)) ;
+            return 1 ;
+            } ;
+        
+        if (sfinfo.channels > MAX_CHANNELS)
+        {	printf ("Not able to process more than %d channels\n", MAX_CHANNELS) ;
+            sf_close (infile) ;
+            return 1 ;
+        }
+
+        // cout<<"Channels: "<<sfinfo.channels<<endl;
+        // cout<<"Format: "<<sfinfo.format<<endl;
+        // cout<<"Frames: "<<sfinfo.frames<<endl;
+        // cout<<"SampleRate: "<<sfinfo.samplerate<<endl;
+        // cout<<"Sections: "<<sfinfo.sections<<endl;
+        // cout<<"Seekable: "<<sfinfo.seekable<<endl;
+
+        Rpp32u audio_length = sfinfo.frames * sfinfo.channels;
+        double input_audio[268237] = {0.0};
+        // cout<<"Audio Length: "<<audio_length<<endl;
+
+        readcount = (int) sf_read_double (infile, input_audio, audio_length);
+        if(readcount == audio_length)
+            cout<<endl<<"Read completely";
+        else
+            cout<<"Incorrect read from audio file"<<endl;
+ 
+        /* Close input*/
+        sf_close (infile);
         
         start_omp = omp_get_wtime();
         start = clock();
         if (ip_bitDepth == 2)
         {
-            rppt_non_silent_region_detection_host(srcPtr, srcSize, detectedIndex, detectionLength, cutOffDB, windowLength, referencePower, resetInterval, referenceMax, handle);
+            rppt_non_silent_region_detection_host(input_audio, audio_length, detectedIndex, detectionLength, cutOffDB, windowLength, referencePower, resetInterval, referenceMax, handle);
         }
         else
             missingFuncFlag = 1;
