@@ -1032,12 +1032,13 @@ case 21:
         test_case_name = "audio_test";
         Rpp32u detectedIndex = 0;
         Rpp32u detectionLength = 0;
-        Rpp64f cutOffDB = -60.0;
+        Rpp32f cutOffDB = -60.0;
         Rpp32u windowLength = 3;
-        Rpp64f referencePower = 1.0;
+        Rpp32f referencePower = 1.0;
         Rpp32u resetInterval = -1;
         bool referenceMax = true;
 
+        // Sample input
         // float srcPtr[10] = {0, 0, 0, 0, 1000, -1000, 1000, 0, 0, 0};
         // Rpp32u srcSize = 10;
 
@@ -1049,13 +1050,13 @@ case 21:
         //The SF_INFO struct must be initialized before using it
         memset (&sfinfo, 0, sizeof (sfinfo));
         if (! (infile = sf_open (mono_output_path.c_str(), SFM_READ, &sfinfo)))
-        {	/* Open failed so print an error message. */
-            // printf ("Not able to open input file %s.\n", infilename1) ;
+        {	
             cerr<<"Not able to open input file"<<mono_output_path<<endl;
+            
             /* Print the error message from libsndfile. */
-            puts (sf_strerror (NULL)) ;
-            return 1 ;
-            } ;
+            puts (sf_strerror (NULL));
+            return 1;
+        }
         
         if (sfinfo.channels > MAX_CHANNELS)
         {	printf ("Not able to process more than %d channels\n", MAX_CHANNELS) ;
@@ -1063,22 +1064,13 @@ case 21:
             return 1 ;
         }
 
-        // cout<<"Channels: "<<sfinfo.channels<<endl;
-        // cout<<"Format: "<<sfinfo.format<<endl;
-        // cout<<"Frames: "<<sfinfo.frames<<endl;
-        // cout<<"SampleRate: "<<sfinfo.samplerate<<endl;
-        // cout<<"Sections: "<<sfinfo.sections<<endl;
-        // cout<<"Seekable: "<<sfinfo.seekable<<endl;
-
         Rpp32u audio_length = sfinfo.frames * sfinfo.channels;
-        double input_audio[268237] = {0.0};
-        // cout<<"Audio Length: "<<audio_length<<endl;
-
-        readcount = (int) sf_read_double (infile, input_audio, audio_length);
+        Rpp32f *input_audio = (Rpp32f *)calloc(audio_length, sizeof(Rpp32f));
+        readcount = (int) sf_read_float (infile, input_audio, audio_length);
         if(readcount == audio_length)
             cout<<endl<<"Read completely";
         else
-            cout<<"Incorrect read from audio file"<<endl;
+            cout<<endl<<"Incorrect read from audio file";
  
         /* Close input*/
         sf_close (infile);
@@ -1091,6 +1083,10 @@ case 21:
         }
         else
             missingFuncFlag = 1;
+        
+        //Print the detection index and length
+        std::cout<<"Index, Length: "<<detectedIndex<<" "<<detectionLength<<std::endl;
+        
         break;
     }
     case 81:

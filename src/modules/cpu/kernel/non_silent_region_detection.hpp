@@ -3,14 +3,14 @@
 #include "cpu/rpp_cpu_common.hpp"
 
 
-Rpp64f Square(Rpp64f value) 
+Rpp32f Square(Rpp32f value) 
 {
   return (value * value);
 }
 
-Rpp64f CalcSumSquared(Rpp64f *values, uint start, uint n) 
+Rpp32f CalcSumSquared(Rpp32f *values, uint start, uint n) 
 {
-  Rpp64f sumsq = 0;
+  Rpp32f sumsq = 0;
   for (uint i = start ; i < n ; i++) 
   {
     sumsq += Square(values[i]);
@@ -18,9 +18,9 @@ Rpp64f CalcSumSquared(Rpp64f *values, uint start, uint n)
   return sumsq;
 }
 
-Rpp64f max_value(std::vector<double> &values, uint length)
+Rpp32f max_value(std::vector<float> &values, uint length)
 {
-  Rpp64f max = values[0];
+  Rpp32f max = values[0];
   for (uint i = 1; i < length; i++) 
   {
     max = std::max(max, values[i]);
@@ -28,13 +28,21 @@ Rpp64f max_value(std::vector<double> &values, uint length)
   return max;
 }
 
-RppStatus non_silent_region_detection_host_tensor(Rpp64f *srcPtr,
+void extend_non_silent_region(Rpp32u *detectionLength, Rpp32u *windowLength)
+{
+  if(*detectionLength != 0)
+  {
+   *detectionLength += *windowLength - 1;
+  }
+}
+
+RppStatus non_silent_region_detection_host_tensor(Rpp32f *srcPtr,
                                                   Rpp32u srcSize,
                                                   Rpp32u detectedIndex,
                                                   Rpp32u detectionLength,
-                                                  Rpp64f cutOffDB,
+                                                  Rpp32f cutOffDB,
                                                   Rpp32u windowLength,
-                                                  Rpp64f referencePower,
+                                                  Rpp32f referencePower,
                                                   Rpp32u resetInterval,
                                                   bool referenceMax)
 {
@@ -43,12 +51,12 @@ RppStatus non_silent_region_detection_host_tensor(Rpp64f *srcPtr,
 
     //Allocate intermediate buffer with given srcSize
     Rpp32u tempBufferSize = srcSize - windowLength + 1;
-    std::vector<double> tempBuffer;
+    std::vector<float> tempBuffer;
     tempBuffer.reserve(tempBufferSize);
     
     //Calculate moving mean square of input array and store in intermediate buffer
-    Rpp64f sumsq = 0;
-    Rpp64f meanFactor = (double)1.0 / windowLength;
+    Rpp32f sumsq = 0;
+    Rpp32f meanFactor = (float)1.0 / windowLength;
     
     for (int window_begin = 0; window_begin <= srcSize - windowLength;) 
     {
@@ -63,9 +71,8 @@ RppStatus non_silent_region_detection_host_tensor(Rpp64f *srcPtr,
     }
  
     //Convert cutOff from DB to magnitude    
-    Rpp64f base = (referenceMax) ?  max_value(tempBuffer, tempBufferSize) : referencePower;
-    Rpp64f cutOffMag = base * pow(10.0 , cutOffDB / 10.0);
-    std::cout<<std::endl<<"cutOff magnitude: "<<cutOffMag;
+    Rpp32f base = (referenceMax) ?  max_value(tempBuffer, tempBufferSize) : referencePower;
+    Rpp32f cutOffMag = base * pow(10.0 , cutOffDB / 10.0);
       
     //Calculate beginning index, length of non silent region from the intermediate buffer
     int end = tempBufferSize;
@@ -83,7 +90,6 @@ RppStatus non_silent_region_detection_host_tensor(Rpp64f *srcPtr,
     {
         detectedIndex = 0;
         detectionLength = 0;
-        std::cout<<std::endl<<"Index, Length: "<<detectedIndex<<" "<<detectionLength;
         return RPP_SUCCESS;
     }
 
@@ -98,7 +104,7 @@ RppStatus non_silent_region_detection_host_tensor(Rpp64f *srcPtr,
 
     detectedIndex = begin;
     detectionLength = end - begin + 1;
-    std::cout<<std::endl<<"Index, Length: "<<detectedIndex<<" "<<detectionLength;
-    
+    extend_non_silent_region(&detectionLength, &windowLength);
+
     return RPP_SUCCESS;
 }
