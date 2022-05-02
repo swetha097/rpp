@@ -1029,24 +1029,23 @@ case 21:
     }
     case 39:
     {
+        Rpp32u batchSize = 1;
         test_case_name = "audio_test";
-        Rpp32u detectedIndex = 0;
-        Rpp32u detectionLength = 0;
-        Rpp32f cutOffDB = -60.0;
-        Rpp32u windowLength = 3;
-        Rpp32f referencePower = 1.0;
-        Rpp32u resetInterval = -1;
-        bool referenceMax = true;
-
-        // Sample input
-        // float srcPtr[10] = {0, 0, 0, 0, 1000, -1000, 1000, 0, 0, 0};
-        // Rpp32u srcSize = 10;
+        Rpp32u detectedIndex[batchSize];
+        Rpp32u detectionLength[batchSize];
+        Rpp32f cutOffDB[batchSize];
+        Rpp32u windowLength[batchSize];
+        Rpp32f referencePower[batchSize];
+        Rpp32u resetInterval[batchSize];
+        bool referenceMax[batchSize];
+        Rpp32u audioLength[batchSize];
+        srcDescPtr->n = batchSize;
 
         SNDFILE	*infile;
         SF_INFO sfinfo;
         int	readcount;
-
         string mono_output_path = "/media/sampath/sampath_rpp/utilities/rpp-unittests/HOST_NEW/sample_output/output.wav";
+        
         //The SF_INFO struct must be initialized before using it
         memset (&sfinfo, 0, sizeof (sfinfo));
         if (! (infile = sf_open (mono_output_path.c_str(), SFM_READ, &sfinfo)))
@@ -1064,10 +1063,21 @@ case 21:
             return 1 ;
         }
 
-        Rpp32u audio_length = sfinfo.frames * sfinfo.channels;
-        Rpp32f *input_audio = (Rpp32f *)calloc(audio_length, sizeof(Rpp32f));
-        readcount = (int) sf_read_float (infile, input_audio, audio_length);
-        if(readcount == audio_length)
+        for (i = 0; i < images; i++)
+        {
+            detectedIndex[i] = 0;
+            detectionLength[i] = 0;
+            cutOffDB[i] = -60.0;
+            windowLength[i] = 3;
+            referencePower[i] = 1.0;
+            resetInterval[i] = -1;
+            referenceMax[i] = true;
+            audioLength[i] = sfinfo.frames * sfinfo.channels;
+        }
+
+        Rpp32f *inputAudio = (Rpp32f *)calloc(audioLength[0], sizeof(Rpp32f));
+        readcount = (int) sf_read_float (infile, inputAudio, audioLength[0]);
+        if(readcount == audioLength[0])
             cout<<endl<<"Read completely";
         else
             cout<<endl<<"Incorrect read from audio file";
@@ -1079,13 +1089,13 @@ case 21:
         start = clock();
         if (ip_bitDepth == 2)
         {
-            rppt_non_silent_region_detection_host(input_audio, audio_length, detectedIndex, detectionLength, cutOffDB, windowLength, referencePower, resetInterval, referenceMax, handle);
+            rppt_non_silent_region_detection_host(inputAudio, srcDescPtr, audioLength, detectedIndex, detectionLength, cutOffDB, windowLength, referencePower, resetInterval, referenceMax, handle);
         }
         else
             missingFuncFlag = 1;
         
         //Print the detection index and length
-        std::cout<<"Index, Length: "<<detectedIndex<<" "<<detectionLength<<std::endl;
+        cout<<endl<<"Index, Length: "<<detectedIndex[0]<<" "<<detectionLength[0];
         
         break;
     }

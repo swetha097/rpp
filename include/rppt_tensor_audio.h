@@ -28,7 +28,7 @@ THE SOFTWARE.
 extern "C" {
 #endif
 
-RppStatus rppt_non_silent_region_detection_host(RppPtr_t srcPtr, Rpp32u srcSize, Rpp32u detectedIndex, Rpp32u detectionLength, Rpp32f cutOffDB, Rpp32u windowLength, Rpp32f referencePower, Rpp32u resetInterval, bool referenceMax, rppHandle_t handle);
+RppStatus rppt_non_silent_region_detection_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, Rpp32u *srcSize, Rpp32u *detectedIndex, Rpp32u *detectionLength, Rpp32f *cutOffDB, Rpp32u *windowLength, Rpp32f *referencePower, Rpp32u *resetInterval, bool *referenceMax, rppHandle_t handle);
 
 #ifdef __cplusplus
 }
