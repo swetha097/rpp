@@ -1031,14 +1031,14 @@ case 21:
     {
         Rpp32u batchSize = 1;
         test_case_name = "audio_test";
-        Rpp32u detectedIndex[batchSize];
-        Rpp32u detectionLength[batchSize];
+        Rpp32s detectedIndex[batchSize];
+        Rpp32s detectionLength[batchSize];
         Rpp32f cutOffDB[batchSize];
-        Rpp32u windowLength[batchSize];
+        Rpp32s windowLength[batchSize];
         Rpp32f referencePower[batchSize];
-        Rpp32u resetInterval[batchSize];
+        Rpp32s resetInterval[batchSize];
         bool referenceMax[batchSize];
-        Rpp32u audioLength[batchSize];
+        Rpp32s audioLength[batchSize];
         srcDescPtr->n = batchSize;
 
         SNDFILE	*infile;

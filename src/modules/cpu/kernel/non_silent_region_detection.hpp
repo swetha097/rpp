@@ -3,32 +3,33 @@
 #include "cpu/rpp_cpu_common.hpp"
 
 
-Rpp32f Square(Rpp32f value) 
+Rpp32f Square(Rpp32f &value) 
 {
-  return (value * value);
+  Rpp32f res = value;
+  return (res * res);
 }
 
-Rpp32f CalcSumSquared(Rpp32f *values, uint start, uint n) 
+Rpp32f CalcSumSquared(Rpp32f *values, int start, int n) 
 {
-  Rpp32f sumOfSquares = 0;
-  for (uint i = start ; i < n ; i++) 
+  Rpp32f sumOfSquares = 0.0;
+  for (int i = start ; i < n ; i++) 
   {
     sumOfSquares += Square(values[i]);
   }
   return sumOfSquares;
 }
 
-Rpp32f max_value(std::vector<float> &values, uint length)
+Rpp32f max_value(std::vector<float> &values, int length)
 {
   Rpp32f max = values[0];
-  for (uint i = 1; i < length; i++) 
+  for (int i = 1; i < length; i++) 
   {
     max = std::max(max, values[i]);
   }
   return max;
 }
 
-void extend_non_silent_region(Rpp32u *detectionLength, Rpp32u *windowLength)
+void extend_non_silent_region(Rpp32s *detectionLength, Rpp32s *windowLength)
 {
   if(*detectionLength != 0)
   {
@@ -38,30 +39,39 @@ void extend_non_silent_region(Rpp32u *detectionLength, Rpp32u *windowLength)
 
 RppStatus non_silent_region_detection_host_tensor(Rpp32f *srcPtr,
                                                   RpptDescPtr srcDescPtr,
-                                                  Rpp32u *srcSizeTensor,
-                                                  Rpp32u *detectedIndexTensor,
-                                                  Rpp32u *detectionLengthTensor,
+                                                  Rpp32s *srcSizeTensor,
+                                                  Rpp32s *detectedIndexTensor,
+                                                  Rpp32s *detectionLengthTensor,
                                                   Rpp32f *cutOffDBTensor,
-                                                  Rpp32u *windowLengthTensor,
+                                                  Rpp32s *windowLengthTensor,
                                                   Rpp32f *referencePowerTensor,
-                                                  Rpp32u *resetIntervalTensor,
+                                                  Rpp32s *resetIntervalTensor,
                                                   bool *referenceMaxTensor)
 {
-#pragma omp parallel for num_threads(srcDescPtr->n)
+#pragma omp parallel for num_threads(srcDescPtr->n)    
     for(int batchCount = 0; batchCount < srcDescPtr->n; batchCount++)
     {
-      Rpp32u srcSize = srcSizeTensor[batchCount];
-      Rpp32u windowLength = windowLengthTensor[batchCount];
+      Rpp32s srcSize = srcSizeTensor[batchCount];
+      Rpp32s windowLength = windowLengthTensor[batchCount];
       Rpp32f referencePower = referencePowerTensor[batchCount];
       Rpp32f cutOffDB = cutOffDBTensor[batchCount];
       bool referenceMax = referenceMaxTensor[batchCount];
 
+      // for(int i = 0; i < srcSize; i++)
+      // {
+      //   std::cout<<srcPtr[i]<<" ";
+      //   if (i % 1000 == 0)
+      //   {
+      //     std::cout<<std::endl;
+      //   }
+      // }
+
       //set reset interval based on the user input 
-      Rpp32u resetInterval = resetIntervalTensor[batchCount];
+      Rpp32s resetInterval = resetIntervalTensor[batchCount];
       resetInterval = (resetInterval == -1) ? srcSize : resetInterval;
 
       //Calculate buffer size for mms array and allocate mms buffer
-      Rpp32u mmsBufferSize = srcSize - windowLength + 1;
+      Rpp32s mmsBufferSize = srcSize - windowLength + 1;
       std::vector<float> mmsBuffer;
       mmsBuffer.reserve(mmsBufferSize);
       
@@ -82,7 +92,7 @@ RppStatus non_silent_region_detection_host_tensor(Rpp32f *srcPtr,
   
       //Convert cutOff from DB to magnitude    
       Rpp32f base = (referenceMax) ?  max_value(mmsBuffer, mmsBufferSize) : referencePower;
-      Rpp32f cutOffMag = base * pow(10.f , cutOffDB / 10.f);
+      Rpp32f cutOffMag = base * pow(float(10) , cutOffDB * float(1) / 10.f);
         
       //Calculate begining index, length of non silent region from the mms buffer
       int endIdx = mmsBufferSize;
