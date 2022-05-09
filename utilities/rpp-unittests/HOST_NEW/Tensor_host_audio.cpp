@@ -45,28 +45,26 @@ int main(int argc, char **argv)
     }
 
     char *src = argv[1];
-    char *src_second = argv[2];
-    char *dst = argv[3];
-    int ip_bitDepth = atoi(argv[4]);
-    unsigned int outputFormatToggle = atoi(argv[5]);
-    int test_case = atoi(argv[6]);
+    // char *src_second = argv[2];
+    // char *dst = argv[3];
+    int ip_bitDepth = atoi(argv[2]);
+    unsigned int outputFormatToggle = atoi(argv[3]);
+    int test_case = atoi(argv[4]);
 
     bool additionalParamCase = (test_case == 21);
     bool kernelSizeCase = false;
     bool interpolationTypeCase = (test_case == 21);
 
-    unsigned int verbosity = additionalParamCase ? atoi(argv[8]) : atoi(argv[7]);
-    unsigned int additionalParam = additionalParamCase ? atoi(argv[7]) : 1;
+    unsigned int verbosity = 0;//additionalParamCase ? atoi(argv[8]) : atoi(argv[7]);
+    unsigned int additionalParam = 0;//additionalParamCase ? atoi(argv[7]) : 1;
 
     if (verbosity == 1)
     {
         printf("\nInputs for this test case are:");
         printf("\nsrc1 = %s", argv[1]);
-        printf("\nsrc2 = %s", argv[2]);
-        printf("\ndst = %s", argv[3]);
-        printf("\nu8 / f16 / f32 / u8->f16 / u8->f32 / i8 / u8->i8 (0/1/2/3/4/5/6) = %s", argv[4]);
-        printf("\noutputFormatToggle (pkd->pkd = 0 / pkd->pln = 1) = %s", argv[5]);
-        printf("\ncase number (0:84) = %s", argv[6]);
+        printf("\nu8 / f16 / f32 / u8->f16 / u8->f32 / i8 / u8->i8 (0/1/2/3/4/5/6) = %s", argv[2]);
+        printf("\noutputFormatToggle (pkd->pkd = 0 / pkd->pln = 1) = %s", argv[3]);
+        printf("\ncase number (0:84) = %s", argv[4]);
     }
 
     int ip_channel = 1;
@@ -75,17 +73,20 @@ int main(int argc, char **argv)
 
     char funcType[1000] = {"Tensor_HOST_PKD3"};
     char funcName[1000];
-    case 0:
-        strcpy(funcName, "non_silent_region_detection");
-        break;
-    default:
-        strcpy(funcName, "test_case");
-        break;
+    switch (test_case)
+    {
+        case 0:
+            strcpy(funcName, "non_silent_region_detection");
+            break;
+        default:
+            strcpy(funcName, "test_case");
+            break;
     }
 
     // Initialize tensor descriptors
 
     RpptDesc srcDesc;
+    RpptDescPtr srcDescPtr;
     srcDescPtr = &srcDesc;
 
     // Set src/dst data types in tensor descriptors
@@ -119,7 +120,6 @@ int main(int argc, char **argv)
     unsigned long long count = 0;
     unsigned long long ioBufferSize = 0;
     static int noOfAudioFiles = 0;
-    Mat image, image_second;
 
     // String ops on function name
     char src1[1000];
@@ -189,11 +189,7 @@ int main(int argc, char **argv)
 
     // Set numDims, offset, n/c/h/w values for src/dst
     srcDescPtr->numDims = 4;
-    dstDescPtr->numDims = 4;
-
     srcDescPtr->offsetInBytes = 0;
-    dstDescPtr->offsetInBytes = 0;
-
     srcDescPtr->n = noOfAudioFiles;    
     srcDescPtr->h = 1;
     srcDescPtr->w = maxLength;
@@ -279,17 +275,17 @@ int main(int argc, char **argv)
     {
         Rpp32u batchSize = 1;
         test_case_name = "audio_test";
-        Rpp32u detectedIndex[batchSize];
-        Rpp32u detectionLength[batchSize];
+        Rpp32s detectedIndex[batchSize];
+        Rpp32s detectionLength[batchSize];
         Rpp32f cutOffDB[batchSize];
-        Rpp32u windowLength[batchSize];
+        Rpp32s windowLength[batchSize];
         Rpp32f referencePower[batchSize];
-        Rpp32u resetInterval[batchSize];
+        Rpp32s resetInterval[batchSize];
         bool referenceMax[batchSize];
-        Rpp32u audioLength[batchSize];
+        Rpp32s audioLength[batchSize];
         srcDescPtr->n = batchSize;
      
-        for (i = 0; i < audio files; i++)
+        for (i = 0; i < batchSize; i++)
         {
             detectedIndex[i] = 0;
             detectionLength[i] = 0;
@@ -304,7 +300,7 @@ int main(int argc, char **argv)
         start = clock();
         if (ip_bitDepth == 2)
         {
-            rppt_non_silent_region_detection_host(inputAudio, srcDescPtr, audioLength, detectedIndex, detectionLength, cutOffDB, windowLength, referencePower, resetInterval, referenceMax, handle);
+            rppt_non_silent_region_detection_host(inputf32, srcDescPtr, audioLength, detectedIndex, detectionLength, cutOffDB, windowLength, referencePower, resetInterval, referenceMax, handle);
         }
         else
             missingFuncFlag = 1;
@@ -336,225 +332,16 @@ int main(int argc, char **argv)
     cout << "\nOMP Time - BatchPD : " << omp_time_used;
     printf("\n");
 
-    // Reconvert other bit depths to 8u for output display purposes
-
-    string fileName = std::to_string(ip_bitDepth);
-    ofstream outputFile (fileName + ".csv");
-
-    if (ip_bitDepth == 0)
-    {
-        Rpp8u *outputTemp;
-        outputTemp = output;
-
-        if (outputFile.is_open())
-        {
-            for (int i = 0; i < oBufferSize; i++)
-            {
-                outputFile << (Rpp32u) *outputTemp << ",";
-                outputTemp++;
-            }
-            outputFile.close();
-        }
-        else
-            cout << "Unable to open file!";
-
-    }
-    else if ((ip_bitDepth == 1) || (ip_bitDepth == 3))
-    {
-        Rpp8u *outputTemp;
-        outputTemp = output;
-        Rpp16f *outputf16Temp;
-        outputf16Temp = outputf16;
-
-        if (outputFile.is_open())
-        {
-            for (int i = 0; i < oBufferSize; i++)
-            {
-                outputFile << *outputf16Temp << ",";
-                *outputTemp = (Rpp8u)RPPPIXELCHECK(*outputf16Temp * 255.0);
-                outputf16Temp++;
-                outputTemp++;
-            }
-            outputFile.close();
-        }
-        else
-            cout << "Unable to open file!";
-
-    }
-    else if ((ip_bitDepth == 2) || (ip_bitDepth == 4))
-    {
-        Rpp8u *outputTemp;
-        outputTemp = output;
-        Rpp32f *outputf32Temp;
-        outputf32Temp = outputf32;
-
-        if (outputFile.is_open())
-        {
-            for (int i = 0; i < oBufferSize; i++)
-            {
-                outputFile << *outputf32Temp << ",";
-                *outputTemp = (Rpp8u)RPPPIXELCHECK(*outputf32Temp * 255.0);
-                outputf32Temp++;
-                outputTemp++;
-            }
-            outputFile.close();
-        }
-        else
-            cout << "Unable to open file!";
-    }
-    else if ((ip_bitDepth == 5) || (ip_bitDepth == 6))
-    {
-        Rpp8u *outputTemp;
-        outputTemp = output;
-        Rpp8s *outputi8Temp;
-        outputi8Temp = outputi8;
-
-        if (outputFile.is_open())
-        {
-            for (int i = 0; i < oBufferSize; i++)
-            {
-                outputFile << (Rpp32s) *outputi8Temp << ",";
-                *outputTemp = (Rpp8u) RPPPIXELCHECK(((Rpp32s) *outputi8Temp) + 128);
-                outputi8Temp++;
-                outputTemp++;
-            }
-            outputFile.close();
-        }
-        else
-            cout << "Unable to open file!";
-    }
-
-    // Calculate exact dstROI in XYWH format for OpenCV dump
-
-    if (roiTypeSrc == RpptRoiType::LTRB)
-    {
-        for (int i = 0; i < dstDescPtr->n; i++)
-        {
-            int ltX = roiTensorPtrSrc[i].ltrbROI.lt.x;
-            int ltY = roiTensorPtrSrc[i].ltrbROI.lt.y;
-            int rbX = roiTensorPtrSrc[i].ltrbROI.rb.x;
-            int rbY = roiTensorPtrSrc[i].ltrbROI.rb.y;
-
-            roiTensorPtrSrc[i].xywhROI.xy.x = ltX;
-            roiTensorPtrSrc[i].xywhROI.xy.y = ltY;
-            roiTensorPtrSrc[i].xywhROI.roiWidth = rbX - ltX + 1;
-            roiTensorPtrSrc[i].xywhROI.roiHeight = rbY - ltY + 1;
-        }
-    }
-
-    RpptROI roiDefault;
-    RpptROIPtr roiPtrDefault;
-    roiPtrDefault = &roiDefault;
-    roiPtrDefault->xywhROI.xy.x = 0;
-    roiPtrDefault->xywhROI.xy.y = 0;
-    roiPtrDefault->xywhROI.roiWidth = dstDescPtr->w;
-    roiPtrDefault->xywhROI.roiHeight = dstDescPtr->h;
-
-    for (int i = 0; i < dstDescPtr->n; i++)
-    {
-        roiTensorPtrSrc[i].xywhROI.roiWidth = RPPMIN2(roiPtrDefault->xywhROI.roiWidth - roiTensorPtrSrc[i].xywhROI.xy.x, roiTensorPtrSrc[i].xywhROI.roiWidth);
-        roiTensorPtrSrc[i].xywhROI.roiHeight = RPPMIN2(roiPtrDefault->xywhROI.roiHeight - roiTensorPtrSrc[i].xywhROI.xy.y, roiTensorPtrSrc[i].xywhROI.roiHeight);
-        roiTensorPtrSrc[i].xywhROI.xy.x = RPPMAX2(roiPtrDefault->xywhROI.xy.x, roiTensorPtrSrc[i].xywhROI.xy.x);
-        roiTensorPtrSrc[i].xywhROI.xy.y = RPPMAX2(roiPtrDefault->xywhROI.xy.y, roiTensorPtrSrc[i].xywhROI.xy.y);
-    }
-
-    // Convert any PLN3 outputs to the corresponding PKD3 version for OpenCV dump
-
-    if (dstDescPtr->layout == RpptLayout::NCHW)
-    {
-        Rpp8u *outputCopy = (Rpp8u *)calloc(oBufferSize, sizeof(Rpp8u));
-        memcpy(outputCopy, output, oBufferSize * sizeof(Rpp8u));
-
-        Rpp8u *outputTemp, *outputCopyTemp;
-        outputTemp = output;
-        outputCopyTemp = outputCopy;
-
-        for (int count = 0; count < dstDescPtr->n; count++)
-        {
-            Rpp8u *outputCopyTempR, *outputCopyTempG, *outputCopyTempB;
-            outputCopyTempR = outputCopyTemp;
-            outputCopyTempG = outputCopyTempR + dstDescPtr->strides.cStride;
-            outputCopyTempB = outputCopyTempG + dstDescPtr->strides.cStride;
-
-            for (int i = 0; i < dstDescPtr->h; i++)
-            {
-                for (int j = 0; j < dstDescPtr->w; j++)
-                {
-                    *outputTemp = *outputCopyTempR;
-                    outputTemp++;
-                    outputCopyTempR++;
-                    *outputTemp = *outputCopyTempG;
-                    outputTemp++;
-                    outputCopyTempG++;
-                    *outputTemp = *outputCopyTempB;
-                    outputTemp++;
-                    outputCopyTempB++;
-                }
-            }
-
-            outputCopyTemp += dstDescPtr->strides.nStride;
-        }
-
-        free(outputCopy);
-    }
-
     rppDestroyHost(handle);
-
-    // OpenCV dump
-
-    mkdir(dst, 0700);
-    strcat(dst, "/");
-
-    count = 0;
-    Rpp32u elementsInRowMax = dstDescPtr->w * ip_channel;
-
-    for (j = 0; j < dstDescPtr->n; j++)
-    {
-        int height = dstImgSizes[j].height;
-        int width = dstImgSizes[j].width;
-
-        int op_size = height * width * ip_channel;
-        Rpp8u *temp_output = (Rpp8u *)calloc(op_size, sizeof(Rpp8u));
-        Rpp8u *temp_output_row;
-        temp_output_row = temp_output;
-        Rpp32u elementsInRow = width * ip_channel;
-        Rpp8u *output_row = output + count;
-
-        for (int k = 0; k < height; k++)
-        {
-            memcpy(temp_output_row, (output_row), elementsInRow * sizeof (Rpp8u));
-            temp_output_row += elementsInRow;
-            output_row += elementsInRowMax;
-        }
-        count += dstDescPtr->strides.nStride;
-
-        char temp[1000];
-        strcpy(temp, dst);
-        strcat(temp, audioNames[j]);
-
-        Mat mat_op_image;
-        mat_op_image = Mat(height, width, CV_8UC3, temp_output);
-        imwrite(temp, mat_op_image);
-
-        free(temp_output);
-    }
 
     // Free memory
 
-    free(roiTensorPtrSrc);
-    free(roiTensorPtrDst);
     free(input);
-    free(input_second);
-    free(output);
     free(inputf16);
-    free(inputf16_second);
-    free(outputf16);
     free(inputf32);
-    free(inputf32_second);
-    free(outputf32);
     free(inputi8);
-    free(inputi8_second);
-    free(outputi8);
+    free(detectionIndex);
+    free(detectionLength);
 
     return 0;
 }
