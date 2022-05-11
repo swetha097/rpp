@@ -68,3 +68,20 @@ RppStatus rppt_to_decibels_host(RppPtr_t magnitudePtr,
 
     return RPP_SUCCESS;
 }
+
+RppStatus rppt_pre_emphasis_filter_host(RppPtr_t srcPtr,
+                                        RpptDescPtr srcDescPtr,
+                                        RppPtr_t dstPtr,
+                                        Rpp32s *srcSizeTensor,
+                                        Rpp32f *coeffTensor,
+                                        Rpp32u borderType)
+{
+     pre_emphasis_filter_host_tensor((Rpp32f*)srcPtr,
+                                     srcDescPtr,
+                                     (Rpp32f*)dstPtr,
+                                     srcSizeTensor,
+                                     coeffTensor,
+                                     borderType);
+    
+    return RPP_SUCCESS;
+}

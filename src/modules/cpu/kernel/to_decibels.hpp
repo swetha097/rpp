@@ -27,8 +27,7 @@ RppStatus to_decibels_host_tensor(Rpp32f *magnitudeTensor,
     {
         Rpp32f magnitude = magnitudeTensor[batchCount];
         Rpp32f minRatio = pow(10, cutOffDB / multiplier);
-        std::cout<<"minRatio: "<<minRatio<<std::endl;
-        std::cout<<"magnitude: "<<magnitude<<std::endl;
+
         //Assert if minRatio < 0 - TODO
         DBTensor[batchCount] = multiplier * log10(std::max(minRatio, magnitude / referenceMagnitude));
     }

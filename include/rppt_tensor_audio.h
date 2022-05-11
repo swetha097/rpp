@@ -34,6 +34,9 @@ RppStatus rppt_non_silent_region_detection_host(RppPtr_t srcPtr, RpptDescPtr src
 //To Decibels
 RppStatus rppt_to_decibels_host(RppPtr_t magnitudePtr, RppPtr_t DBPtr, Rpp32u batchSize, Rpp32f cutOffDB = -200.0, Rpp32f multiplier = 10.0, Rpp32f referenceMagnitude = 0.0);
 
+//Pre emphasis filter
+RppStatus rppt_pre_emphasis_filter_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, Rpp32s *srcSizeTensor, Rpp32f *coeffTensor, Rpp32u borderType = 1);
+
 #ifdef __cplusplus
 }
 #endif
