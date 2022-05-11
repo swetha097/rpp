@@ -24,5 +24,6 @@ THE SOFTWARE.
 #define HOST_TENSOR_AUDIO_HPP
 
 #include "kernel/non_silent_region_detection.hpp"
+#include "kernel/to_decibels.hpp"
 
 #endif // HOST_TENSOR_AUDIO_HPP

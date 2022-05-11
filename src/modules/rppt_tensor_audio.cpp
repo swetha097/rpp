@@ -51,3 +51,20 @@ RppStatus rppt_non_silent_region_detection_host(RppPtr_t srcPtr,
 
     return RPP_SUCCESS;
 }
+
+RppStatus rppt_to_decibels_host(RppPtr_t magnitudePtr,
+                                RppPtr_t DBPtr,
+                                Rpp32u batchSize,
+                                Rpp32f cutOffDB,
+                                Rpp32f multiplier,
+                                Rpp32f referenceMagnitude)
+{
+    to_decibels_host_tensor((Rpp32f*)(magnitudePtr),
+                            (Rpp32f*)(DBPtr),
+                            batchSize,
+                            cutOffDB,
+                            multiplier,
+                            referenceMagnitude);
+
+    return RPP_SUCCESS;
+}

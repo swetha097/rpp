@@ -28,7 +28,11 @@ THE SOFTWARE.
 extern "C" {
 #endif
 
+//Non Silent Region Detection
 RppStatus rppt_non_silent_region_detection_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, Rpp32s *srcSize, Rpp32s *detectedIndex, Rpp32s *detectionLength, Rpp32f *cutOffDB, Rpp32s *windowLength, Rpp32f *referencePower, Rpp32s *resetInterval, bool *referenceMax, rppHandle_t handle);
+
+//To Decibels
+RppStatus rppt_to_decibels_host(RppPtr_t magnitudePtr, RppPtr_t DBPtr, Rpp32u batchSize, Rpp32f cutOffDB = -200.0, Rpp32f multiplier = 10.0, Rpp32f referenceMagnitude = 0.0);
 
 #ifdef __cplusplus
 }
