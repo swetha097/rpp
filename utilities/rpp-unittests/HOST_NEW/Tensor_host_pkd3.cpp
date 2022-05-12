@@ -1029,6 +1029,28 @@ case 21:
     }
     case 39:
     {
+
+        Rpp32f inputAudio[7] = {-0.272664, -0.183242, 0.297365, 0.176255, -0.10889, -0.167186, 0.0983087};
+        int numElements = 7;
+        Rpp32s *inputSize = (Rpp32s *)calloc(numElements, sizeof(Rpp32s));
+        inputSize[0] = 7;
+        srcDescPtr->n = 1;
+        Rpp32f *outAudio = (Rpp32f *)calloc(numElements, sizeof(float));
+        Rpp32f *coeff = (Rpp32f *)calloc(numElements, sizeof(float));
+        coeff[0] = 0.97;
+        Rpp32u borderType = 1;
+
+        if (ip_bitDepth == 2)
+        {
+            rppt_pre_emphasis_filter_host(inputAudio, srcDescPtr, outAudio, inputSize, coeff);
+        }
+
+        std::cout<<"Printing filtered output: "<<std::endl;
+        for(int i = 0; i < 7; i++)
+        {
+            std::cout<<outAudio[i]<<" ";
+        }
+
         // int numElements = 8;
         // Rpp32f inputMag[8] = {0.1369617 , -0.23021328, -0.4590265 , -0.48347238,  0.3132702 ,
         //  0.41275555,  0.10663575,  0.22949654};
@@ -1050,75 +1072,75 @@ case 21:
         //     std::cout<<outDB[i]<<" ";
         // }
         
-        Rpp32u batchSize = 1;
-        test_case_name = "audio_test";
-        Rpp32s detectedIndex[batchSize];
-        Rpp32s detectionLength[batchSize];
-        Rpp32f cutOffDB[batchSize];
-        Rpp32s windowLength[batchSize];
-        Rpp32f referencePower[batchSize];
-        Rpp32s resetInterval[batchSize];
-        bool referenceMax[batchSize];
-        Rpp32s audioLength[batchSize];
-        srcDescPtr->n = batchSize;
+        // Rpp32u batchSize = 1;
+        // test_case_name = "audio_test";
+        // Rpp32s detectedIndex[batchSize];
+        // Rpp32s detectionLength[batchSize];
+        // Rpp32f cutOffDB[batchSize];
+        // Rpp32s windowLength[batchSize];
+        // Rpp32f referencePower[batchSize];
+        // Rpp32s resetInterval[batchSize];
+        // bool referenceMax[batchSize];
+        // Rpp32s audioLength[batchSize];
+        // srcDescPtr->n = batchSize;
 
-        SNDFILE	*infile;
-        SF_INFO sfinfo;
-        int	readcount;
-        string mono_output_path = "/media/sampath/sampath_rpp/utilities/rpp-unittests/HOST_NEW/sample_output/output.wav";
+        // SNDFILE	*infile;
+        // SF_INFO sfinfo;
+        // int	readcount;
+        // string mono_output_path = "/media/sampath/sampath_rpp/utilities/rpp-unittests/HOST_NEW/sample_output/output.wav";
         
-        //The SF_INFO struct must be initialized before using it
-        memset (&sfinfo, 0, sizeof (sfinfo));
-        if (! (infile = sf_open (mono_output_path.c_str(), SFM_READ, &sfinfo)))
-        {	
-            cerr<<"Not able to open input file"<<mono_output_path<<endl;
+        // //The SF_INFO struct must be initialized before using it
+        // memset (&sfinfo, 0, sizeof (sfinfo));
+        // if (! (infile = sf_open (mono_output_path.c_str(), SFM_READ, &sfinfo)))
+        // {	
+        //     cerr<<"Not able to open input file"<<mono_output_path<<endl;
             
-            /* Print the error message from libsndfile. */
-            puts (sf_strerror (NULL));
-            return 1;
-        }
+        //     /* Print the error message from libsndfile. */
+        //     puts (sf_strerror (NULL));
+        //     return 1;
+        // }
         
-        if (sfinfo.channels > MAX_CHANNELS)
-        {	printf ("Not able to process more than %d channels\n", MAX_CHANNELS) ;
-            sf_close (infile) ;
-            return 1 ;
-        }
+        // if (sfinfo.channels > MAX_CHANNELS)
+        // {	printf ("Not able to process more than %d channels\n", MAX_CHANNELS) ;
+        //     sf_close (infile) ;
+        //     return 1 ;
+        // }
 
-        for (i = 0; i < images; i++)
-        {
-            detectedIndex[i] = 0;
-            detectionLength[i] = 0;
-            cutOffDB[i] = -60.0;
-            windowLength[i] = 3;
-            referencePower[i] = 1.0;
-            resetInterval[i] = -1;
-            referenceMax[i] = true;
-            audioLength[i] = sfinfo.frames * sfinfo.channels;
-        }
+        // for (i = 0; i < images; i++)
+        // {
+        //     detectedIndex[i] = 0;
+        //     detectionLength[i] = 0;
+        //     cutOffDB[i] = -60.0;
+        //     windowLength[i] = 3;
+        //     referencePower[i] = 1.0;
+        //     resetInterval[i] = -1;
+        //     referenceMax[i] = true;
+        //     audioLength[i] = sfinfo.frames * sfinfo.channels;
+        // }
 
-        Rpp32f *inputAudio = (Rpp32f *)calloc(audioLength[0], sizeof(Rpp32f));
-        readcount = (int) sf_read_float (infile, inputAudio, audioLength[0]);
-        if(readcount == audioLength[0])
-            cout<<endl<<"Read completely";
-        else
-            cout<<endl<<"Incorrect read from audio file";
+        // Rpp32f *inputAudio = (Rpp32f *)calloc(audioLength[0], sizeof(Rpp32f));
+        // readcount = (int) sf_read_float (infile, inputAudio, audioLength[0]);
+        // if(readcount == audioLength[0])
+        //     cout<<endl<<"Read completely";
+        // else
+        //     cout<<endl<<"Incorrect read from audio file";
  
-        /* Close input*/
-        sf_close (infile);
+        // /* Close input*/
+        // sf_close (infile);
         
-        start_omp = omp_get_wtime();
-        start = clock();
-        if (ip_bitDepth == 2)
-        {
-            rppt_non_silent_region_detection_host(inputAudio, srcDescPtr, audioLength, detectedIndex, detectionLength, cutOffDB, windowLength, referencePower, resetInterval, referenceMax, handle);
-        }
-        else
-            missingFuncFlag = 1;
+        // start_omp = omp_get_wtime();
+        // start = clock();
+        // if (ip_bitDepth == 2)
+        // {
+        //     rppt_non_silent_region_detection_host(inputAudio, srcDescPtr, audioLength, detectedIndex, detectionLength, cutOffDB, windowLength, referencePower, resetInterval, referenceMax, handle);
+        // }
+        // else
+        //     missingFuncFlag = 1;
         
-        //Print the detection index and length
-        cout<<endl<<"Index, Length: "<<detectedIndex[0]<<" "<<detectionLength[0];
+        // //Print the detection index and length
+        // cout<<endl<<"Index, Length: "<<detectedIndex[0]<<" "<<detectionLength[0];
         
-        break;
+        // break;
     }
     case 81:
     {
