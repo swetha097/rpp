@@ -170,10 +170,10 @@ do
     echo "--------------------------------"
     printf "Running a New Functionality...\n"
     echo "--------------------------------"
-    for ((bitDepth=2;bitDepth<3;bitDepth++))
+    for ((bitDepth=0;bitDepth<7;bitDepth++))
     do
         printf "\n\n\nRunning New Bit Depth...\n-------------------------\n\n"
-        for ((outputFormatToggle=0;outputFormatToggle<2;outputFormatToggle++))
+        for ((outputFormatToggle=0;outputFormatToggle<1;outputFormatToggle++))
         do
 
             if [[ "$case" -eq 74 ]]
@@ -239,10 +239,10 @@ do
     echo "--------------------------------"
     printf "Running a New Functionality...\n"
     echo "--------------------------------"
-    for ((bitDepth=2;bitDepth<3;bitDepth++))
+    for ((bitDepth=0;bitDepth<7;bitDepth++))
     do
         printf "\n\n\nRunning New Bit Depth...\n-------------------------\n\n"
-        for ((outputFormatToggle=0;outputFormatToggle<1;outputFormatToggle++))
+        for ((outputFormatToggle=0;outputFormatToggle<2;outputFormatToggle++))
         do
 
             if [[ "$case" -eq 74 ]]
@@ -308,7 +308,7 @@ do
     echo "--------------------------------"
     printf "Running a New Functionality...\n"
     echo "--------------------------------"
-    for ((bitDepth=2;bitDepth<3;bitDepth++))
+    for ((bitDepth=0;bitDepth<7;bitDepth++))
     do
         printf "\n\n\nRunning New Bit Depth...\n-------------------------\n\n"
         for ((outputFormatToggle=0;outputFormatToggle<2;outputFormatToggle++))
@@ -376,7 +376,7 @@ then
         echo "--------------------------------" | tee -a "$DST_FOLDER/uniqueFunctionalities_host_log.txt"
         printf "Running a New Functionality...\n" | tee -a "$DST_FOLDER/uniqueFunctionalities_host_log.txt"
         echo "--------------------------------" | tee -a "$DST_FOLDER/uniqueFunctionalities_host_log.txt"
-        for ((bitDepth=2;bitDepth<3;bitDepth++))
+        for ((bitDepth=0;bitDepth<7;bitDepth++))
         do
             printf "\n\n\nRunning New Bit Depth...\n-------------------------\n\n" | tee -a "$DST_FOLDER/uniqueFunctionalities_host_log.txt"
             echo "./uniqueFunctionalities_host $bitDepth $case" | tee -a "$DST_FOLDER/uniqueFunctionalities_host_log.txt"

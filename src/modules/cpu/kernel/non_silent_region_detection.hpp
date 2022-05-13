@@ -51,20 +51,12 @@ RppStatus non_silent_region_detection_host_tensor(Rpp32f *srcPtr,
 #pragma omp parallel for num_threads(srcDescPtr->n)    
     for(int batchCount = 0; batchCount < srcDescPtr->n; batchCount++)
     {
+      Rpp32f *srcPtrTemp = srcPtr + batchCount * srcDescPtr->w;
       Rpp32s srcSize = srcSizeTensor[batchCount];
       Rpp32s windowLength = windowLengthTensor[batchCount];
       Rpp32f referencePower = referencePowerTensor[batchCount];
       Rpp32f cutOffDB = cutOffDBTensor[batchCount];
       bool referenceMax = referenceMaxTensor[batchCount];
-
-      // for(int i = 0; i < srcSize; i++)
-      // {
-      //   std::cout<<srcPtr[i]<<" ";
-      //   if (i % 1000 == 0)
-      //   {
-      //     std::cout<<std::endl;
-      //   }
-      // }
 
       //set reset interval based on the user input 
       Rpp32s resetInterval = resetIntervalTensor[batchCount];
@@ -80,12 +72,12 @@ RppStatus non_silent_region_detection_host_tensor(Rpp32f *srcPtr,
       Rpp32f meanFactor = 1.f / windowLength;
       for (int windowBegin = 0; windowBegin <= srcSize - windowLength;) 
       {
-          sumOfSquares = CalcSumSquared(srcPtr, windowBegin, windowLength);
+          sumOfSquares = CalcSumSquared(srcPtrTemp, windowBegin, windowLength);
           mmsBuffer[windowBegin] = sumOfSquares * meanFactor;
           auto interval_endIdx = std::min(windowBegin + resetInterval, srcSize) - windowLength + 1;
           for (windowBegin++; windowBegin < interval_endIdx; windowBegin++) 
           {
-              sumOfSquares += Square(srcPtr[windowBegin + windowLength - 1]) - Square(srcPtr[windowBegin - 1]);
+              sumOfSquares += Square(srcPtrTemp[windowBegin + windowLength - 1]) - Square(srcPtrTemp[windowBegin - 1]);
               mmsBuffer[windowBegin] = sumOfSquares * meanFactor;
           }
       }
