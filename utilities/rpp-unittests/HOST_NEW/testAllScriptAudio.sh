@@ -5,7 +5,7 @@
 cwd=$(pwd)
 
 # Input AUDIO_FILES - Three AUDIO_FILES (224 x 224)
-DEFAULT_SRC_FOLDER_1="/media/sampath/sampath_rpp/utilities/rpp-unittests/HOST_NEW/sample_output"
+DEFAULT_SRC_FOLDER_1="$cwd/../TEST_AUDIO_FILES"
 
 # Output AUDIO_FILES
 mkdir "$cwd/../OUTPUT_AUDIO_FILES_HOST_NEW"

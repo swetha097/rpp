@@ -257,8 +257,8 @@ int main(int argc, char **argv)
         case 0:
         {
             test_case_name = "non_silent_region_detection";
-            Rpp32s *detectionIndex = (Rpp32s *)calloc(ioBufferSize, sizeof(Rpp32s));
-            Rpp32s *detectionLength = (Rpp32s *)calloc(ioBufferSize, sizeof(Rpp32s));
+            Rpp32s *detectionIndex = (Rpp32s *)calloc(noOfAudioFiles, sizeof(Rpp32s));
+            Rpp32s *detectionLength = (Rpp32s *)calloc(noOfAudioFiles, sizeof(Rpp32s));
 
             Rpp32f cutOffDB[noOfAudioFiles];
             Rpp32s windowLength[noOfAudioFiles];
@@ -287,8 +287,8 @@ int main(int argc, char **argv)
             //Print the detection index and length
             for(int i = 0; i < noOfAudioFiles; i++)
             {
-                cout<<"Audiofile: "<<audioNames[i]<<endl;
-                cout<<"Index, Length: "<<detectionIndex[i]<<" "<<detectionLength[i]<<endl;
+                cout<<endl<<"Audiofile: "<<audioNames[i];
+                cout<<endl<<"Index, Length: "<<detectionIndex[i]<<" "<<detectionLength[i];
             }
 
             free(detectionIndex);
@@ -346,6 +346,7 @@ int main(int argc, char **argv)
             // {
             //     std::cout<<outputf32[i]<<" ";
             // }
+            free(coeff);
             break;
         }
         default:
@@ -375,6 +376,7 @@ int main(int argc, char **argv)
     rppDestroyHost(handle);
 
     // Free memory
+    free(inputAudioSize);
     free(inputf32);
     free(outputf32);
     // free(inputf64);
