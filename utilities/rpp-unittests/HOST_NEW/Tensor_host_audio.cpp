@@ -349,6 +349,46 @@ int main(int argc, char **argv)
             free(coeff);
             break;
         }
+        case 3:
+        {
+            test_case_name = "down_mixing";
+            Rpp32f stereoInput[12] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12};
+            int numFiles = 1;
+            int stereoSize = 12;
+            int numChannels = 3;
+            int64_t numSamplesPerChannel = (int64_t)stereoSize / numChannels; 
+            Rpp64s samplesPerChannelTensor[numFiles];
+            Rpp32s channelsTensor[numFiles];
+            Rpp32f weightsTensor[numFiles * 3] = {3, 2, 1};
+            bool normalizeWeights = false;
+
+            for(int i = 0; i < numFiles; i++)
+            {
+                samplesPerChannelTensor[i] = numSamplesPerChannel; 
+                channelsTensor[i] = numChannels;
+            }
+
+            Rpp32f *monoOutput = (Rpp32f *)calloc(numSamplesPerChannel, sizeof(Rpp32f));
+        
+            start_omp = omp_get_wtime();
+            start = clock();
+            if (ip_bitDepth == 2)
+            {
+                rppt_down_mixing_host(stereoInput, srcDescPtr, monoOutput, samplesPerChannelTensor, channelsTensor, weightsTensor, normalizeWeights);
+            }
+            else
+                missingFuncFlag = 1;
+
+            //Print the mono output
+            cout<<endl<<"Mono Output: ";
+            for(int i = 0; i < numSamplesPerChannel; i++)
+            {
+                cout<<monoOutput[i]<<" ";
+            }
+
+            free(monoOutput);
+            break;
+        }
         default:
         {
             missingFuncFlag = 1;

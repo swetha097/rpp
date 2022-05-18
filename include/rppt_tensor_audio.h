@@ -37,6 +37,9 @@ RppStatus rppt_to_decibels_host(RppPtr_t magnitudePtr, RppPtr_t DBPtr, Rpp32u ba
 //Pre emphasis filter
 RppStatus rppt_pre_emphasis_filter_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, Rpp32s *srcSizeTensor, Rpp32f *coeffTensor, Rpp32u borderType = 1);
 
+//Downmixing
+RppStatus rppt_down_mixing_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, Rpp64s *samplesPerChannelTensor, Rpp32s *channelsTensor, Rpp32f *weightsTensor, bool  normalizeWeights);
+
 #ifdef __cplusplus
 }
 #endif
