@@ -16,11 +16,11 @@ RppStatus pre_emphasis_filter_host_tensor(Rpp32f *srcPtr,
       Rpp32s srcSize = srcSizeTensor[batchCount];
       Rpp32f coeff = coeffTensor[batchCount];
 
-      if(borderType == 0)
+      if(borderType == RpptAudioBorderType::Zero)
         dstPtr[0] = srcPtr[0];
-      else if(borderType == 1)
+      else if(borderType == RpptAudioBorderType::Clamp)
         dstPtr[0] = srcPtr[0] * (1 - coeff); 
-      else
+      else if(borderType == RpptAudioBorderType::Reflect)
         dstPtr[0] = srcPtr[0] - coeff * srcPtr[1]; 
 
       for(int i = 1; i < srcSize; i++)

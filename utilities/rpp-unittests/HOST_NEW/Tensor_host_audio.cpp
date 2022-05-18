@@ -315,7 +315,7 @@ int main(int argc, char **argv)
                 missingFuncFlag = 1;
 
             //Print the detection index and length
-            cout<<"Output Magnitude: "<<endl;
+            cout<<endl<<"Output in DB: "<<endl;
             for(int i = 0; i < numElements; i++)
             {
                 cout<<outDB[i]<<" ";
@@ -330,7 +330,7 @@ int main(int argc, char **argv)
             Rpp32f *coeff = (Rpp32f *)calloc(noOfAudioFiles, sizeof(float));
             for (i = 0; i < noOfAudioFiles; i++)
                 coeff[i] = 0.97;
-            Rpp32u borderType = 1;
+            RpptAudioBorderType borderType = RpptAudioBorderType::Clamp;
 
             start_omp = omp_get_wtime();
             start = clock();
@@ -341,11 +341,16 @@ int main(int argc, char **argv)
             else
                 missingFuncFlag = 1;
 
-            // std::cout<<"Printing filtered output: "<<std::endl;
-            // for(int i = 0; i < 7; i++)
-            // {
-            //     std::cout<<outputf32[i]<<" ";
-            // }
+            cout<<endl<<"Output from preemphasis filter: ";
+            for(int i = 0; i < noOfAudioFiles; i++)
+            {
+                cout<<endl<<"Audiofile: "<<audioNames[i]<<endl;
+                for(int j = 0; j < inputAudioSize[i]; j++)
+                {
+                    cout<<outputf32[j]<<" ";
+                }
+                cout<<endl;
+            }
             free(coeff);
             break;
         }

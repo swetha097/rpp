@@ -1,6 +1,4 @@
 #include "rppdefs.h"
-#include "cpu/rpp_cpu_simd.hpp"
-#include "cpu/rpp_cpu_common.hpp"
 
 RppStatus to_decibels_host_tensor(Rpp32f *magnitudeTensor,
                                   Rpp32f *DBTensor,
@@ -23,13 +21,16 @@ RppStatus to_decibels_host_tensor(Rpp32f *magnitudeTensor,
             referenceMagnitude = 1.0;
     }
 
+    //Calculate the intermediate values needed for DB conversion
+    Rpp32f minRatio = pow(10, cutOffDB / multiplier);
+    if(minRatio == 0.0f)
+        minRatio = std::nextafter(0.0f, 1.0f);
+    Rpp32f invReferenceMagnitude = 1.f / referenceMagnitude;
+
     for(int batchCount = 0; batchCount < batchSize; batchCount++)
     {
         Rpp32f magnitude = magnitudeTensor[batchCount];
-        Rpp32f minRatio = pow(10, cutOffDB / multiplier);
-
-        //Assert if minRatio < 0 - TODO
-        DBTensor[batchCount] = multiplier * log10(std::max(minRatio, magnitude / referenceMagnitude));
+        DBTensor[batchCount] = multiplier * log10(std::max(minRatio, magnitude * invReferenceMagnitude));
     }
     return RPP_SUCCESS;
 }

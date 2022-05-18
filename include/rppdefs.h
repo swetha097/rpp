@@ -292,6 +292,12 @@ typedef struct
     Rpp32u height;
 } RpptImagePatch, *RpptImagePatchPtr;
 
+typedef enum {
+    Zero = 0,
+    Clamp,
+    Reflect,
+  }RpptAudioBorderType;
+
 
 
 /******************** HOST memory typedefs ********************/
