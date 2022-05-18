@@ -104,3 +104,24 @@ RppStatus rppt_down_mixing_host(RppPtr_t srcPtr,
 
     return RPP_SUCCESS;
 }
+
+RppStatus rppt_resampling_host(RppPtr_t srcPtr,
+                               RpptDescPtr srcDescPtr,
+                               int64_t *nInTensor,
+                               Rpp64f *inRateTensor,
+                               RppPtr_t dstPtr,
+                               int64_t *outBeginTensor,
+                               int64_t *outEndTensor,
+                               Rpp64f *outRateTensor)
+{
+     resampling_host_tensor((Rpp32f*)srcPtr,
+                            srcDescPtr,
+                            nInTensor,
+                            inRateTensor,
+                            (Rpp32f*)dstPtr,
+                            outBeginTensor,
+                            outEndTensor,
+                            outRateTensor)
+
+    return RPP_SUCCESS;
+}

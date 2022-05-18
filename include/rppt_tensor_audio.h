@@ -40,6 +40,9 @@ RppStatus rppt_pre_emphasis_filter_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr,
 //Downmixing
 RppStatus rppt_down_mixing_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, Rpp64s *samplesPerChannelTensor, Rpp32s *channelsTensor, Rpp32f *weightsTensor, bool  normalizeWeights);
 
+//Resampling
+RppStatus rppt_resampling_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, int64_t *nInTensor, Rpp64f *inRateTensor, RppPtr_t dstPtr, int64_t *outBeginTensor, int64_t *outEndTensor, Rpp64f *outRateTensor);
+
 #ifdef __cplusplus
 }
 #endif
