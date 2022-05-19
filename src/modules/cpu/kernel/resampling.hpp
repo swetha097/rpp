@@ -8,7 +8,7 @@
 #include "rppdefs.h"
 #include<iomanip>
 
-RppStatus down_mixing_host_tensor(Rpp32f *srcPtr,
+RppStatus resampling_host_tensor(Rpp32f *srcPtr,
                                   RpptDescPtr srcDescPtr,
                                   int64_t *nInTensor,
                                   Rpp64f *inRateTensor,

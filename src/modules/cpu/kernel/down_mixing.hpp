@@ -6,15 +6,19 @@ RppStatus down_mixing_host_tensor(Rpp32f *srcPtr,
                                   Rpp32f *dstPtr,
                                   Rpp64s *samplesPerChannelTensor,
                                   Rpp32s *channelsTensor,
-                                  Rpp32f *weightsTensor,
                                   bool  normalizeWeights)
 {
-    for(int batchCount = 0; batchCount < 1; batchCount++)
+    for(int batchCount = 0; batchCount < srcDescPtr->n; batchCount++)
     {
-        std::vector<float> normalizedWeights(8);
-        float *weights = &weightsTensor[batchCount];
+        Rpp32f *srcPtrTemp = srcPtr + batchCount * srcDescPtr->strides.nStride;
+        Rpp32f *dstPtrTemp = dstPtr + batchCount * srcDescPtr->strides.nStride;
+
         int channels = channelsTensor[batchCount];
         int64_t samples = samplesPerChannelTensor[batchCount];
+        std::vector<float> weights;
+        weights.resize(channels, 1.f / channels);
+        std::vector<float> normalizedWeights;
+        
         if (normalizeWeights) 
         {
             normalizedWeights.resize(channels);
@@ -28,17 +32,17 @@ RppStatus down_mixing_host_tensor(Rpp32f *srcPtr,
             for (int i = 0; i < channels; i++) 
                 normalizedWeights[i] = weights[i] / sum;
             
-            weights = normalizedWeights.data();
+            weights = normalizedWeights;
         }
 
         //use weights to downmix for stereo to mono
         for (int64_t o = 0, i = 0; o < samples; o++, i += channels) 
         {
-            float sum = srcPtr[i] * weights[0];
+            float sum = srcPtrTemp[i] * weights[0];
             for (int c = 1; c < channels; c++) 
-                sum += srcPtr[i + c] * weights[c];
+                sum += srcPtrTemp[i + c] * weights[c];
             
-            dstPtr[o] = sum;
+            dstPtrTemp[o] = sum;
         }
     }
 

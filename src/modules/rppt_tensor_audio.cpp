@@ -91,7 +91,6 @@ RppStatus rppt_down_mixing_host(RppPtr_t srcPtr,
                                 RppPtr_t dstPtr,
                                 Rpp64s *samplesPerChannelTensor,
                                 Rpp32s *channelsTensor,
-                                Rpp32f *weightsTensor,
                                 bool  normalizeWeights)
 {
      down_mixing_host_tensor((Rpp32f*)srcPtr,
@@ -99,7 +98,6 @@ RppStatus rppt_down_mixing_host(RppPtr_t srcPtr,
                              (Rpp32f*)dstPtr,
                              samplesPerChannelTensor,
                              channelsTensor,
-                             weightsTensor,
                              normalizeWeights);
 
     return RPP_SUCCESS;
@@ -121,7 +119,7 @@ RppStatus rppt_resampling_host(RppPtr_t srcPtr,
                             (Rpp32f*)dstPtr,
                             outBeginTensor,
                             outEndTensor,
-                            outRateTensor)
+                            outRateTensor);
 
     return RPP_SUCCESS;
 }

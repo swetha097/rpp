@@ -126,10 +126,12 @@ int main(int argc, char **argv)
 
     // Initialize the AudioPatch for source
     Rpp32s *inputAudioSize = (Rpp32s *) calloc(noOfAudioFiles, sizeof(Rpp32s));
+    Rpp64s *samplesPerChannelTensor = (Rpp64s *) calloc(noOfAudioFiles, sizeof(Rpp64s));
+    Rpp32s *channelsTensor =  (Rpp32s *) calloc(noOfAudioFiles, sizeof(Rpp32s));
 
     // Set maxLength
     char audioNames[noOfAudioFiles][1000];
-
+    
     dr = opendir(src);
     while ((de = readdir(dr)) != NULL)
     {
@@ -153,6 +155,8 @@ int main(int argc, char **argv)
         }
 
         inputAudioSize[count] = sfinfo.frames * sfinfo.channels;
+        samplesPerChannelTensor[count] = sfinfo.frames;
+        channelsTensor[count] = sfinfo.channels;
         maxLength = RPPMAX2(maxLength, inputAudioSize[count]);
  
         /* Close input*/
@@ -352,41 +356,30 @@ int main(int argc, char **argv)
         case 3:
         {
             test_case_name = "down_mixing";
-            Rpp32f stereoInput[12] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12};
-            int numFiles = 1;
-            int stereoSize = 12;
-            int numChannels = 3;
-            int64_t numSamplesPerChannel = (int64_t)stereoSize / numChannels; 
-            Rpp64s samplesPerChannelTensor[numFiles];
-            Rpp32s channelsTensor[numFiles];
-            Rpp32f weightsTensor[numFiles * 3] = {3, 2, 1};
             bool normalizeWeights = false;
 
-            for(int i = 0; i < numFiles; i++)
-            {
-                samplesPerChannelTensor[i] = numSamplesPerChannel; 
-                channelsTensor[i] = numChannels;
-            }
-
-            Rpp32f *monoOutput = (Rpp32f *)calloc(numSamplesPerChannel, sizeof(Rpp32f));
-        
             start_omp = omp_get_wtime();
             start = clock();
             if (ip_bitDepth == 2)
             {
-                rppt_down_mixing_host(stereoInput, srcDescPtr, monoOutput, samplesPerChannelTensor, channelsTensor, weightsTensor, normalizeWeights);
+                rppt_down_mixing_host(inputf32, srcDescPtr, outputf32, samplesPerChannelTensor, channelsTensor, normalizeWeights);
             }
             else
                 missingFuncFlag = 1;
 
             //Print the mono output
-            cout<<endl<<"Mono Output: ";
-            for(int i = 0; i < numSamplesPerChannel; i++)
+            cout<<endl<<"Printing downmixed output: "<<endl;
+            for(int i = 0; i < noOfAudioFiles; i++)
             {
-                cout<<monoOutput[i]<<" ";
+                int idxstart = i * srcDescPtr->strides.nStride;
+                int idxend = idxstart + samplesPerChannelTensor[i];
+                for(int j = idxstart; j < idxend; j++)
+                {
+                    cout<<"out["<<j<<"]: "<<outputf32[j]<<endl;
+                }
+                cout<<endl;
             }
 
-            free(monoOutput);
             break;
         }
         default:
@@ -417,6 +410,8 @@ int main(int argc, char **argv)
 
     // Free memory
     free(inputAudioSize);
+    free(samplesPerChannelTensor);
+    free(channelsTensor);
     free(inputf32);
     free(outputf32);
     // free(inputf64);
