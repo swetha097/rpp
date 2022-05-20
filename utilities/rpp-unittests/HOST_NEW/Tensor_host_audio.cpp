@@ -327,6 +327,7 @@ int main(int argc, char **argv)
         case 2:
         {
             test_case_name = "pre_emphasis_filter";
+            std::cout<<"Batchsize: "<<noOfAudioFiles<<std::endl;
             Rpp32f *coeff = (Rpp32f *)calloc(noOfAudioFiles, sizeof(float));
             for (i = 0; i < noOfAudioFiles; i++)
                 coeff[i] = 0.97;
@@ -341,16 +342,16 @@ int main(int argc, char **argv)
             else
                 missingFuncFlag = 1;
 
-            cout<<endl<<"Output from preemphasis filter: ";
-            for(int i = 0; i < noOfAudioFiles; i++)
-            {
-                cout<<endl<<"Audiofile: "<<audioNames[i]<<endl;
-                for(int j = 0; j < inputAudioSize[i]; j++)
-                {
-                    cout<<outputf32[j]<<" ";
-                }
-                cout<<endl;
-            }
+            // cout<<endl<<"Output from preemphasis filter: ";
+            // for(int i = 0; i < noOfAudioFiles; i++)
+            // {
+            //     cout<<endl<<"Audiofile: "<<audioNames[i]<<endl;
+            //     for(int j = 0; j < inputAudioSize[i]; j++)
+            //     {
+            //         cout<<outputf32[j]<<endl;
+            //     }
+            //     cout<<endl;
+            // }
             free(coeff);
             break;
         }
