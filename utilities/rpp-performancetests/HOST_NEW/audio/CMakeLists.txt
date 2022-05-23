@@ -1,0 +1,33 @@
+cmake_minimum_required(VERSION 3.0)
+project(Rpp_test)
+list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/../../../../cmake)
+set(ROCM_PATH /opt/rocm CACHE PATH "default ROCm installation path")
+find_package(OpenCL REQUIRED)
+find_package(OpenCV REQUIRED)
+find_package(AMDRPP QUIET)
+find_library(libsnd_LIBS
+    NAMES sndfile libsndfile
+    PATHS ${CMAKE_SYSTEM_PREFIX_PATH} ${LIBSND_ROOT_DIR} "/usr/local"
+    PATH_SUFFIXES lib lib64)
+
+if(NOT OpenCL_FOUND)
+    message("-- ${Yellow}Rpp_test requires OpenCL, Found ${OpenCL_INCLUDE_DIRS} ${OpenCL_LIBRARIES} ${ColourReset}")
+endif()
+
+if (OpenCL_FOUND)
+    include_directories(${OpenCL_INCLUDE_DIRS} ${OpenCL_INCLUDE_DIRS}/Headers)
+    include_directories(${OpenCV_INCLUDE_DIRS})
+    include_directories(${ROCM_PATH}/include ${ROCM_PATH}/rpp/include /usr/local/include)
+    include_directories(${SndFile_INCLUDE_DIRS})
+    link_directories(${SndFile_LIBRARIES_DIR} /usr/local/lib/)
+    link_directories(${ROCM_PATH}/lib ${ROCM_PATH}/rpp/lib/ /usr/local/lib)
+
+    add_executable(Tensor_host_audio Tensor_host_audio.cpp)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp -DOCL_COMPILE=1 -DRPP_BACKEND_OPENCL=1 -std=c++11")
+    target_link_libraries(Tensor_host_audio ${OpenCV_LIBS} -lamd_rpp ${libsnd_LIBS} -lsndfile ${OpenCL_LIBRARIES} pthread boost_filesystem boost_system)
+endif()
+
+if(${libsnd_LIBS} STREQUAL libsnd_LIBS-NOTFOUND)
+        message(FATAL_ERROR "libsnd (sndfile) could not be found. Try to specify it's location with `-DLIBSND_ROOT_DIR`.")
+endif()
+message(STATUS "Found libsnd: ${libsnd_LIBS}")

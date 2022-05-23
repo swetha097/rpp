@@ -1,0 +1,110 @@
+mkdir: cannot create directory '/media/sampath/sampath_rpp/utilities/rpp-performancetests/HOST_NEW/audio/../../OUTPUT_PERFORMANCE_LOGS_HOST_NEW': File exists
+removed '/media/sampath/sampath_rpp/utilities/rpp-performancetests/HOST_NEW/audio/../../OUTPUT_PERFORMANCE_LOGS_HOST_NEW/Tensor_host_audio_host_raw_performance_log.txt'
+mkdir: cannot create directory 'build': File exists
+removed './CMakeCache.txt'
+removed './CMakeFiles/CMakeDirectoryInformation.cmake'
+removed './CMakeFiles/Makefile2'
+removed './CMakeFiles/feature_tests.cxx'
+removed './CMakeFiles/feature_tests.c'
+removed './CMakeFiles/feature_tests.bin'
+removed './CMakeFiles/TargetDirectories.txt'
+removed './CMakeFiles/progress.marks'
+removed directory './CMakeFiles/CMakeTmp'
+removed './CMakeFiles/cmake.check_cache'
+removed './CMakeFiles/3.10.2/CMakeSystem.cmake'
+removed './CMakeFiles/3.10.2/CMakeDetermineCompilerABI_CXX.bin'
+removed './CMakeFiles/3.10.2/CMakeDetermineCompilerABI_C.bin'
+removed directory './CMakeFiles/3.10.2/CompilerIdC/tmp'
+removed './CMakeFiles/3.10.2/CompilerIdC/CMakeCCompilerId.c'
+removed './CMakeFiles/3.10.2/CompilerIdC/a.out'
+removed directory './CMakeFiles/3.10.2/CompilerIdC'
+removed './CMakeFiles/3.10.2/CMakeCXXCompiler.cmake'
+removed './CMakeFiles/3.10.2/CMakeCCompiler.cmake'
+removed directory './CMakeFiles/3.10.2/CompilerIdCXX/tmp'
+removed './CMakeFiles/3.10.2/CompilerIdCXX/CMakeCXXCompilerId.cpp'
+removed './CMakeFiles/3.10.2/CompilerIdCXX/a.out'
+removed directory './CMakeFiles/3.10.2/CompilerIdCXX'
+removed directory './CMakeFiles/3.10.2'
+removed './CMakeFiles/Makefile.cmake'
+removed './CMakeFiles/Tensor_host_audio.dir/depend.internal'
+removed './CMakeFiles/Tensor_host_audio.dir/build.make'
+removed './CMakeFiles/Tensor_host_audio.dir/Tensor_host_audio.cpp.o'
+removed './CMakeFiles/Tensor_host_audio.dir/link.txt'
+removed './CMakeFiles/Tensor_host_audio.dir/CXX.includecache'
+removed './CMakeFiles/Tensor_host_audio.dir/cmake_clean.cmake'
+removed './CMakeFiles/Tensor_host_audio.dir/DependInfo.cmake'
+removed './CMakeFiles/Tensor_host_audio.dir/depend.make'
+removed './CMakeFiles/Tensor_host_audio.dir/flags.make'
+removed './CMakeFiles/Tensor_host_audio.dir/progress.make'
+removed directory './CMakeFiles/Tensor_host_audio.dir'
+removed './CMakeFiles/CMakeOutput.log'
+removed directory './CMakeFiles'
+removed './Makefile'
+removed './Tensor_host_audio'
+removed './cmake_install.cmake'
+-- The C compiler identification is GNU 7.5.0
+-- The CXX compiler identification is GNU 7.5.0
+-- Check for working C compiler: /usr/bin/cc
+-- Check for working C compiler: /usr/bin/cc -- works
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Check for working CXX compiler: /usr/bin/c++
+-- Check for working CXX compiler: /usr/bin/c++ -- works
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Found OPENCL: /opt/rocm/opencl/lib/libOpenCL.so  
+-- ROCm OpenCL Found - Set CL_TARGET_OPENCL_VERSION=220
+-- Found OpenCV: /usr/local (found version "3.4.0") 
+-- Found libsnd: /usr/lib/x86_64-linux-gnu/libsndfile.so
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /media/sampath/sampath_rpp/utilities/rpp-performancetests/HOST_NEW/audio/build
+Scanning dependencies of target Tensor_host_audio
+[ 50%] Building CXX object CMakeFiles/Tensor_host_audio.dir/Tensor_host_audio.cpp.o
+[100%] Linking CXX executable Tensor_host_audio
+[100%] Built target Tensor_host_audio
+
+
+
+
+
+##########################################################################################
+Running all Audio Inputs...
+##########################################################################################
+
+
+Usage: ./Tensor_host_audio <src folder> <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <case number = 0:1>
+
+
+
+--------------------------------
+Running a New Functionality...
+--------------------------------
+
+
+
+Running New Bit Depth...
+-------------------------
+
+
+./Tensor_host_audio  2 0 
+Running non_silent_region_detection_f32_Tensor_HOST_audio 100 times (each time with a batch size of 1 audio files) and computing mean statistics...
+max,min,avg = 0.009186,0.001398,0.001592
+------------------------------------------------------------------------------------------
+
+
+
+Opened log file ->  ../../OUTPUT_PERFORMANCE_LOGS_HOST_NEW/Tensor_host_audio_host_raw_performance_log.txt
+Functionalities -  1
+
+
+Functionality						Frames Count	max(s)		min(s)		avg(s)
+
+                                                  	   		   	   	  
+non_silent_region_detection                       	   		   	   	  
+                                                  	   		   	   	  
+non_silent_region_detection_f32_Tensor_HOST_audio 	 100 		 0.009186 	 0.001398 	 0.001592
