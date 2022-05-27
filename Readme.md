@@ -60,6 +60,8 @@ RPP is developed for **Linux** operating system.
         cmake -D CMAKE_BUILD_TYPE=Release -D CMAKE_INSTALL_PREFIX=/usr/local ..
         make -j<number of threads>
         sudo make install
+        sudo apt-get update
+        sudo apt-get install libsndfile1-dev
 
 ## Supported Functionalities and Variants
 
