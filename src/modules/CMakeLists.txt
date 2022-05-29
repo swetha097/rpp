@@ -95,7 +95,8 @@ elseif( "${BACKEND}" STREQUAL "OCL")
     # Set OpenCL compiler and flags
     set(CMAKE_CXX_COMPILER ${COMPILER_FOR_OPENCL}) # GCC and G++ donst work for creating .so file
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp -Ofast -msse4.2 -msse4.1 -mssse3 -mavx2 -mfma -g3 -std=c++14 -Wno-deprecated-declarations")
-
+    set_source_files_properties(rppt_tensor_audio.cpp PROPERTIES COMPILE_FLAGS -mno-fma)
+    
     # Add OpenCL specific preprocessor flags
     add_definitions(-DOCL_COMPILE)
     add_definitions(-DRPP_BACKEND_OPENCL)
