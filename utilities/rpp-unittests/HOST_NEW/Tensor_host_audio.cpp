@@ -54,13 +54,7 @@ int main(int argc, char **argv)
     switch (test_case)
     {
         case 0:
-            strcpy(funcName, "non_silent_region_detection");
-            break;
-        case 1:
-            strcpy(funcName, "to_decibels");
-            break;
-        case 2:
-            strcpy(funcName, "pre_emphasis_filter");
+            strcpy(funcName, "downmixing");
             break;
         default:
             strcpy(funcName, "test_case");
@@ -74,25 +68,10 @@ int main(int argc, char **argv)
     srcDescPtr = &srcDesc;
 
     // Set src/dst data types in tensor descriptors
-    if (ip_bitDepth == 0)
-    {
-        strcat(funcName, "_u8_");
-        srcDescPtr->dataType = RpptDataType::U8;
-    }
-    else if (ip_bitDepth == 1)
-    {
-        strcat(funcName, "_f16_");
-        srcDescPtr->dataType = RpptDataType::F16;
-    }
-    else if (ip_bitDepth == 2)
+    if (ip_bitDepth == 2)
     {
         strcat(funcName, "_f32_");
         srcDescPtr->dataType = RpptDataType::F32;
-    }
-    else if (ip_bitDepth == 5)
-    {
-        strcat(funcName, "_i8_");
-        srcDescPtr->dataType = RpptDataType::I8;
     }
 
     // Other initializations
@@ -184,24 +163,14 @@ int main(int argc, char **argv)
 
     // Initialize host buffers for input & output
     Rpp32f *inputf32 = (Rpp32f *)calloc(ioBufferSize, sizeof(Rpp32f));
-    // Rpp64f *inputf64 = (Rpp64f *)calloc(ioBufferSize, sizeof(Rpp64f));
-    // Rpp32s *inputi32 = (Rpp32s *)calloc(ioBufferSize, sizeof(Rpp32s));
-    
     Rpp32f *outputf32 = (Rpp32f *)calloc(ioBufferSize, sizeof(Rpp32f));
-    // Rpp64f *outputf64 = (Rpp64f *)calloc(ioBufferSize, sizeof(Rpp64f));
-    // Rpp32s *outputi32 = (Rpp32s *)calloc(ioBufferSize, sizeof(Rpp32s));
     
     i = 0;
     dr = opendir(src);
     while ((de = readdir(dr)) != NULL)
     {
-        Rpp32s *input_temp_i32;
         Rpp32f *input_temp_f32;
-        Rpp64f *input_temp_f64;
-
         input_temp_f32 = inputf32 + (i * srcDescPtr->strides.nStride);
-        // input_temp_f64 = inputf64 + (i * srcDescPtr->strides.nStride);
-        // input_temp_i32 = inputi32 + (i * srcDescPtr->strides.nStride);
 
         if (strcmp(de->d_name, ".") == 0 || strcmp(de->d_name, "..") == 0)
             continue;
@@ -223,23 +192,11 @@ int main(int argc, char **argv)
         }
 
         int bufferLength = sfinfo.frames * sfinfo.channels;
-        if(ip_bitDepth == 1)
-        {
-            readcount = (int) sf_read_double (infile, input_temp_f64, bufferLength);
-            if(readcount != bufferLength)
-                std::cerr<<"F64 Input: Unable to read audio file completely"<<std::endl;
-        }
         if(ip_bitDepth == 2)
         {
             readcount = (int) sf_read_float (infile, input_temp_f32, bufferLength);
             if(readcount != bufferLength)
                 std::cerr<<"F32 Unable to read audio file completely"<<std::endl;
-        }
-        else if(ip_bitDepth == 5)
-        {
-            readcount = (int) sf_read_int (infile, input_temp_i32, bufferLength);
-            if(readcount != bufferLength)
-                std::cerr<<"Unable to read audio file completely"<<std::endl;
         }
         i++;
  
@@ -259,101 +216,6 @@ int main(int argc, char **argv)
     switch (test_case)
     { 
         case 0:
-        {
-            test_case_name = "non_silent_region_detection";
-            Rpp32s *detectionIndex = (Rpp32s *)calloc(noOfAudioFiles, sizeof(Rpp32s));
-            Rpp32s *detectionLength = (Rpp32s *)calloc(noOfAudioFiles, sizeof(Rpp32s));
-
-            Rpp32f cutOffDB[noOfAudioFiles];
-            Rpp32s windowLength[noOfAudioFiles];
-            Rpp32f referencePower[noOfAudioFiles];
-            Rpp32s resetInterval[noOfAudioFiles];
-            bool referenceMax[noOfAudioFiles];
-        
-            for (i = 0; i < noOfAudioFiles; i++)
-            {
-                cutOffDB[i] = -60.0;
-                windowLength[i] = 3;
-                referencePower[i] = 1.0;
-                resetInterval[i] = -1;
-                referenceMax[i] = true;
-            }
-    
-            start_omp = omp_get_wtime();
-            start = clock();
-            if (ip_bitDepth == 2)
-            {
-                rppt_non_silent_region_detection_host(inputf32, srcDescPtr, inputAudioSize, detectionIndex, detectionLength, cutOffDB, windowLength, referencePower, resetInterval, referenceMax, handle);
-            }
-            else
-                missingFuncFlag = 1;
-            
-            //Print the detection index and length
-            for(int i = 0; i < noOfAudioFiles; i++)
-            {
-                cout<<endl<<"Audiofile: "<<audioNames[i];
-                cout<<endl<<"Index, Length: "<<detectionIndex[i]<<" "<<detectionLength[i];
-            }
-
-            free(detectionIndex);
-            free(detectionLength); 
-            break;
-        }
-        case 1:
-        {
-            test_case_name = "to_decibels";
-            int numElements = 8;
-            Rpp32f inputMag[8] = {0.1369617 , -0.23021328, -0.4590265 , -0.48347238,  0.3132702 , 0.41275555,  0.10663575,  0.22949654};
-
-            Rpp32f *outDB = (Rpp32f *)calloc(numElements, sizeof(Rpp32f));
-            Rpp32f cutOffDB = -200.0;
-            Rpp32f multiplier = 10.0;
-            
-            start_omp = omp_get_wtime();
-            start = clock();
-            if (ip_bitDepth == 2)
-            {
-                rppt_to_decibels_host(inputMag, outDB, numElements, cutOffDB, multiplier);
-            }
-            else
-                missingFuncFlag = 1;
-
-            //Print the detection index and length
-            cout<<"Output Magnitude: "<<endl;
-            for(int i = 0; i < numElements; i++)
-            {
-                cout<<outDB[i]<<" ";
-            }
-
-            free(outDB);
-            break;
-        }
-        case 2:
-        {
-            test_case_name = "pre_emphasis_filter";
-            Rpp32f *coeff = (Rpp32f *)calloc(noOfAudioFiles, sizeof(float));
-            for (i = 0; i < noOfAudioFiles; i++)
-                coeff[i] = 0.97;
-            Rpp32u borderType = 1;
-
-            start_omp = omp_get_wtime();
-            start = clock();
-            if (ip_bitDepth == 2)
-            {
-                rppt_pre_emphasis_filter_host(inputf32, srcDescPtr, outputf32, inputAudioSize, coeff, borderType);
-            }
-            else
-                missingFuncFlag = 1;
-
-            // std::cout<<"Printing filtered output: "<<std::endl;
-            // for(int i = 0; i < 7; i++)
-            // {
-            //     std::cout<<outputf32[i]<<" ";
-            // }
-            free(coeff);
-            break;
-        }
-        case 3:
         {
             test_case_name = "down_mixing";
             bool normalizeWeights = false;
@@ -414,10 +276,6 @@ int main(int argc, char **argv)
     free(channelsTensor);
     free(inputf32);
     free(outputf32);
-    // free(inputf64);
-    // free(outputf64);
-    // free(inputi32);
-    // free(outputi32);
     
     return 0;
 }
