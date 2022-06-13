@@ -69,25 +69,10 @@ int main(int argc, char **argv)
     srcDescPtr = &srcDesc;
 
     // Set src/dst data types in tensor descriptors
-    if (ip_bitDepth == 0)
-    {
-        strcat(funcName, "_u8_");
-        srcDescPtr->dataType = RpptDataType::U8;
-    }
-    else if (ip_bitDepth == 1)
-    {
-        strcat(funcName, "_f16_");
-        srcDescPtr->dataType = RpptDataType::F16;
-    }
-    else if (ip_bitDepth == 2)
+    if (ip_bitDepth == 2)
     {
         strcat(funcName, "_f32_");
         srcDescPtr->dataType = RpptDataType::F32;
-    }
-    else if (ip_bitDepth == 5)
-    {
-        strcat(funcName, "_i8_");
-        srcDescPtr->dataType = RpptDataType::I8;
     }
 
     // Other initializations
@@ -175,25 +160,15 @@ int main(int argc, char **argv)
 
     // Initialize host buffers for input & output
     Rpp32f *inputf32 = (Rpp32f *)calloc(ioBufferSize, sizeof(Rpp32f));
-    // Rpp64f *inputf64 = (Rpp64f *)calloc(ioBufferSize, sizeof(Rpp64f));
-    // Rpp32s *inputi32 = (Rpp32s *)calloc(ioBufferSize, sizeof(Rpp32s));
-    
     Rpp32f *outputf32 = (Rpp32f *)calloc(ioBufferSize, sizeof(Rpp32f));
-    // Rpp64f *outputf64 = (Rpp64f *)calloc(ioBufferSize, sizeof(Rpp64f));
-    // Rpp32s *outputi32 = (Rpp32s *)calloc(ioBufferSize, sizeof(Rpp32s));
     
     i = 0;
     dr = opendir(src);
     while ((de = readdir(dr)) != NULL)
     {
-        Rpp32s *input_temp_i32;
         Rpp32f *input_temp_f32;
-        Rpp64f *input_temp_f64;
-
         input_temp_f32 = inputf32 + (i * srcDescPtr->strides.nStride);
-        // input_temp_f64 = inputf64 + (i * srcDescPtr->strides.nStride);
-        // input_temp_i32 = inputi32 + (i * srcDescPtr->strides.nStride);
-
+        
         if (strcmp(de->d_name, ".") == 0 || strcmp(de->d_name, "..") == 0)
             continue;
         strcpy(audioNames[count], de->d_name);
@@ -214,23 +189,11 @@ int main(int argc, char **argv)
         }
 
         int bufferLength = sfinfo.frames * sfinfo.channels;
-        if(ip_bitDepth == 1)
-        {
-            readcount = (int) sf_read_double (infile, input_temp_f64, bufferLength);
-            if(readcount != bufferLength)
-                std::cerr<<"F64 Input: Unable to read audio file completely"<<std::endl;
-        }
         if(ip_bitDepth == 2)
         {
             readcount = (int) sf_read_float (infile, input_temp_f32, bufferLength);
             if(readcount != bufferLength)
                 std::cerr<<"F32 Unable to read audio file completely"<<std::endl;
-        }
-        else if(ip_bitDepth == 5)
-        {
-            readcount = (int) sf_read_int (infile, input_temp_i32, bufferLength);
-            if(readcount != bufferLength)
-                std::cerr<<"Unable to read audio file completely"<<std::endl;
         }
         i++;
  
@@ -364,10 +327,6 @@ int main(int argc, char **argv)
     free(inputAudioSize);
     free(inputf32);
     free(outputf32);
-    // free(inputf64);
-    // free(outputf64);
-    // free(inputi32);
-    // free(outputi32);
     
     return 0;
 }
