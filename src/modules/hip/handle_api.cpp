@@ -59,7 +59,7 @@ extern "C" rppStatus_t rppCreate(rppHandle_t* handle)
 }
 
 extern "C" rppStatus_t rppCreateWithBatchSize(rppHandle_t* handle, size_t nBatchSize){
-         return rpp::try_([&] { rpp::deref(handle) = new rpp::Handle(nBatchSize); });                                           
+         return rpp::try_([&] { rpp::deref(handle) = new rpp::Handle(nBatchSize); });
 }
 
 extern "C" rppStatus_t rppCreateWithStream(rppHandle_t* handle,
@@ -71,7 +71,7 @@ extern "C" rppStatus_t rppCreateWithStream(rppHandle_t* handle,
 
 extern "C" rppStatus_t rppCreateWithStreamAndBatchSize(rppHandle_t* handle,
                                                     rppAcceleratorQueue_t stream, size_t nBatchSize){
-         return rpp::try_([&] { rpp::deref(handle) = new rpp::Handle(stream, nBatchSize); });                                           
+         return rpp::try_([&] { rpp::deref(handle) = new rpp::Handle(stream, nBatchSize); });
 }
 
 extern "C" rppStatus_t rppSetStream(rppHandle_t handle, rppAcceleratorQueue_t streamID)
@@ -117,7 +117,7 @@ extern "C" rppStatus_t rppEnableProfiling(rppHandle_t handle, bool enable)
 }
 
 extern "C" rppStatus_t rppGetBatchSize(rppHandle_t handle, size_t *batchSize) {
-     return rpp::try_([&] { 
+     return rpp::try_([&] {
          rpp::deref(batchSize) = rpp::deref(handle).GetBatchSize();});
 }
 

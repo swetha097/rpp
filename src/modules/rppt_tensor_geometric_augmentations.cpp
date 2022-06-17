@@ -499,7 +499,8 @@ RppStatus rppt_resize_host(RppPtr_t srcPtr,
                                               dstImgSizes,
                                               roiTensorPtrSrc,
                                               roiType,
-                                              srcLayoutParams);
+                                              srcLayoutParams,
+                                              rpp::deref(rppHandle).GetInternalBatchSize());
         }
         else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
         {

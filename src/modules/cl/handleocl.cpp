@@ -269,6 +269,7 @@ struct HandleImpl
     bool enable_profiling  = false;
     float profiling_result = 0.0;
     size_t nBatchSize = 1;
+    size_t internalBatchSize;
     InitHandle* initHandle = nullptr;
 
     ContextPtr create_context()
@@ -349,6 +350,91 @@ struct HandleImpl
             profiling_result = static_cast<float>(end - st) * 1.0e-6; // NOLINT
         }
     }
+
+    struct HandleImpl
+{
+    // typedef RPP_MANAGE_PTR(hipStream_t, hipStreamDestroy) StreamPtr;
+    using StreamPtr = std::shared_ptr<typename std::remove_pointer<hipStream_t>::type>;
+
+    HandleImpl() : ctx(get_ctx()) {}
+
+    StreamPtr create_stream()
+    {
+        hipStream_t result;
+        auto status = hipStreamCreate(&result);
+        if(status != hipSuccess)
+            RPP_THROW_HIP_STATUS(status, "Failed to allocate stream");
+        return StreamPtr{result, &hipStreamDestroy};
+    }
+
+    static StreamPtr reference_stream(hipStream_t s) { return StreamPtr{s, null_deleter{}}; }
+
+    void elapsed_time(hipEvent_t start, hipEvent_t stop)
+    {
+        if(enable_profiling)
+            hipEventElapsedTime(&this->profiling_result, start, stop);
+    }
+
+    std::function<void(hipEvent_t, hipEvent_t)> elapsed_time_handler()
+    {
+        return std::bind(
+            &HandleImpl::elapsed_time, this, std::placeholders::_1, std::placeholders::_2);
+    }
+
+    void set_ctx()
+    {
+        rpp::set_ctx(this->ctx);
+        // rpp::set_device(this->device);
+        // Check device matches
+        if(this->device != get_device_id())
+            RPP_THROW("Running handle on wrong device");
+    }
+
+
+    uint compute_internal_batch_size(Rpp32u user_batch_size)
+    {
+      const unsigned MINIMUM_CPU_THREAD_COUNT = 2;
+      const unsigned DEFAULT_SMT_COUNT = 2;
+      unsigned THREAD_COUNT = std::thread::hardware_concurrency();
+      // if(THREAD_COUNT >= MINIMUM_CPU_THREAD_COUNT)
+      // {
+      //     INFO("Can run " + TOSTR(THREAD_COUNT) + " threads simultaneously on this machine")
+      // }
+      // else
+      // {
+      //     THREAD_COUNT = MINIMUM_CPU_THREAD_COUNT;
+      //     WRN("hardware_concurrency() call failed assuming can run " + TOSTR(THREAD_COUNT) + " threads")
+      // }
+      size_t ret = user_batch_size;
+      size_t CORE_COUNT = THREAD_COUNT / DEFAULT_SMT_COUNT;
+
+      if(CORE_COUNT <= 0)
+      {
+          std::cerr<<"\n Wrong core count detected less than 0";
+          exit(0);
+      }
+
+      for( size_t i = CORE_COUNT; i <= THREAD_COUNT; i++)
+      {
+        if(user_batch_size % i == 0)
+          {
+              ret = i;
+              break;
+          }
+      }
+
+      for(size_t i = CORE_COUNT; i > 1; i--)
+      {
+        if(user_batch_size % i == 0)
+            {
+                 ret = i;
+              break;
+          }
+      }
+      std::cerr<<"\n User batch size "<<(user_batch_size)<<" Internal batch size set to "<<ret;
+      return ret;
+    }
+
     void PreInitializeBufferCPU() {
 	    this->initHandle = new InitHandle();
 
@@ -467,6 +553,7 @@ Handle::Handle(size_t batchSize) : impl(new HandleImpl())
     impl->nBatchSize = batchSize;
     this->SetAllocator(nullptr, nullptr, nullptr);
     impl->PreInitializeBufferCPU();
+    impl->internalBatchSize = impl->compute_internal_batch_size(impl->nBatchSize);
 }
 
 Handle::Handle() : impl(new HandleImpl())
@@ -645,6 +732,7 @@ void Handle::rpp_destroy_object_host()
 }
 
 size_t Handle::GetBatchSize() const {return this->impl->nBatchSize;}
+size_t Handle::GetInternalBatchSize() const {return this->impl->internalBatchSize;}
 
 void Handle::SetBatchSize(size_t bSize) const {this->impl->nBatchSize = bSize;}
 

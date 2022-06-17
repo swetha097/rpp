@@ -9,12 +9,14 @@ RppStatus resize_bilinear_u8_u8_host_tensor(Rpp8u *srcPtr,
                                             RpptImagePatchPtr dstImgSize,
                                             RpptROIPtr roiTensorPtrSrc,
                                             RpptRoiType roiType,
-                                            RppLayoutParams srcLayoutParams)
+                                            RppLayoutParams srcLayoutParams,
+                                            size_t internal_batch_size)
 {
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
-
+std::cerr<<"\n Internal Batch size ::"<<internal_batch_size;
 omp_set_dynamic(0);
-#pragma omp parallel for num_threads(dstDescPtr->n)
+#pragma omp parallel for num_threads(internal_batch_size)
+// #pragma omp parallel for num_threads(dstDescPtr->n)
     for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
     {
         RpptROI roi;

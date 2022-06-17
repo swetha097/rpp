@@ -69,6 +69,7 @@ struct Handle : rppHandle
 
     InitHandle*  GetInitHandle() const;
     size_t GetBatchSize() const;
+    size_t GetInternalBatchSize() const;
     void SetBatchSize(size_t bSize) const;
     void rpp_destroy_object_gpu();
     void rpp_destroy_object_host();
