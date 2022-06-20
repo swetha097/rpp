@@ -39,6 +39,7 @@
 #include <rpp/gemm_geometry.hpp>
 #endif
 #include <string>
+#include <thread>
 
 #ifndef _WIN32
 #include <unistd.h>
@@ -351,47 +352,7 @@ struct HandleImpl
         }
     }
 
-    struct HandleImpl
-{
-    // typedef RPP_MANAGE_PTR(hipStream_t, hipStreamDestroy) StreamPtr;
-    using StreamPtr = std::shared_ptr<typename std::remove_pointer<hipStream_t>::type>;
-
-    HandleImpl() : ctx(get_ctx()) {}
-
-    StreamPtr create_stream()
-    {
-        hipStream_t result;
-        auto status = hipStreamCreate(&result);
-        if(status != hipSuccess)
-            RPP_THROW_HIP_STATUS(status, "Failed to allocate stream");
-        return StreamPtr{result, &hipStreamDestroy};
-    }
-
-    static StreamPtr reference_stream(hipStream_t s) { return StreamPtr{s, null_deleter{}}; }
-
-    void elapsed_time(hipEvent_t start, hipEvent_t stop)
-    {
-        if(enable_profiling)
-            hipEventElapsedTime(&this->profiling_result, start, stop);
-    }
-
-    std::function<void(hipEvent_t, hipEvent_t)> elapsed_time_handler()
-    {
-        return std::bind(
-            &HandleImpl::elapsed_time, this, std::placeholders::_1, std::placeholders::_2);
-    }
-
-    void set_ctx()
-    {
-        rpp::set_ctx(this->ctx);
-        // rpp::set_device(this->device);
-        // Check device matches
-        if(this->device != get_device_id())
-            RPP_THROW("Running handle on wrong device");
-    }
-
-
-    uint compute_internal_batch_size(Rpp32u user_batch_size)
+uint compute_internal_batch_size(Rpp32u user_batch_size)
     {
       const unsigned MINIMUM_CPU_THREAD_COUNT = 2;
       const unsigned DEFAULT_SMT_COUNT = 2;
@@ -400,11 +361,11 @@ struct HandleImpl
       // {
       //     INFO("Can run " + TOSTR(THREAD_COUNT) + " threads simultaneously on this machine")
       // }
-      // else
-      // {
-      //     THREAD_COUNT = MINIMUM_CPU_THREAD_COUNT;
-      //     WRN("hardware_concurrency() call failed assuming can run " + TOSTR(THREAD_COUNT) + " threads")
-      // }
+      if(THREAD_COUNT < MINIMUM_CPU_THREAD_COUNT)
+      {
+          THREAD_COUNT = MINIMUM_CPU_THREAD_COUNT;
+          std::cerr<<"hardware_concurrency() call failed assuming can run "<<THREAD_COUNT<<" threads";
+      }
       size_t ret = user_batch_size;
       size_t CORE_COUNT = THREAD_COUNT / DEFAULT_SMT_COUNT;
 
