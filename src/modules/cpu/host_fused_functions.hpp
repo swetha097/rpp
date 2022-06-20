@@ -2897,12 +2897,14 @@ RppStatus crop_mirror_normalize_host_batch(T* srcPtr, RppiSize *batch_srcSize, R
                                      Rpp32f *batch_mean, Rpp32f *batch_stdDev,
                                      Rpp32u *batch_mirrorFlag, Rpp32u outputFormatToggle,
                                      Rpp32u nbatchSize,
-                                     RppiChnFormat chnFormat, Rpp32u channel)
+                                     RppiChnFormat chnFormat, Rpp32u channel,
+                                     size_t internal_batch_size)
 {
     if(chnFormat == RPPI_CHN_PLANAR)
     {
+        std::cerr<<"\n Internal Batch Size u8 PNL CMN";
         omp_set_dynamic(0);
-#pragma omp parallel for num_threads(nbatchSize)
+#pragma omp parallel for num_threads(internal_batch_size)
         for(int batchCount = 0; batchCount < nbatchSize; batchCount ++)
         {
             Rpp32u srcImageDimMax = batch_srcSizeMax[batchCount].height * batch_srcSizeMax[batchCount].width;
@@ -3080,7 +3082,7 @@ RppStatus crop_mirror_normalize_host_batch(T* srcPtr, RppiSize *batch_srcSize, R
     else if (chnFormat == RPPI_CHN_PACKED)
     {
         omp_set_dynamic(0);
-#pragma omp parallel for num_threads(nbatchSize)
+#pragma omp parallel for num_threads(internal_batch_size)
         for(int batchCount = 0; batchCount < nbatchSize; batchCount ++)
         {
             Rpp32u srcImageDimMax = batch_srcSizeMax[batchCount].height * batch_srcSizeMax[batchCount].width;
@@ -4590,12 +4592,13 @@ template <typename T, typename U>
 RppStatus crop_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, U* dstPtr, RppiSize *batch_dstSize, RppiSize *batch_dstSizeMax,
                                      Rpp32u *batch_crop_pos_x, Rpp32u *batch_crop_pos_y,
                                      Rpp32u outputFormatToggle, Rpp32u nbatchSize,
-                                     RppiChnFormat chnFormat, Rpp32u channel)
+                                     RppiChnFormat chnFormat, Rpp32u channel,
+                                     size_t internal_batch_size)
 {
     if(chnFormat == RPPI_CHN_PLANAR)
     {
         omp_set_dynamic(0);
-#pragma omp parallel for num_threads(nbatchSize)
+#pragma omp parallel for num_threads(internal_batch_size)
         for(int batchCount = 0; batchCount < nbatchSize; batchCount ++)
         {
             Rpp32u srcImageDimMax = batch_srcSizeMax[batchCount].height * batch_srcSizeMax[batchCount].width;
@@ -4669,8 +4672,9 @@ RppStatus crop_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_sr
     }
     else if (chnFormat == RPPI_CHN_PACKED)
     {
+
         omp_set_dynamic(0);
-#pragma omp parallel for num_threads(nbatchSize)
+#pragma omp parallel for num_threads(internal_batch_size)
         for(int batchCount = 0; batchCount < nbatchSize; batchCount ++)
         {
             Rpp32u srcImageDimMax = batch_srcSizeMax[batchCount].height * batch_srcSizeMax[batchCount].width;
