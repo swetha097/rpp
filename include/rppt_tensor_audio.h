@@ -82,7 +82,7 @@ RppStatus rppt_pre_emphasis_filter_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr,
 
 /******************** down_mixing ********************/
 
-// Dowmix stereo audio buffer to mono audio buffer
+// Downmix stereo audio buffer to mono audio buffer
 
 // *param[in] srcPtr source tensor memory
 // *param[in] srcDesc source tensor descriptor

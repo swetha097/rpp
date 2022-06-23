@@ -22,19 +22,19 @@ RppStatus down_mixing_host_tensor(Rpp32f *srcPtr,
         {
             normalizedWeights.resize(channels);
 
-            //Compute sum of the weights
+            // Compute sum of the weights
             double sum = 0.0;
             for (int i = 0; i < channels; i++)
                 sum += weights[i];
             
-            //Normalize the weights 
+            // Normalize the weights 
             for (int i = 0; i < channels; i++) 
                 normalizedWeights[i] = weights[i] / sum;
             
             weights = normalizedWeights;
         }
 
-        //use weights to downmix for stereo to mono
+        // use weights to downmix for stereo to mono
         for (int64_t o = 0, i = 0; o < samples; o++, i += channels) 
         {
             float sum = srcPtrTemp[i] * weights[0];
