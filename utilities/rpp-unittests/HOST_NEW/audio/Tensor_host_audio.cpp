@@ -48,7 +48,16 @@ int main(int argc, char **argv)
     switch (test_case)
     {
         case 0:
-            strcpy(funcName, "downmixing");
+            strcpy(funcName, "non_silent_region_detection");
+            break;
+        case 1:
+            strcpy(funcName, "to_decibels");
+            break;
+        case 2:
+            strcpy(funcName, "pre_emphasis_filter");
+            break;
+        case 3:
+            strcpy(funcName, "down_mixing");
             break;
         default:
             strcpy(funcName, "test_case");
@@ -208,19 +217,64 @@ int main(int argc, char **argv)
     { 
         case 0:
         {
-            test_case_name = "down_mixing";
-            bool normalizeWeights = false;
+            test_case_name = "non_silent_region_detection";
+            Rpp32s *detectionIndex = (Rpp32s *)calloc(noOfAudioFiles, sizeof(Rpp32s));
+            Rpp32s *detectionLength = (Rpp32s *)calloc(noOfAudioFiles, sizeof(Rpp32s));
 
+            Rpp32f cutOffDB[noOfAudioFiles];
+            Rpp32s windowLength[noOfAudioFiles];
+            Rpp32f referencePower[noOfAudioFiles];
+            Rpp32s resetInterval[noOfAudioFiles];
+            bool referenceMax[noOfAudioFiles];
+        
+            for (i = 0; i < noOfAudioFiles; i++)
+            {
+                cutOffDB[i] = -60.0;
+                windowLength[i] = 3;
+                referencePower[i] = 1.0;
+                resetInterval[i] = -1;
+                referenceMax[i] = true;
+            }
+    
             start_omp = omp_get_wtime();
             start = clock();
             if (ip_bitDepth == 2)
             {
-                rppt_down_mixing_host(inputf32, srcDescPtr, outputf32, samplesPerChannelTensor, channelsTensor, normalizeWeights);
+                rppt_non_silent_region_detection_host(inputf32, srcDescPtr, inputAudioSize, detectionIndex, detectionLength, cutOffDB, windowLength, referencePower, resetInterval, referenceMax, handle);
+            }
+            else
+                missingFuncFlag = 1;
+            
+            //Print the detection index and length
+            for(int i = 0; i < noOfAudioFiles; i++)
+            {
+                cout<<endl<<"Audiofile: "<<audioNames[i];
+                cout<<endl<<"Index, Length: "<<detectionIndex[i]<<" "<<detectionLength[i];
+            }
+
+            free(detectionIndex);
+            free(detectionLength); 
+            break;
+        }
+        case 1:
+        {
+            test_case_name = "to_decibels";
+            int numElements = 8;
+            Rpp32f inputMag[8] = {0.1369617 , -0.23021328, -0.4590265 , -0.48347238,  0.3132702 , 0.41275555,  0.10663575,  0.22949654};
+
+            Rpp32f *outDB = (Rpp32f *)calloc(numElements, sizeof(Rpp32f));
+            Rpp32f cutOffDB = -200.0;
+            Rpp32f multiplier = 10.0;
+            
+            start_omp = omp_get_wtime();
+            start = clock();
+            if (ip_bitDepth == 2)
+            {
+                rppt_to_decibels_host(inputMag, outDB, numElements, cutOffDB, multiplier);
             }
             else
                 missingFuncFlag = 1;
 
-            //Print the detection index and length
             cout<<endl<<"Output in DB: "<<endl;
             for(int i = 0; i < numElements; i++)
             {
@@ -242,14 +296,10 @@ int main(int argc, char **argv)
             start = clock();
             if (ip_bitDepth == 2)
             {
-                int idxstart = i * srcDescPtr->strides.nStride;
-                int idxend = idxstart + samplesPerChannelTensor[i];
-                for(int j = idxstart; j < idxend; j++)
-                {
-                    cout<<"out["<<j<<"]: "<<outputf32[j]<<endl;
-                }
-                cout<<endl;
+                rppt_pre_emphasis_filter_host(inputf32, srcDescPtr, outputf32, inputAudioSize, coeff, borderType);
             }
+            else
+                missingFuncFlag = 1;
 
             // cout<<endl<<"Output from preemphasis filter: ";
             // for(int i = 0; i < noOfAudioFiles; i++)
@@ -278,18 +328,18 @@ int main(int argc, char **argv)
             else
                 missingFuncFlag = 1;
 
-            //Print the mono output
-            cout<<endl<<"Printing downmixed output: "<<endl;
-            for(int i = 0; i < noOfAudioFiles; i++)
-            {
-                int idxstart = i * srcDescPtr->strides.nStride;
-                int idxend = idxstart + samplesPerChannelTensor[i];
-                for(int j = idxstart; j < idxend; j++)
-                {
-                    cout<<"out["<<j<<"]: "<<outputf32[j]<<endl;
-                }
-                cout<<endl;
-            }
+            // Print the mono output
+            // cout<<endl<<"Printing downmixed output: "<<endl;
+            // for(int i = 0; i < noOfAudioFiles; i++)
+            // {
+            //     int idxstart = i * srcDescPtr->strides.nStride;
+            //     int idxend = idxstart + samplesPerChannelTensor[i];
+            //     for(int j = idxstart; j < idxend; j++)
+            //     {
+            //         cout<<"out["<<j<<"]: "<<outputf32[j]<<endl;
+            //     }
+            //     cout<<endl;
+            // }
 
             break;
         }

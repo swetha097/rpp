@@ -1,5 +1,4 @@
 #include "rppdefs.h"
-#include<iomanip>
 
 RppStatus down_mixing_host_tensor(Rpp32f *srcPtr,
                                   RpptDescPtr srcDescPtr,
