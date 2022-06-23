@@ -44,7 +44,6 @@ int main(int argc, char **argv)
     int ip_channel = 1;
 
     // Set case names
-    char funcType[1000] = {"Tensor_HOST_audio"};
     char funcName[1000];
     switch (test_case)
     {
@@ -70,10 +69,7 @@ int main(int argc, char **argv)
 
     // Set src/dst data types in tensor descriptors
     if (ip_bitDepth == 2)
-    {
-        strcat(funcName, "_f32_");
         srcDescPtr->dataType = RpptDataType::F32;
-    }
 
     // Other initializations
     int missingFuncFlag = 0;
@@ -91,7 +87,6 @@ int main(int argc, char **argv)
 
     char func[1000];
     strcpy(func, funcName);
-    strcat(func, funcType);
 
     // Get number of audio files
     struct dirent *de;

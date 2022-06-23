@@ -1,6 +1,4 @@
 #include "rppdefs.h"
-#include "cpu/rpp_cpu_simd.hpp"
-#include "cpu/rpp_cpu_common.hpp"
 
 Rpp32f getSquare(Rpp32f &value) 
 {

@@ -30,7 +30,7 @@ extern "C" {
 
 /******************** non_silent_region_detection ********************/
 
-// Non Silent Region Detection augmentation for a 1D audio buffer
+// Non Silent Region Detection augmentation for 1D audio buffer
 
 // *param[in] srcPtr source tensor memory
 // *param[in] srcDesc source tensor descriptor
@@ -41,7 +41,7 @@ extern "C" {
 // *param[in] windowLength size of the sliding window used to calculate of the short-term power of the signal
 // *param[in] referencePower reference power that is used to convert the signal to dB.
 // *param[in] resetInterval number of samples after which the moving mean average is recalculated to avoid loss of precision
-// *param[in] referenceMax 
+// *param[in] referenceMax bool value to specify to use referencePower or not
 // *returns a  RppStatus enumeration.
 // *retval RPP_SUCCESS : successful completion
 // *retval RPP_ERROR : Error
@@ -50,7 +50,7 @@ RppStatus rppt_non_silent_region_detection_host(RppPtr_t srcPtr, RpptDescPtr src
 
 /******************** to_decibels ********************/
 
-// Non Silent Region Detection augmentation for a 1D audio buffer
+// To Decibels augmentation for 1D magnitude buffer
 
 // *param[in] srcPtr source tensor memory
 // *param[out] dstPtr destination tensor memory
@@ -66,7 +66,7 @@ RppStatus rppt_to_decibels_host(RppPtr_t magnitudePtr, RppPtr_t DBPtr, Rpp32u ba
 
 /******************** pre_emphasis_filter ********************/
 
-// Pre Emphasis Filter augmentation for an audio buffer
+// Pre Emphasis Filter augmentation for 1D audio buffer
 
 // *param[in] srcPtr source tensor memory
 // *param[in] srcDesc source tensor descriptor
@@ -78,7 +78,6 @@ RppStatus rppt_to_decibels_host(RppPtr_t magnitudePtr, RppPtr_t DBPtr, Rpp32u ba
 // *retval RPP_SUCCESS : successful completion
 // *retval RPP_ERROR : Error
 
-//Pre emphasis filter
 RppStatus rppt_pre_emphasis_filter_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, Rpp32s *srcSizeTensor, Rpp32f *coeffTensor, RpptAudioBorderType borderType = RpptAudioBorderType::Clamp);
 
 #ifdef __cplusplus

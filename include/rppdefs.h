@@ -310,6 +310,7 @@ typedef enum {
     Reflect,
   }RpptAudioBorderType;
   
+  
 /******************** HOST memory typedefs ********************/
 
 typedef struct

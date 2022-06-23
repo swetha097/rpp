@@ -1,7 +1,6 @@
 #include "rppdefs.h"
-#include "cpu/rpp_cpu_simd.hpp"
-#include "cpu/rpp_cpu_common.hpp"
-#include<iomanip>
+#include "rpp_cpu_simd.hpp"
+#include "rpp_cpu_common.hpp"
 
 RppStatus pre_emphasis_filter_host_tensor(Rpp32f *srcPtr,
                                           RpptDescPtr srcDescPtr,

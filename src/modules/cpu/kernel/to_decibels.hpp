@@ -16,12 +16,12 @@ RppStatus to_decibels_host_tensor(Rpp32f *magnitudeTensor,
                 referenceMagnitude = magnitudeTensor[i];
         }
 
-        //Avoid division by zero
+        // Avoid division by zero
         if(referenceMagnitude == 0.0)
             referenceMagnitude = 1.0;
     }
 
-    //Calculate the intermediate values needed for DB conversion
+    // Calculate the intermediate values needed for DB conversion
     Rpp32f minRatio = pow(10, cutOffDB / multiplier);
     if(minRatio == 0.0f)
         minRatio = std::nextafter(0.0f, 1.0f);

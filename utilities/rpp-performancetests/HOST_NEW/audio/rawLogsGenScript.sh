@@ -5,7 +5,7 @@
 cwd=$(pwd)
 
 # Input AUDIO_FILES - Three AUDIO_FILES (224 x 224)
-DEFAULT_SRC_FOLDER="$cwd/../../TEST_AUDIO_FILES/single_channel/"
+DEFAULT_SRC_FOLDER="$cwd/../../../TEST_AUDIO_FILES/single_channel/"
 
 # Output AUDIO_FILES
 mkdir "$cwd/../../OUTPUT_PERFORMANCE_LOGS_HOST_NEW"
