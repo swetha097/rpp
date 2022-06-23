@@ -2,24 +2,13 @@
 #include "cpu/rpp_cpu_simd.hpp"
 #include "cpu/rpp_cpu_common.hpp"
 
-
-Rpp32f Square(Rpp32f &value) 
+Rpp32f getSquare(Rpp32f &value) 
 {
   Rpp32f res = value;
   return (res * res);
 }
 
-Rpp32f CalcSumSquared(Rpp32f *values, int start, int n) 
-{
-  Rpp32f sumOfSquares = 0.0;
-  for (int i = start ; i < n ; i++) 
-  {
-    sumOfSquares += Square(values[i]);
-  }
-  return sumOfSquares;
-}
-
-Rpp32f max_value(std::vector<float> &values, int length)
+Rpp32f getMax(std::vector<float> &values, int length)
 {
   Rpp32f max = values[0];
   for (int i = 1; i < length; i++) 
@@ -27,14 +16,6 @@ Rpp32f max_value(std::vector<float> &values, int length)
     max = std::max(max, values[i]);
   }
   return max;
-}
-
-void extend_non_silent_region(Rpp32s *detectionLength, Rpp32s *windowLength)
-{
-  if(*detectionLength != 0)
-  {
-   *detectionLength += *windowLength - 1;
-  }
 }
 
 RppStatus non_silent_region_detection_host_tensor(Rpp32f *srcPtr,
@@ -58,35 +39,37 @@ RppStatus non_silent_region_detection_host_tensor(Rpp32f *srcPtr,
       Rpp32f cutOffDB = cutOffDBTensor[batchCount];
       bool referenceMax = referenceMaxTensor[batchCount];
 
-      //set reset interval based on the user input 
+      // set reset interval based on the user input 
       Rpp32s resetInterval = resetIntervalTensor[batchCount];
       resetInterval = (resetInterval == -1) ? srcSize : resetInterval;
 
-      //Calculate buffer size for mms array and allocate mms buffer
+      // Calculate buffer size for mms array and allocate mms buffer
       Rpp32s mmsBufferSize = srcSize - windowLength + 1;
       std::vector<float> mmsBuffer;
       mmsBuffer.reserve(mmsBufferSize);
       
-      //Calculate moving mean square of input array and store in mms buffer
-      Rpp32f sumOfSquares = 0;
+      // Calculate moving mean square of input array and store in mms buffer
+      Rpp32f sumOfSquares = 0.0f;
       Rpp32f meanFactor = 1.f / windowLength;
       for (int windowBegin = 0; windowBegin <= srcSize - windowLength;) 
       {
-          sumOfSquares = CalcSumSquared(srcPtrTemp, windowBegin, windowLength);
+        for (int i = windowBegin ; i < windowLength ; i++) 
+          sumOfSquares += getSquare(srcPtrTemp[i]);
+        mmsBuffer[windowBegin] = sumOfSquares * meanFactor;
+
+        auto interval_endIdx = std::min(windowBegin + resetInterval, srcSize) - windowLength + 1;
+        for (windowBegin++; windowBegin < interval_endIdx; windowBegin++) 
+        {
+          sumOfSquares += getSquare(srcPtrTemp[windowBegin + windowLength - 1]) - getSquare(srcPtrTemp[windowBegin - 1]);
           mmsBuffer[windowBegin] = sumOfSquares * meanFactor;
-          auto interval_endIdx = std::min(windowBegin + resetInterval, srcSize) - windowLength + 1;
-          for (windowBegin++; windowBegin < interval_endIdx; windowBegin++) 
-          {
-              sumOfSquares += Square(srcPtrTemp[windowBegin + windowLength - 1]) - Square(srcPtrTemp[windowBegin - 1]);
-              mmsBuffer[windowBegin] = sumOfSquares * meanFactor;
-          }
+        }
       }
   
-      //Convert cutOff from DB to magnitude    
-      Rpp32f base = (referenceMax) ?  max_value(mmsBuffer, mmsBufferSize) : referencePower;
+      // Convert cutOff from DB to magnitude    
+      Rpp32f base = (referenceMax) ? getMax(mmsBuffer, mmsBufferSize) : referencePower;
       Rpp32f cutOffMag = base * pow(float(10) , cutOffDB * float(1) / 10.f);
         
-      //Calculate begining index, length of non silent region from the mms buffer
+      // Calculate begining index, length of non silent region from the mms buffer
       int endIdx = mmsBufferSize;
       int beginIdx = endIdx;
       for (int i = 0; i < endIdx; i++) 
@@ -117,7 +100,9 @@ RppStatus non_silent_region_detection_host_tensor(Rpp32f *srcPtr,
         detectionLengthTensor[batchCount] = endIdx - beginIdx + 1;
       }
 
-      extend_non_silent_region(&detectionLengthTensor[batchCount], &windowLength);
+      // Extend non silent region
+      if(detectionLengthTensor[batchCount] != 0)
+        detectionLengthTensor[batchCount] += windowLength - 1;
     }
     return RPP_SUCCESS;
 }

@@ -28,11 +28,55 @@ THE SOFTWARE.
 extern "C" {
 #endif
 
-//Non Silent Region Detection
+/******************** non_silent_region_detection ********************/
+
+// Non Silent Region Detection augmentation for a 1D audio buffer
+
+// *param[in] srcPtr source tensor memory
+// *param[in] srcDesc source tensor descriptor
+// *param[in] srcSize source audio buffer length
+// *param[out] detectedIndex beginning index of non silent region
+// *param[out] detectionLength length of non silent region
+// *param[in] cutOffDB threshold(dB) below which the signal is considered silent
+// *param[in] windowLength size of the sliding window used to calculate of the short-term power of the signal
+// *param[in] referencePower reference power that is used to convert the signal to dB.
+// *param[in] resetInterval number of samples after which the moving mean average is recalculated to avoid loss of precision
+// *param[in] referenceMax 
+// *returns a  RppStatus enumeration.
+// *retval RPP_SUCCESS : successful completion
+// *retval RPP_ERROR : Error
+
 RppStatus rppt_non_silent_region_detection_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, Rpp32s *srcSize, Rpp32s *detectedIndex, Rpp32s *detectionLength, Rpp32f *cutOffDB, Rpp32s *windowLength, Rpp32f *referencePower, Rpp32s *resetInterval, bool *referenceMax, rppHandle_t handle);
 
-//To Decibels
+/******************** to_decibels ********************/
+
+// Non Silent Region Detection augmentation for a 1D audio buffer
+
+// *param[in] srcPtr source tensor memory
+// *param[out] dstPtr destination tensor memory
+// *param[in] batchSize number of magnitude values to be processed 
+// *param[in] cutOffDB  minimum or cut-off ratio in dB
+// *param[in] multiplier factor by which the logarithm is multiplied
+// *param[in] referenceMagnitude Reference magnitude if not provided maximum value of input used as reference
+// *returns a  RppStatus enumeration.
+// *retval RPP_SUCCESS : successful completion
+// *retval RPP_ERROR : Error
+
 RppStatus rppt_to_decibels_host(RppPtr_t magnitudePtr, RppPtr_t DBPtr, Rpp32u batchSize, Rpp32f cutOffDB = -200.0, Rpp32f multiplier = 10.0, Rpp32f referenceMagnitude = 0.0);
+
+/******************** pre_emphasis_filter ********************/
+
+// Pre Emphasis Filter augmentation for an audio buffer
+
+// *param[in] srcPtr source tensor memory
+// *param[in] srcDesc source tensor descriptor
+// *param[out] dstPtr destination tensor memory
+// *param[in] srcSize source audio buffer length
+// *param[in] coeffTensor preemphasis coefficient
+// *param[in] borderType border value policy
+// *returns a  RppStatus enumeration.
+// *retval RPP_SUCCESS : successful completion
+// *retval RPP_ERROR : Error
 
 //Pre emphasis filter
 RppStatus rppt_pre_emphasis_filter_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, Rpp32s *srcSizeTensor, Rpp32f *coeffTensor, RpptAudioBorderType borderType = RpptAudioBorderType::Clamp);
