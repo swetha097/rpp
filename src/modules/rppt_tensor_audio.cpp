@@ -85,3 +85,20 @@ RppStatus rppt_pre_emphasis_filter_host(RppPtr_t srcPtr,
     
     return RPP_SUCCESS;
 }
+
+RppStatus rppt_down_mixing_host(RppPtr_t srcPtr,
+                                RpptDescPtr srcDescPtr,
+                                RppPtr_t dstPtr,
+                                Rpp64s *samplesPerChannelTensor,
+                                Rpp32s *channelsTensor,
+                                bool  normalizeWeights)
+{
+    down_mixing_host_tensor((Rpp32f*)srcPtr,
+                            srcDescPtr,
+                            (Rpp32f*)dstPtr,
+                            samplesPerChannelTensor,
+                            channelsTensor,
+                            normalizeWeights);
+
+    return RPP_SUCCESS;
+}

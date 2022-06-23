@@ -80,6 +80,21 @@ RppStatus rppt_to_decibels_host(RppPtr_t magnitudePtr, RppPtr_t DBPtr, Rpp32u ba
 
 RppStatus rppt_pre_emphasis_filter_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, Rpp32s *srcSizeTensor, Rpp32f *coeffTensor, RpptAudioBorderType borderType = RpptAudioBorderType::Clamp);
 
+/******************** down_mixing ********************/
+
+// Dowmix stereo audio buffer to mono audio buffer
+
+// *param[in] srcPtr source tensor memory
+// *param[in] srcDesc source tensor descriptor
+// *param[out] dstPtr destination tensor memory
+// *param[in] samplesPerChannelTensor number of samples per channel
+// *param[in] channelsTensor number of channels in audio buffer
+// *returns a  RppStatus enumeration.
+// *retval RPP_SUCCESS : successful completion
+// *retval RPP_ERROR : Error
+
+RppStatus rppt_down_mixing_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, Rpp64s *samplesPerChannelTensor, Rpp32s *channelsTensor, bool normalizeWeights = false);
+
 #ifdef __cplusplus
 }
 #endif
