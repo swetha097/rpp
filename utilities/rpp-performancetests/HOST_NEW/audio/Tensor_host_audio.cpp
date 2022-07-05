@@ -11,20 +11,16 @@
 #include <half.hpp>
 #include <fstream>
 
-/* Include this header file to use functions from libsndfile. */
+// Include this header file to use functions from libsndfile
 #include <sndfile.h>
 
-/* libsndfile can handle more than 6 channels but we'll restrict it to 6. */
-#define		MAX_CHANNELS	6
+// libsndfile can handle more than 6 channels but we'll restrict it to 6
+#define	MAX_CHANNELS 6
 
 using namespace std;
 using half_float::half;
 
 typedef half Rpp16f;
-
-#define RPPPIXELCHECK(pixel) (pixel < (Rpp32f)0) ? ((Rpp32f)0) : ((pixel < (Rpp32f)255) ? pixel : ((Rpp32f)255))
-#define RPPMAX2(a,b) ((a > b) ? a : b)
-#define RPPMIN2(a,b) ((a < b) ? a : b)
 
 int main(int argc, char **argv)
 {
@@ -62,7 +58,6 @@ int main(int argc, char **argv)
     }
 
     // Initialize tensor descriptors
-
     RpptDesc srcDesc;
     RpptDescPtr srcDescPtr;
     srcDescPtr = &srcDesc;
@@ -118,19 +113,19 @@ int main(int argc, char **argv)
         SNDFILE	*infile;
         SF_INFO sfinfo;
         int	readcount;
-        
+
         //The SF_INFO struct must be initialized before using it
         memset (&sfinfo, 0, sizeof (sfinfo));
         if (!(infile = sf_open (temp, SFM_READ, &sfinfo)) || sfinfo.channels > MAX_CHANNELS)
-        {   
+        {
             sf_close (infile);
             continue;
         }
 
         inputAudioSize[count] = sfinfo.frames * sfinfo.channels;
-        maxLength = RPPMAX2(maxLength, inputAudioSize[count]);
- 
-        /* Close input*/
+        maxLength = std::max(maxLength, inputAudioSize[count]);
+
+        // Close input
         sf_close (infile);
         count++;
     }
@@ -139,7 +134,7 @@ int main(int argc, char **argv)
     // Set numDims, offset, n/c/h/w values for src/dst
     srcDescPtr->numDims = 4;
     srcDescPtr->offsetInBytes = 0;
-    srcDescPtr->n = noOfAudioFiles;    
+    srcDescPtr->n = noOfAudioFiles;
     srcDescPtr->h = 1;
     srcDescPtr->w = maxLength;
     srcDescPtr->c = ip_channel;
@@ -156,14 +151,14 @@ int main(int argc, char **argv)
     // Initialize host buffers for input & output
     Rpp32f *inputf32 = (Rpp32f *)calloc(ioBufferSize, sizeof(Rpp32f));
     Rpp32f *outputf32 = (Rpp32f *)calloc(ioBufferSize, sizeof(Rpp32f));
-    
+
     i = 0;
     dr = opendir(src);
     while ((de = readdir(dr)) != NULL)
     {
         Rpp32f *input_temp_f32;
         input_temp_f32 = inputf32 + (i * srcDescPtr->strides.nStride);
-        
+
         if (strcmp(de->d_name, ".") == 0 || strcmp(de->d_name, "..") == 0)
             continue;
         strcpy(audioNames[count], de->d_name);
@@ -174,11 +169,11 @@ int main(int argc, char **argv)
         SNDFILE	*infile;
         SF_INFO sfinfo;
         int	readcount;
-        
-        //The SF_INFO struct must be initialized before using it
+
+        // The SF_INFO struct must be initialized before using it
         memset (&sfinfo, 0, sizeof (sfinfo));
         if (!(infile = sf_open (temp, SFM_READ, &sfinfo)) || sfinfo.channels > MAX_CHANNELS)
-        {   
+        {
             sf_close (infile);
             continue;
         }
@@ -191,17 +186,17 @@ int main(int argc, char **argv)
                 std::cerr<<"F32 Unable to read audio file completely"<<std::endl;
         }
         i++;
- 
-        /* Close input*/
+
+        // Close input
         sf_close (infile);
     }
     closedir(dr);
-    
+
     // Run case-wise RPP API and measure time
     rppHandle_t handle;
     rppCreateWithBatchSize(&handle, noOfAudioFiles);
     printf("\nRunning %s 100 times (each time with a batch size of %d audio files) and computing mean statistics...", func, noOfAudioFiles);
-    
+
     double max_time_used = 0, min_time_used = 500, avg_time_used = 0;
     string test_case_name;
     for (int perfRunCount = 0; perfRunCount < 100; perfRunCount++)
@@ -211,7 +206,7 @@ int main(int argc, char **argv)
         double cpu_time_used, omp_time_used;
 
         switch (test_case)
-        { 
+        {
             case 0:
             {
                 test_case_name = "non_silent_region_detection";
@@ -222,7 +217,7 @@ int main(int argc, char **argv)
                 Rpp32f referencePower[noOfAudioFiles];
                 Rpp32s resetInterval[noOfAudioFiles];
                 bool referenceMax[noOfAudioFiles];
-            
+
                 for (i = 0; i < noOfAudioFiles; i++)
                 {
                     cutOffDB[i] = -60.0;
@@ -231,7 +226,7 @@ int main(int argc, char **argv)
                     resetInterval[i] = -1;
                     referenceMax[i] = true;
                 }
-        
+
                 start_omp = omp_get_wtime();
                 start = clock();
                 if (ip_bitDepth == 2)
@@ -240,19 +235,19 @@ int main(int argc, char **argv)
                 }
                 else
                     missingFuncFlag = 1;
-                
+
                 break;
             }
             case 1:
             {
                 test_case_name = "to_decibels";
                 int numElements = 8;
-                Rpp32f inputMag[8] = {0.1369617 , -0.23021328, -0.4590265 , -0.48347238,  0.3132702 , 0.41275555,  0.10663575,  0.22949654};
+                Rpp32f inputMag[8] = {0.1369617, -0.23021328, -0.4590265, -0.48347238, 0.3132702, 0.41275555, 0.10663575, 0.22949654};
 
                 Rpp32f *outDB = (Rpp32f *)calloc(numElements, sizeof(Rpp32f));
                 Rpp32f cutOffDB = -200.0;
                 Rpp32f multiplier = 10.0;
-                
+
                 start_omp = omp_get_wtime();
                 start = clock();
                 if (ip_bitDepth == 2)
@@ -301,7 +296,6 @@ int main(int argc, char **argv)
         }
 
         // Display measured times
-
         cpu_time_used = ((double)(end - start)) / CLOCKS_PER_SEC;
         omp_time_used = end_omp - start_omp;
         if (cpu_time_used > max_time_used)
@@ -322,6 +316,6 @@ int main(int argc, char **argv)
     free(inputAudioSize);
     free(inputf32);
     free(outputf32);
-    
+
     return 0;
 }

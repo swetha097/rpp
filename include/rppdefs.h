@@ -229,6 +229,13 @@ typedef enum
     TRIANGULAR
 } RpptInterpolationType;
 
+typedef enum
+{
+    ZERO = 0,
+    CLAMP,
+    REFLECT,
+} RpptAudioBorderType;
+
 typedef struct
 {
     RppiPoint lt, rb;
@@ -304,13 +311,6 @@ typedef struct
     Rpp32u counter;
 } RpptXorwowState;
 
-typedef enum {
-    Zero = 0,
-    Clamp,
-    Reflect,
-  }RpptAudioBorderType;
-  
-  
 /******************** HOST memory typedefs ********************/
 
 typedef struct

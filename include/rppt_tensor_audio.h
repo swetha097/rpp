@@ -54,7 +54,7 @@ RppStatus rppt_non_silent_region_detection_host(RppPtr_t srcPtr, RpptDescPtr src
 
 // *param[in] srcPtr source tensor memory
 // *param[out] dstPtr destination tensor memory
-// *param[in] batchSize number of magnitude values to be processed 
+// *param[in] batchSize number of magnitude values to be processed
 // *param[in] cutOffDB  minimum or cut-off ratio in dB
 // *param[in] multiplier factor by which the logarithm is multiplied
 // *param[in] referenceMagnitude Reference magnitude if not provided maximum value of input used as reference
@@ -78,7 +78,7 @@ RppStatus rppt_to_decibels_host(RppPtr_t magnitudePtr, RppPtr_t DBPtr, Rpp32u ba
 // *retval RPP_SUCCESS : successful completion
 // *retval RPP_ERROR : Error
 
-RppStatus rppt_pre_emphasis_filter_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, Rpp32s *srcSizeTensor, Rpp32f *coeffTensor, RpptAudioBorderType borderType = RpptAudioBorderType::Clamp);
+RppStatus rppt_pre_emphasis_filter_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, Rpp32s *srcSizeTensor, Rpp32f *coeffTensor, RpptAudioBorderType borderType = RpptAudioBorderType::CLAMP);
 
 /******************** down_mixing ********************/
 

@@ -1,19 +1,19 @@
 #include "rppdefs.h"
 
-Rpp32f getSquare(Rpp32f &value) 
+Rpp32f getSquare(Rpp32f &value)
 {
-  Rpp32f res = value;
-  return (res * res);
+    Rpp32f res = value;
+    return (res * res);
 }
 
 Rpp32f getMax(std::vector<float> &values, int length)
 {
-  Rpp32f max = values[0];
-  for (int i = 1; i < length; i++) 
-  {
-    max = std::max(max, values[i]);
-  }
-  return max;
+    Rpp32f max = values[0];
+    for (int i = 1; i < length; i++)
+    {
+      max = std::max(max, values[i]);
+    }
+    return max;
 }
 
 RppStatus non_silent_region_detection_host_tensor(Rpp32f *srcPtr,
@@ -27,7 +27,7 @@ RppStatus non_silent_region_detection_host_tensor(Rpp32f *srcPtr,
                                                   Rpp32s *resetIntervalTensor,
                                                   bool *referenceMaxTensor)
 {
-#pragma omp parallel for num_threads(srcDescPtr->n)    
+#pragma omp parallel for num_threads(srcDescPtr->n)
     for(int batchCount = 0; batchCount < srcDescPtr->n; batchCount++)
     {
       Rpp32f *srcPtrTemp = srcPtr + batchCount * srcDescPtr->w;
@@ -37,7 +37,7 @@ RppStatus non_silent_region_detection_host_tensor(Rpp32f *srcPtr,
       Rpp32f cutOffDB = cutOffDBTensor[batchCount];
       bool referenceMax = referenceMaxTensor[batchCount];
 
-      // set reset interval based on the user input 
+      // set reset interval based on the user input
       Rpp32s resetInterval = resetIntervalTensor[batchCount];
       resetInterval = (resetInterval == -1) ? srcSize : resetInterval;
 
@@ -45,50 +45,50 @@ RppStatus non_silent_region_detection_host_tensor(Rpp32f *srcPtr,
       Rpp32s mmsBufferSize = srcSize - windowLength + 1;
       std::vector<float> mmsBuffer;
       mmsBuffer.reserve(mmsBufferSize);
-      
+
       // Calculate moving mean square of input array and store in mms buffer
       Rpp32f sumOfSquares = 0.0f;
       Rpp32f meanFactor = 1.f / windowLength;
-      for (int windowBegin = 0; windowBegin <= srcSize - windowLength;) 
+      for (int windowBegin = 0; windowBegin <= srcSize - windowLength;)
       {
-        for (int i = windowBegin ; i < windowLength ; i++) 
+        for (int i = windowBegin ; i < windowLength ; i++)
           sumOfSquares += getSquare(srcPtrTemp[i]);
         mmsBuffer[windowBegin] = sumOfSquares * meanFactor;
 
         auto interval_endIdx = std::min(windowBegin + resetInterval, srcSize) - windowLength + 1;
-        for (windowBegin++; windowBegin < interval_endIdx; windowBegin++) 
+        for (windowBegin++; windowBegin < interval_endIdx; windowBegin++)
         {
           sumOfSquares += getSquare(srcPtrTemp[windowBegin + windowLength - 1]) - getSquare(srcPtrTemp[windowBegin - 1]);
           mmsBuffer[windowBegin] = sumOfSquares * meanFactor;
         }
       }
-  
-      // Convert cutOff from DB to magnitude    
+
+      // Convert cutOff from DB to magnitude
       Rpp32f base = (referenceMax) ? getMax(mmsBuffer, mmsBufferSize) : referencePower;
       Rpp32f cutOffMag = base * pow(float(10) , cutOffDB * float(1) / 10.f);
-        
+
       // Calculate begining index, length of non silent region from the mms buffer
       int endIdx = mmsBufferSize;
       int beginIdx = endIdx;
-      for (int i = 0; i < endIdx; i++) 
+      for (int i = 0; i < endIdx; i++)
       {
-          if (mmsBuffer[i] >= cutOffMag) 
+          if (mmsBuffer[i] >= cutOffMag)
           {
               beginIdx = i;
               break;
           }
       }
 
-      if (beginIdx == endIdx) 
+      if (beginIdx == endIdx)
       {
           detectedIndexTensor[batchCount] = 0;
           detectionLengthTensor[batchCount] = 0;
       }
       else
-      {        
-        for (int i = endIdx - 1; i >= beginIdx; i--) 
+      {
+        for (int i = endIdx - 1; i >= beginIdx; i--)
         {
-            if (mmsBuffer[i] >= cutOffMag) 
+            if (mmsBuffer[i] >= cutOffMag)
             {
                 endIdx = i;
                 break;

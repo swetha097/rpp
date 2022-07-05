@@ -9,7 +9,7 @@ RppStatus pre_emphasis_filter_host_tensor(Rpp32f *srcPtr,
                                           Rpp32f *coeffTensor,
                                           Rpp32u borderType)
 {
-#pragma omp parallel for num_threads(srcDescPtr->n)    
+#pragma omp parallel for num_threads(srcDescPtr->n)
     for(int batchCount = 0; batchCount < srcDescPtr->n; batchCount++)
     {
       Rpp32f *srcPtrTemp = srcPtr + batchCount * srcDescPtr->strides.nStride;
@@ -17,12 +17,12 @@ RppStatus pre_emphasis_filter_host_tensor(Rpp32f *srcPtr,
       Rpp32s srcSize = srcSizeTensor[batchCount];
       Rpp32f coeff = coeffTensor[batchCount];
 
-      if(borderType == RpptAudioBorderType::Zero)
+      if(borderType == RpptAudioBorderType::ZERO)
         dstPtrTemp[0] = srcPtrTemp[0];
-      else if(borderType == RpptAudioBorderType::Clamp)
-        dstPtrTemp[0] = srcPtrTemp[0] * (1 - coeff); 
-      else if(borderType == RpptAudioBorderType::Reflect)
-        dstPtrTemp[0] = srcPtrTemp[0] - coeff * srcPtrTemp[1]; 
+      else if(borderType == RpptAudioBorderType::CLAMP)
+        dstPtrTemp[0] = srcPtrTemp[0] * (1 - coeff);
+      else if(borderType == RpptAudioBorderType::REFLECT)
+        dstPtrTemp[0] = srcPtrTemp[0] - coeff * srcPtrTemp[1];
 
       int vectorIncrement = 8;
       int alignedLength = (srcSize / 8) * 8;

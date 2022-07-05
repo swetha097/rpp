@@ -14,13 +14,6 @@
 #include <half.hpp>
 #include <fstream>
 
-/* Include this header file to use functions from libsndfile. */
-#include <sndfile.h>
-#include <dirent.h>
-
-/* libsndfile can handle more than 6 channels but we'll restrict it to 6. */
-#define		MAX_CHANNELS	6
-
 using namespace cv;
 using namespace std;
 using half_float::half;
