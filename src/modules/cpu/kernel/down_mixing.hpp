@@ -35,7 +35,7 @@ RppStatus down_mixing_host_tensor(Rpp32f *srcPtr,
             weights = normalizedWeights;
         }
 
-        // use weights to downmix for stereo to mono
+        // use weights to downmix from stereo to mono
         for (int64_t o = 0, i = 0; o < samples; o++, i += channels)
         {
             float sum = srcPtrTemp[i] * weights[0];

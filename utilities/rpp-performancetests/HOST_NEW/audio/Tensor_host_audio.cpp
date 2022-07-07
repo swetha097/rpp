@@ -266,7 +266,7 @@ int main(int argc, char **argv)
                 Rpp32f coeff[noOfAudioFiles];
                 for (i = 0; i < noOfAudioFiles; i++)
                     coeff[i] = 0.97;
-                RpptAudioBorderType borderType = RpptAudioBorderType::Clamp;
+                RpptAudioBorderType borderType = RpptAudioBorderType::CLAMP;
 
                 start_omp = omp_get_wtime();
                 start = clock();

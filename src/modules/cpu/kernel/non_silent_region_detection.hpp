@@ -30,7 +30,7 @@ RppStatus non_silent_region_detection_host_tensor(Rpp32f *srcPtr,
 #pragma omp parallel for num_threads(srcDescPtr->n)
     for(int batchCount = 0; batchCount < srcDescPtr->n; batchCount++)
     {
-      Rpp32f *srcPtrTemp = srcPtr + batchCount * srcDescPtr->w;
+      Rpp32f *srcPtrTemp = srcPtr + batchCount * srcDescPtr->strides.nStride;
       Rpp32s srcSize = srcSizeTensor[batchCount];
       Rpp32s windowLength = windowLengthTensor[batchCount];
       Rpp32f referencePower = referencePowerTensor[batchCount];
@@ -65,7 +65,7 @@ RppStatus non_silent_region_detection_host_tensor(Rpp32f *srcPtr,
 
       // Convert cutOff from DB to magnitude
       Rpp32f base = (referenceMax) ? getMax(mmsBuffer, mmsBufferSize) : referencePower;
-      Rpp32f cutOffMag = base * pow(float(10) , cutOffDB * float(1) / 10.f);
+      Rpp32f cutOffMag = base * pow(float(10) , cutOffDB * float(1) / 10.0f);
 
       // Calculate begining index, length of non silent region from the mms buffer
       int endIdx = mmsBufferSize;

@@ -255,7 +255,7 @@ int main(int argc, char **argv)
             Rpp32s numElements = 8;
             Rpp32f inputMag[8] = {0.1369617, -0.23021328, -0.4590265, -0.48347238, 0.3132702, 0.41275555, 0.10663575, 0.22949654};
 
-            Rpp32f *outDB = (Rpp32f *)calloc(numElements, sizeof(Rpp32f));
+            Rpp32f outDB[numElements];
             Rpp32f cutOffDB = -200.0;
             Rpp32f multiplier = 10.0;
 
@@ -274,7 +274,6 @@ int main(int argc, char **argv)
                 cout<<outDB[i]<<" ";
             }
 
-            free(outDB);
             break;
         }
         case 2:
