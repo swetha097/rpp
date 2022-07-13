@@ -48,24 +48,25 @@ RppStatus non_silent_region_detection_host_tensor(Rpp32f *srcPtr,
 
       // Calculate moving mean square of input array and store in mms buffer
       Rpp32f sumOfSquares = 0.0f;
-      Rpp32f meanFactor = 1.f / windowLength;
-      for (int windowBegin = 0; windowBegin <= srcSize - windowLength;)
+      Rpp32f meanFactor = 1.0f / windowLength;
+      int windowBegin = 0;
+      while(windowBegin <= srcSize - windowLength)
       {
-        for (int i = windowBegin ; i < windowLength ; i++)
-          sumOfSquares += getSquare(srcPtrTemp[i]);
-        mmsBuffer[windowBegin] = sumOfSquares * meanFactor;
-
-        auto interval_endIdx = std::min(windowBegin + resetInterval, srcSize) - windowLength + 1;
-        for (windowBegin++; windowBegin < interval_endIdx; windowBegin++)
-        {
-          sumOfSquares += getSquare(srcPtrTemp[windowBegin + windowLength - 1]) - getSquare(srcPtrTemp[windowBegin - 1]);
+          for (int i = windowBegin ; i < windowLength ; i++)
+            sumOfSquares += getSquare(srcPtrTemp[i]);
           mmsBuffer[windowBegin] = sumOfSquares * meanFactor;
-        }
+
+          auto interval_endIdx = std::min(windowBegin + resetInterval, srcSize) - windowLength + 1;
+          for (windowBegin++; windowBegin < interval_endIdx; windowBegin++)
+          {
+            sumOfSquares += getSquare(srcPtrTemp[windowBegin + windowLength - 1]) - getSquare(srcPtrTemp[windowBegin - 1]);
+            mmsBuffer[windowBegin] = sumOfSquares * meanFactor;
+          }
       }
 
       // Convert cutOff from DB to magnitude
       Rpp32f base = (referenceMax) ? getMax(mmsBuffer, mmsBufferSize) : referencePower;
-      Rpp32f cutOffMag = base * pow(float(10) , cutOffDB * float(1) / 10.0f);
+      Rpp32f cutOffMag = base * pow(10.0f , cutOffDB * 0.1f);
 
       // Calculate begining index, length of non silent region from the mms buffer
       int endIdx = mmsBufferSize;

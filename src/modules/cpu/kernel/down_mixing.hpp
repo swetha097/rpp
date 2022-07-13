@@ -7,6 +7,8 @@ RppStatus down_mixing_host_tensor(Rpp32f *srcPtr,
                                   Rpp32s *channelsTensor,
                                   bool  normalizeWeights)
 {
+    omp_set_dynamic(0);
+#pragma omp parallel for num_threads(srcDescPtr->n)
     for(int batchCount = 0; batchCount < srcDescPtr->n; batchCount++)
     {
         Rpp32f *srcPtrTemp = srcPtr + batchCount * srcDescPtr->strides.nStride;
@@ -38,11 +40,9 @@ RppStatus down_mixing_host_tensor(Rpp32f *srcPtr,
         // use weights to downmix from stereo to mono
         for (int64_t o = 0, i = 0; o < samples; o++, i += channels)
         {
-            float sum = srcPtrTemp[i] * weights[0];
-            for (int c = 1; c < channels; c++)
-                sum += srcPtrTemp[i + c] * weights[c];
-
-            dstPtrTemp[o] = sum;
+            dstPtrTemp[o] = 0.0;
+            for (int c = 0; c < channels; c++)
+                dstPtrTemp[o] += srcPtrTemp[i + c] * weights[c];
         }
     }
 
