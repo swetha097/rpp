@@ -52,6 +52,9 @@ int main(int argc, char **argv)
         case 2:
             strcpy(funcName, "pre_emphasis_filter");
             break;
+        case 3:
+            strcpy(funcName, "down_mixing");
+            break;
         default:
             strcpy(funcName, "test_case");
             break;
@@ -96,6 +99,8 @@ int main(int argc, char **argv)
 
     // Initialize the AudioPatch for source
     Rpp32s *inputAudioSize = (Rpp32s *) calloc(noOfAudioFiles, sizeof(Rpp32s));
+    Rpp64s *samplesPerChannelTensor = (Rpp64s *) calloc(noOfAudioFiles, sizeof(Rpp64s));
+    Rpp32s *channelsTensor = (Rpp32s *) calloc(noOfAudioFiles, sizeof(Rpp32s));
 
     // Set maxLength
     char audioNames[noOfAudioFiles][1000];
@@ -123,6 +128,8 @@ int main(int argc, char **argv)
         }
 
         inputAudioSize[count] = sfinfo.frames * sfinfo.channels;
+        samplesPerChannelTensor[count] = sfinfo.frames;
+        channelsTensor[count] = sfinfo.channels;
         maxLength = std::max(maxLength, inputAudioSize[count]);
 
         // Close input
@@ -279,6 +286,35 @@ int main(int argc, char **argv)
 
                 break;
             }
+            case 3:
+            {
+                test_case_name = "down_mixing";
+                bool normalizeWeights = false;
+
+                start_omp = omp_get_wtime();
+                start = clock();
+                if (ip_bitDepth == 2)
+                {
+                    rppt_down_mixing_host(inputf32, srcDescPtr, outputf32, samplesPerChannelTensor, channelsTensor, normalizeWeights);
+                }
+                else
+                    missingFuncFlag = 1;
+
+                // Print the mono output
+                // cout<<endl<<"Printing downmixed output: "<<endl;
+                // for(int i = 0; i < srcDescPtr->n; i++)
+                // {
+                //     int idxstart = i * srcDescPtr->strides.nStride;
+                //     int idxend = idxstart + samplesPerChannelTensor[i];
+                //     for(int j = idxstart; j < idxend; j++)
+                //     {
+                //         cout<<"out["<<j<<"]: "<<outputf32[j]<<endl;
+                //     }
+                //     cout<<endl;
+                // }
+
+                break;
+            }
             default:
             {
                 missingFuncFlag = 1;
@@ -314,6 +350,8 @@ int main(int argc, char **argv)
 
     // Free memory
     free(inputAudioSize);
+    free(samplesPerChannelTensor);
+    free(channelsTensor);
     free(inputf32);
     free(outputf32);
 

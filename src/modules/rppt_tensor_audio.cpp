@@ -82,7 +82,7 @@ RppStatus rppt_pre_emphasis_filter_host(RppPtr_t srcPtr,
                                     srcSizeTensor,
                                     coeffTensor,
                                     borderType);
-    
+
     return RPP_SUCCESS;
 }
 

@@ -213,14 +213,13 @@ int main(int argc, char **argv)
         case 0:
         {
             test_case_name = "non_silent_region_detection";
-            Rpp32s detectionIndex[srcDescPtr->n];
-            Rpp32s detectionLength[srcDescPtr->n];
-
-            Rpp32f cutOffDB[srcDescPtr->n];
-            Rpp32s windowLength[srcDescPtr->n];
-            Rpp32f referencePower[srcDescPtr->n];
-            Rpp32s resetInterval[srcDescPtr->n];
-            bool referenceMax[srcDescPtr->n];
+            Rpp32s detectionIndex[noOfAudioFiles];
+            Rpp32s detectionLength[noOfAudioFiles];
+            Rpp32f cutOffDB[noOfAudioFiles];
+            Rpp32s windowLength[noOfAudioFiles];
+            Rpp32f referencePower[noOfAudioFiles];
+            Rpp32s resetInterval[noOfAudioFiles];
+            bool referenceMax[noOfAudioFiles];
 
             for (i = 0; i < srcDescPtr->n; i++)
             {
@@ -279,7 +278,7 @@ int main(int argc, char **argv)
         case 2:
         {
             test_case_name = "pre_emphasis_filter";
-            Rpp32f coeff[srcDescPtr->n];
+            Rpp32f coeff[noOfAudioFiles];
             for (i = 0; i < srcDescPtr->n; i++)
                 coeff[i] = 0.97;
             RpptAudioBorderType borderType = RpptAudioBorderType::CLAMP;

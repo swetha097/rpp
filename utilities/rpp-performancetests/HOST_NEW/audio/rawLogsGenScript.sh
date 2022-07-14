@@ -16,31 +16,31 @@ SRC_FOLDER="$DEFAULT_SRC_FOLDER"
 DST_FOLDER="$DEFAULT_DST_FOLDER"
 
 # <<<<<<<<<<<<<< EXECUTION OF ALL FUNCTIONALITIES (NEED NOT CHANGE) >>>>>>>>>>>>>>
-if [[ "$1" -lt 0 ]] | [[ "$1" -gt 2 ]]; then
-    echo "The starting case# must be in the 0-2 range!"
+if [[ "$1" -lt 0 ]] | [[ "$1" -gt 3 ]]; then
+    echo "The starting case# must be in the 0-3 range!"
     echo
     echo "The testAllScript.sh bash script runs the RPP Performance testsuite for AMDRPP audio functionalities in HOST backends"
     echo
     echo "Syntax: ./testAllScript.sh <S> <E>"
-    echo "S     CASE_START (Starting case# (0-2))"
-    echo "E     CASE_END (Ending case# (0-2))"
+    echo "S     CASE_START (Starting case# (0-3))"
+    echo "E     CASE_END (Ending case# (0-3))"
     exit 1
 fi
 
-if [[ "$2" -lt 0 ]] | [[ "$2" -gt 2 ]]; then
-    echo "The ending case# must be in the 0-2 range!"
+if [[ "$2" -lt 0 ]] | [[ "$2" -gt 3 ]]; then
+    echo "The ending case# must be in the 0-3 range!"
     echo
     echo "The testAllScript.sh bash script runs the RPP Performance testsuite for AMDRPP audio functionalities in HOST backends"
     echo
     echo "Syntax: ./testAllScript.sh <S> <E>"
-    echo "S     CASE_START (Starting case# (0-2))"
-    echo "E     CASE_END (Ending case# (0-2))"
+    echo "S     CASE_START (Starting case# (0-3))"
+    echo "E     CASE_END (Ending case# (0-3))"
     exit 1
 fi
 
 if (( "$#" < 2 )); then
     CASE_START="0"
-    CASE_END="2"
+    CASE_END="3"
 else
     CASE_START="$1"
     CASE_END="$2"

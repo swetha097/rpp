@@ -6,7 +6,7 @@ RppStatus to_decibels_host_tensor(Rpp32f *magnitudeTensor,
                                   Rpp32f cutOffDB,
                                   Rpp32f multiplier,
                                   Rpp32f referenceMagnitude)
-{   
+{
     bool referenceMax = (referenceMagnitude == 0.0) ? false : true;
     if(!referenceMax)
     {
@@ -32,5 +32,6 @@ RppStatus to_decibels_host_tensor(Rpp32f *magnitudeTensor,
         Rpp32f magnitude = magnitudeTensor[batchCount];
         DBTensor[batchCount] = multiplier * log10(std::max(minRatio, magnitude * invReferenceMagnitude));
     }
+
     return RPP_SUCCESS;
 }
