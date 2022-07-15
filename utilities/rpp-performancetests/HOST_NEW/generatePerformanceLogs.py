@@ -80,8 +80,6 @@ for log_file in log_file_list:
             split_word_start = "Running "
             split_word_end = " 100"
             prevLine = prevLine.partition(split_word_start)[2].partition(split_word_end)[0]
-            print(prevLine)
-            print(functions)
             if prevLine not in functions:
                 functions.append(prevLine)
                 frames.append("100")
