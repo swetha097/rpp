@@ -31,7 +31,7 @@ log_file_list = [
 functionality_group_list = [
     "non_silent_region_detection",
     "to_decibels",
-    "pre_emphasis",
+    "pre_emphasis_filter",
     "down_mixing"
 ]
 
@@ -58,6 +58,7 @@ for log_file in log_file_list:
     for line in f:
         for functionality_group in functionality_group_list:
             if functionality_group in line:
+                print(functionality_group)
                 functions.extend([" ", functionality_group, " "])
                 frames.extend([" ", " ", " "])
                 maxVals.extend([" ", " ", " "])
@@ -67,8 +68,9 @@ for log_file in log_file_list:
         if "max,min,avg" in line:
             split_word_start = "Running "
             split_word_end = " 100"
-            prevLine = prevLine.partition(split_word_start)[2].partition(split_word_end)[0]
-            if prevLine not in functions:
+
+            prevLine = (prevLine.partition(split_word_start)[2].partition(split_word_end)[0])
+            if prevLine in functions:
                 functions.append(prevLine)
                 frames.append("100")
                 split_word_start = "max,min,avg = "

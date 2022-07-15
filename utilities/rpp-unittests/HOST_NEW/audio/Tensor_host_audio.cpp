@@ -100,7 +100,7 @@ int main(int argc, char **argv)
 
     // Initialize the AudioPatch for source
     Rpp32s *inputAudioSize = (Rpp32s *) calloc(noOfAudioFiles, sizeof(Rpp32s));
-    Rpp64s *samplesPerChannelTensor = (Rpp64s *) calloc(noOfAudioFiles, sizeof(Rpp64s));
+    Rpp32s *srcLengthTensor = (Rpp32s *) calloc(noOfAudioFiles, sizeof(Rpp32s));
     Rpp32s *channelsTensor = (Rpp32s *) calloc(noOfAudioFiles, sizeof(Rpp32s));
 
     // Set maxLength
@@ -129,7 +129,7 @@ int main(int argc, char **argv)
         }
 
         inputAudioSize[count] = sfinfo.frames * sfinfo.channels;
-        samplesPerChannelTensor[count] = sfinfo.frames;
+        srcLengthTensor[count] = sfinfo.frames;
         channelsTensor[count] = sfinfo.channels;
         maxLength = std::max(maxLength, inputAudioSize[count]);
 
@@ -251,27 +251,24 @@ int main(int argc, char **argv)
         case 1:
         {
             test_case_name = "to_decibels";
-            Rpp32s numElements = 8;
-            Rpp32f inputMag[8] = {0.1369617, -0.23021328, -0.4590265, -0.48347238, 0.3132702, 0.41275555, 0.10663575, 0.22949654};
-
-            Rpp32f outDB[numElements];
             Rpp32f cutOffDB = -200.0;
             Rpp32f multiplier = 10.0;
+            Rpp32f referenceMagnitude = 0.0;
 
             start_omp = omp_get_wtime();
             start = clock();
             if (ip_bitDepth == 2)
             {
-                rppt_to_decibels_host(inputMag, outDB, numElements, cutOffDB, multiplier);
+                rppt_to_decibels_host(inputf32, srcDescPtr, outputf32, srcLengthTensor, cutOffDB, multiplier, referenceMagnitude);
             }
             else
                 missingFuncFlag = 1;
 
-            cout<<endl<<"Output in DB: "<<endl;
-            for(int i = 0; i < numElements; i++)
-            {
-                cout<<outDB[i]<<" ";
-            }
+            // cout<<endl<<"Output in DB: "<<endl;
+            // for(int i = 0; i < srcLengthTensor[0]; i++)
+            // {
+            //     cout<<"output["<<i<<"]: "<<outputf32[i]<<endl;
+            // }
 
             break;
         }
@@ -313,7 +310,7 @@ int main(int argc, char **argv)
             start = clock();
             if (ip_bitDepth == 2)
             {
-                rppt_down_mixing_host(inputf32, srcDescPtr, outputf32, samplesPerChannelTensor, channelsTensor, normalizeWeights);
+                rppt_down_mixing_host(inputf32, srcDescPtr, outputf32, srcLengthTensor, channelsTensor, normalizeWeights);
             }
             else
                 missingFuncFlag = 1;
@@ -323,7 +320,7 @@ int main(int argc, char **argv)
             // for(int i = 0; i < srcDescPtr->n; i++)
             // {
             //     int idxstart = i * srcDescPtr->strides.nStride;
-            //     int idxend = idxstart + samplesPerChannelTensor[i];
+            //     int idxend = idxstart + srcLengthTensor[i];
             //     for(int j = idxstart; j < idxend; j++)
             //     {
             //         cout<<"out["<<j<<"]: "<<outputf32[j]<<endl;
@@ -360,7 +357,7 @@ int main(int argc, char **argv)
 
     // Free memory
     free(inputAudioSize);
-    free(samplesPerChannelTensor);
+    free(srcLengthTensor);
     free(channelsTensor);
     free(inputf32);
     free(outputf32);

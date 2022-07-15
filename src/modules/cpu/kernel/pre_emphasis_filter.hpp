@@ -9,7 +9,6 @@ RppStatus pre_emphasis_filter_host_tensor(Rpp32f *srcPtr,
                                           Rpp32f *coeffTensor,
                                           Rpp32u borderType)
 {
-	omp_set_dynamic(0);
 #pragma omp parallel for num_threads(srcDescPtr->n)
 	for(int batchCount = 0; batchCount < srcDescPtr->n; batchCount++)
 	{

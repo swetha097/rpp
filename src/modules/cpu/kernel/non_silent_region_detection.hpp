@@ -27,7 +27,6 @@ RppStatus non_silent_region_detection_host_tensor(Rpp32f *srcPtr,
 												  Rpp32s *resetIntervalTensor,
 												  bool *referenceMaxTensor)
 {
-	omp_set_dynamic(0);
 #pragma omp parallel for num_threads(srcDescPtr->n)
 	for(int batchCount = 0; batchCount < srcDescPtr->n; batchCount++)
 	{

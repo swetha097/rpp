@@ -3,11 +3,10 @@
 RppStatus down_mixing_host_tensor(Rpp32f *srcPtr,
                                   RpptDescPtr srcDescPtr,
                                   Rpp32f *dstPtr,
-                                  Rpp64s *samplesPerChannelTensor,
+                                  Rpp32s *srcLengthTensor,
                                   Rpp32s *channelsTensor,
                                   bool normalizeWeights)
 {
-    omp_set_dynamic(0);
 #pragma omp parallel for num_threads(srcDescPtr->n)
     for(int batchCount = 0; batchCount < srcDescPtr->n; batchCount++)
     {
@@ -15,7 +14,7 @@ RppStatus down_mixing_host_tensor(Rpp32f *srcPtr,
         Rpp32f *dstPtrTemp = dstPtr + batchCount * srcDescPtr->strides.nStride;
 
         Rpp32s channels = channelsTensor[batchCount];
-        Rpp64s samples = samplesPerChannelTensor[batchCount];
+        Rpp32s samples = srcLengthTensor[batchCount];
         std::vector<float> weights;
         weights.resize(channels, 1.f / channels);
         std::vector<float> normalizedWeights;
