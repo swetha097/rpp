@@ -22,14 +22,18 @@ using half_float::half;
 
 typedef half Rpp16f;
 
-int check_output(Rpp32f *dstPtr, int *srcLength, int bs, string test_case, Rpp32u stride)
+int check_output(Rpp32f *dstPtr, int *srcLength, int bs, string test_case, Rpp32u stride, char audioNames[][1000])
 {
     fstream ref_file;
-    string ref_path = "/media/sampath/sampath_rpp/utilities/rpp-unittests/HOST_NEW/audio/GoldenOutputs/";
+    // TODO - change hardcoded path to path based on working directory
+    string ref_path = "/media/sampath/sampath_rpp/utilities/rpp-unittests/HOST_NEW/audio/ReferenceOutputs/";
     int file_match = 0;
     for (int i = 0; i < bs; i++)
     {
-        string out_file = ref_path + test_case + "/" + test_case + "_output" + std::to_string(i) + ".txt";
+        string currentFileName = audioNames[i];
+        size_t lastindex = currentFileName.find_last_of(".");
+        currentFileName = currentFileName.substr(0, lastindex);  // Remove extension from file name
+        string out_file = ref_path + test_case + "/" + test_case + "_ref_" + currentFileName + ".txt";
         ref_file.open(out_file, ios::in);
         int offset = i * stride;
         int matched_indices = 0;
@@ -48,9 +52,9 @@ int check_output(Rpp32f *dstPtr, int *srcLength, int bs, string test_case, Rpp32
 
     std::cerr<<std::endl<<"Results for Test case: "<<test_case<<std::endl;
     if(file_match == bs)
-        std::cerr<<"Outputs are matching"<<std::endl;
+        std::cerr<<"All Outputs are matching"<<std::endl;
     else
-        std::cerr<<"Only "<<file_match<<" outputs are matching out of "<< bs<<std::endl;
+        std::cerr<<file_match<<"/"<<bs<<" outputs are matching"<<std::endl;
 }
 
 int main(int argc, char **argv)
@@ -297,7 +301,7 @@ int main(int argc, char **argv)
             else
                 missingFuncFlag = 1;
 
-            check_output(outputf32, srcLengthTensor, noOfAudioFiles, test_case_name, srcDescPtr->strides.nStride);
+            check_output(outputf32, srcLengthTensor, noOfAudioFiles, test_case_name, srcDescPtr->strides.nStride, audioNames);
             break;
         }
         case 2:
@@ -317,10 +321,7 @@ int main(int argc, char **argv)
             else
                 missingFuncFlag = 1;
 
-            ofstream outfile;
-            string test_string = "preemph_output";
-
-            check_output(outputf32, srcLengthTensor, noOfAudioFiles, test_case_name, srcDescPtr->strides.nStride);
+            check_output(outputf32, srcLengthTensor, noOfAudioFiles, test_case_name, srcDescPtr->strides.nStride, audioNames);
             break;
         }
         case 3:
