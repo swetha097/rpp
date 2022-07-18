@@ -22,6 +22,37 @@ using half_float::half;
 
 typedef half Rpp16f;
 
+int check_output(Rpp32f *dstPtr, int *srcLength, int bs, string test_case, Rpp32u stride)
+{
+    fstream ref_file;
+    string ref_path = "/media/sampath/sampath_rpp/utilities/rpp-unittests/HOST_NEW/audio/GoldenOutputs/";
+    int file_match = 0;
+    for (int i = 0; i < bs; i++)
+    {
+        string out_file = ref_path + test_case + "/" + test_case + "_output" + std::to_string(i) + ".txt";
+        ref_file.open(out_file, ios::in);
+        int offset = i * stride;
+        int matched_indices = 0;
+        for(int j = 0; j < srcLength[i]; j++)
+        {
+            Rpp32f ref_val, out_val;
+            ref_file>>ref_val;
+            out_val = dstPtr[offset + j];
+            if(abs(out_val - ref_val) < 1e-4)
+                matched_indices += 1;
+        }
+        ref_file.close();
+        if(matched_indices == srcLength[i])
+            file_match++;
+    }
+
+    std::cerr<<std::endl<<"Results for Test case: "<<test_case<<std::endl;
+    if(file_match == bs)
+        std::cerr<<"Outputs are matching"<<std::endl;
+    else
+        std::cerr<<"Only "<<file_match<<" outputs are matching out of "<< bs<<std::endl;
+}
+
 int main(int argc, char **argv)
 {
     // Handle inputs
@@ -129,8 +160,10 @@ int main(int argc, char **argv)
         }
 
         inputAudioSize[count] = sfinfo.frames * sfinfo.channels;
+        // std::cerr<<"audioSize: "<<inputAudioSize[count]<<std::endl;
         srcLengthTensor[count] = sfinfo.frames;
         channelsTensor[count] = sfinfo.channels;
+        // std::cerr<<"channels: "<<channelsTensor[count]<<std::endl;
         maxLength = std::max(maxLength, inputAudioSize[count]);
 
         // Close input
@@ -264,12 +297,7 @@ int main(int argc, char **argv)
             else
                 missingFuncFlag = 1;
 
-            // cout<<endl<<"Output in DB: "<<endl;
-            // for(int i = 0; i < srcLengthTensor[0]; i++)
-            // {
-            //     cout<<"output["<<i<<"]: "<<outputf32[i]<<endl;
-            // }
-
+            check_output(outputf32, srcLengthTensor, noOfAudioFiles, test_case_name, srcDescPtr->strides.nStride);
             break;
         }
         case 2:
@@ -289,16 +317,10 @@ int main(int argc, char **argv)
             else
                 missingFuncFlag = 1;
 
-            // cout<<endl<<"Output from preemphasis filter: ";
-            // for(int i = 0; i < srcDescPtr->n; i++)
-            // {
-            //     cout<<endl<<"Audiofile: "<<audioNames[i]<<endl;
-            //     for(int j = 0; j < inputAudioSize[i]; j++)
-            //     {
-            //         cout<<outputf32[j]<<endl;
-            //     }
-            //     cout<<endl;
-            // }
+            ofstream outfile;
+            string test_string = "preemph_output";
+
+            check_output(outputf32, srcLengthTensor, noOfAudioFiles, test_case_name, srcDescPtr->strides.nStride);
             break;
         }
         case 3:
