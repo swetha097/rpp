@@ -10,6 +10,7 @@
 #include <omp.h>
 #include <half.hpp>
 #include <fstream>
+#include <experimental/filesystem>
 
 // Include this header file to use functions from libsndfile
 #include <sndfile.h>
@@ -22,18 +23,30 @@ using half_float::half;
 
 typedef half Rpp16f;
 
-int check_output(Rpp32f *dstPtr, int *srcLength, int bs, string test_case, Rpp32u stride, char audioNames[][1000])
+void remove_substring(string &str, string &pattern)
+{
+    std::string::size_type i = str.find(pattern);
+    while (i != std::string::npos)
+    {
+        str.erase(i, pattern.length());
+        i = str.find(pattern, i);
+   }
+}
+
+void verify_output(Rpp32f *dstPtr, int *srcLength, int bs, string test_case, Rpp32u stride, char audioNames[][1000])
 {
     fstream ref_file;
-    // TODO - change hardcoded path to path based on working directory
-    string ref_path = "/media/sampath/sampath_rpp/utilities/rpp-unittests/HOST_NEW/audio/ReferenceOutputs/";
+    string ref_path = get_current_dir_name();
+    string pattern = "build";
+    remove_substring(ref_path, pattern);
+    ref_path = ref_path + "ReferenceOutputs/";
     int file_match = 0;
     for (int i = 0; i < bs; i++)
     {
-        string currentFileName = audioNames[i];
-        size_t lastindex = currentFileName.find_last_of(".");
-        currentFileName = currentFileName.substr(0, lastindex);  // Remove extension from file name
-        string out_file = ref_path + test_case + "/" + test_case + "_ref_" + currentFileName + ".txt";
+        string current_file_name = audioNames[i];
+        size_t last_index = current_file_name.find_last_of(".");
+        current_file_name = current_file_name.substr(0, last_index);  // Remove extension from file name
+        string out_file = ref_path + test_case + "/" + test_case + "_ref_" + current_file_name + ".txt";
         ref_file.open(out_file, ios::in);
         int offset = i * stride;
         int matched_indices = 0;
@@ -52,9 +65,43 @@ int check_output(Rpp32f *dstPtr, int *srcLength, int bs, string test_case, Rpp32
 
     std::cerr<<std::endl<<"Results for Test case: "<<test_case<<std::endl;
     if(file_match == bs)
-        std::cerr<<"All Outputs are matching"<<std::endl;
+        std::cerr<<"Success! All outputs are matching with reference outputs"<<std::endl;
     else
-        std::cerr<<file_match<<"/"<<bs<<" outputs are matching"<<std::endl;
+        std::cerr<<"Failed! "<<file_match<<"/"<<bs<<" outputs are matching with reference outputs"<<std::endl;
+}
+
+void verify_non_silent_region_detection(int *detectionIndex, int *detectionLength, string test_case, int bs, char audioNames[][1000])
+{
+    fstream ref_file;
+    string ref_path = get_current_dir_name();
+    string pattern = "build";
+    remove_substring(ref_path, pattern);
+    ref_path = ref_path + "ReferenceOutputs/";
+    int file_match = 0;
+    for (int i = 0; i < bs; i++)
+    {
+        string current_file_name = audioNames[i];
+        size_t last_index = current_file_name.find_last_of(".");
+        current_file_name = current_file_name.substr(0, last_index);  // Remove extension from file name
+        string out_file = ref_path + test_case + "/" + test_case + "_ref_" + current_file_name + ".txt";
+        ref_file.open(out_file, ios::in);
+
+        Rpp32s ref_index, ref_length;
+        Rpp32s out_index, out_length;
+        ref_file>>ref_index;
+        ref_file>>ref_length;
+        out_index = detectionIndex[i];
+        out_length = detectionLength[i];
+
+        if((out_index == ref_index) && (out_length == ref_length))
+            file_match += 1;
+        ref_file.close();
+    }
+    std::cerr<<std::endl<<"Results for Test case: "<<test_case<<std::endl;
+    if(file_match == bs)
+        std::cerr<<"Success! All outputs are matching with reference outputs"<<std::endl;
+    else
+        std::cerr<<"Failed! "<<file_match<<"/"<<bs<<" outputs are matching with reference outputs"<<std::endl;
 }
 
 int main(int argc, char **argv)
@@ -70,6 +117,7 @@ int main(int argc, char **argv)
     }
 
     char *src = argv[1];
+    std::cerr<<"src: "<<argv[0]<<std::endl;
     int ip_bitDepth = atoi(argv[2]);
     int test_case = atoi(argv[3]);
     int ip_channel = 1;
@@ -276,13 +324,7 @@ int main(int argc, char **argv)
             else
                 missingFuncFlag = 1;
 
-            // Print the detection index and length
-            for(int i = 0; i < srcDescPtr->n; i++)
-            {
-                cout<<endl<<"Audiofile: "<<audioNames[i];
-                cout<<endl<<"Index, Length: "<<detectionIndex[i]<<" "<<detectionLength[i];
-            }
-
+            check_non_silent_region_detection(detectionIndex, detectionLength, test_case_name, noOfAudioFiles, audioNames);
             break;
         }
         case 1:
@@ -301,7 +343,7 @@ int main(int argc, char **argv)
             else
                 missingFuncFlag = 1;
 
-            check_output(outputf32, srcLengthTensor, noOfAudioFiles, test_case_name, srcDescPtr->strides.nStride, audioNames);
+            verify_output(outputf32, srcLengthTensor, noOfAudioFiles, test_case_name, srcDescPtr->strides.nStride, audioNames);
             break;
         }
         case 2:
@@ -321,7 +363,7 @@ int main(int argc, char **argv)
             else
                 missingFuncFlag = 1;
 
-            check_output(outputf32, srcLengthTensor, noOfAudioFiles, test_case_name, srcDescPtr->strides.nStride, audioNames);
+            verify_output(outputf32, srcLengthTensor, noOfAudioFiles, test_case_name, srcDescPtr->strides.nStride, audioNames);
             break;
         }
         case 3:
@@ -338,19 +380,7 @@ int main(int argc, char **argv)
             else
                 missingFuncFlag = 1;
 
-            // Print the mono output
-            // cout<<endl<<"Printing downmixed output: "<<endl;
-            // for(int i = 0; i < srcDescPtr->n; i++)
-            // {
-            //     int idxstart = i * srcDescPtr->strides.nStride;
-            //     int idxend = idxstart + srcLengthTensor[i];
-            //     for(int j = idxstart; j < idxend; j++)
-            //     {
-            //         cout<<"out["<<j<<"]: "<<outputf32[j]<<endl;
-            //     }
-            //     cout<<endl;
-            // }
-
+            verify_output(outputf32, srcLengthTensor, noOfAudioFiles, test_case_name, srcDescPtr->strides.nStride, audioNames);
             break;
         }
         default:
