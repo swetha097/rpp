@@ -1,4 +1,5 @@
 #include "rppdefs.h"
+#include <omp.h>
 
 RppStatus to_decibels_host_tensor(Rpp32f *srcPtr,
                                   RpptDescPtr srcDescPtr,
@@ -15,6 +16,7 @@ RppStatus to_decibels_host_tensor(Rpp32f *srcPtr,
     if(minRatio == 0.0f)
         minRatio = std::nextafter(0.0f, 1.0f);
 
+    omp_set_dynamic(0);
 #pragma omp parallel for num_threads(srcDescPtr->n)
     for(int batchCount = 0; batchCount < srcDescPtr->n; batchCount++)
     {

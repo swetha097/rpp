@@ -261,12 +261,6 @@ int main(int argc, char **argv)
                 else
                     missingFuncFlag = 1;
 
-                // cout<<endl<<"Output in DB: "<<endl;
-                // for(int i = 0; i < srcLengthTensor[0]; i++)
-                // {
-                //     cout<<"output["<<i<<"]: "<<outputf32[i]<<endl;
-                // }
-
                 break;
             }
             case 2:
@@ -302,19 +296,6 @@ int main(int argc, char **argv)
                 else
                     missingFuncFlag = 1;
 
-                // Print the mono output
-                // cout<<endl<<"Printing downmixed output: "<<endl;
-                // for(int i = 0; i < srcDescPtr->n; i++)
-                // {
-                //     int idxstart = i * srcDescPtr->strides.nStride;
-                //     int idxend = idxstart + srcLengthTensor[i];
-                //     for(int j = idxstart; j < idxend; j++)
-                //     {
-                //         cout<<"out["<<j<<"]: "<<outputf32[j]<<endl;
-                //     }
-                //     cout<<endl;
-                // }
-
                 break;
             }
             default:
@@ -333,7 +314,6 @@ int main(int argc, char **argv)
             return -1;
         }
 
-        // Display measured times
         cpu_time_used = ((double)(end - start)) / CLOCKS_PER_SEC;
         omp_time_used = end_omp - start_omp;
         if (cpu_time_used > max_time_used)
@@ -344,8 +324,8 @@ int main(int argc, char **argv)
     }
 
     avg_time_used /= 100;
-    // Display measured times
 
+    // Display measured times
     cout << fixed << "\nmax,min,avg = " << max_time_used << "," << min_time_used << "," << avg_time_used << endl;
 
     rppDestroyHost(handle);

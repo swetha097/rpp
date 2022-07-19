@@ -1,4 +1,5 @@
 #include "rppdefs.h"
+#include <omp.h>
 
 RppStatus down_mixing_host_tensor(Rpp32f *srcPtr,
                                   RpptDescPtr srcDescPtr,
@@ -7,6 +8,7 @@ RppStatus down_mixing_host_tensor(Rpp32f *srcPtr,
                                   Rpp32s *channelsTensor,
                                   bool normalizeWeights)
 {
+    omp_set_dynamic(0);
 #pragma omp parallel for num_threads(srcDescPtr->n)
     for(int batchCount = 0; batchCount < srcDescPtr->n; batchCount++)
     {

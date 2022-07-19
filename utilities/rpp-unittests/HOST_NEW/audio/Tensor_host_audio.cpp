@@ -306,7 +306,7 @@ int main(int argc, char **argv)
             Rpp32s resetInterval[noOfAudioFiles];
             bool referenceMax[noOfAudioFiles];
 
-            for (i = 0; i < srcDescPtr->n; i++)
+            for (i = 0; i < noOfAudioFiles; i++)
             {
                 cutOffDB[i] = -60.0;
                 windowLength[i] = 3;
@@ -324,7 +324,7 @@ int main(int argc, char **argv)
             else
                 missingFuncFlag = 1;
 
-            check_non_silent_region_detection(detectionIndex, detectionLength, test_case_name, noOfAudioFiles, audioNames);
+            verify_non_silent_region_detection(detectionIndex, detectionLength, test_case_name, noOfAudioFiles, audioNames);
             break;
         }
         case 1:
@@ -350,7 +350,7 @@ int main(int argc, char **argv)
         {
             test_case_name = "pre_emphasis_filter";
             Rpp32f coeff[noOfAudioFiles];
-            for (i = 0; i < srcDescPtr->n; i++)
+            for (i = 0; i < noOfAudioFiles; i++)
                 coeff[i] = 0.97;
             RpptAudioBorderType borderType = RpptAudioBorderType::CLAMP;
 
