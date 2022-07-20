@@ -65,9 +65,9 @@ void verify_output(Rpp32f *dstPtr, int *srcLength, int bs, string test_case, Rpp
 
     std::cerr<<std::endl<<"Results for Test case: "<<test_case<<std::endl;
     if(file_match == bs)
-        std::cerr<<"Success! All outputs are matching with reference outputs"<<std::endl;
+        std::cerr<<"PASSED!"<<std::endl;
     else
-        std::cerr<<"Failed! "<<file_match<<"/"<<bs<<" outputs are matching with reference outputs"<<std::endl;
+        std::cerr<<"FAILED! "<<file_match<<"/"<<bs<<" outputs are matching with reference outputs"<<std::endl;
 }
 
 void verify_non_silent_region_detection(int *detectionIndex, int *detectionLength, string test_case, int bs, char audioNames[][1000])
@@ -99,9 +99,9 @@ void verify_non_silent_region_detection(int *detectionIndex, int *detectionLengt
     }
     std::cerr<<std::endl<<"Results for Test case: "<<test_case<<std::endl;
     if(file_match == bs)
-        std::cerr<<"Success! All outputs are matching with reference outputs"<<std::endl;
+        std::cerr<<"PASSED!"<<std::endl;
     else
-        std::cerr<<"Failed! "<<file_match<<"/"<<bs<<" outputs are matching with reference outputs"<<std::endl;
+        std::cerr<<"FAILED! "<<file_match<<"/"<<bs<<" outputs are matching with reference outputs"<<std::endl;
 }
 
 int main(int argc, char **argv)
@@ -231,6 +231,9 @@ int main(int argc, char **argv)
     srcDescPtr->h = 1;
     srcDescPtr->w = maxLength;
     srcDescPtr->c = ip_channel;
+
+    // Optionally set w stride as a multiple of 8 for src
+    srcDescPtr->w = ((srcDescPtr->w / 8) * 8) + 8;
 
     // Set n/c/h/w strides for src/dst
     srcDescPtr->strides.nStride = srcDescPtr->c * srcDescPtr->w * srcDescPtr->h;

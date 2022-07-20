@@ -146,6 +146,9 @@ int main(int argc, char **argv)
     srcDescPtr->w = maxLength;
     srcDescPtr->c = ip_channel;
 
+    // Optionally set w stride as a multiple of 8 for src
+    srcDescPtr->w = ((srcDescPtr->w / 8) * 8) + 8;
+
     // Set n/c/h/w strides for src/dst
     srcDescPtr->strides.nStride = ip_channel * srcDescPtr->w * srcDescPtr->h;
     srcDescPtr->strides.hStride = ip_channel * srcDescPtr->w;

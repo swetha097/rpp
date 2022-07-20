@@ -26,12 +26,12 @@ RppStatus down_mixing_host_tensor(Rpp32f *srcPtr,
             normalizedWeights.resize(channels);
 
             // Compute sum of the weights
-            double sum = 0.0;
+            Rpp32f sum = 0.0;
             for(int i = 0; i < channels; i++)
                 sum += weights[i];
 
             // Normalize the weights
-            float invSum = 1.0 / sum;
+            Rpp32f invSum = 1.0 / sum;
             for(int i = 0; i < channels; i++)
                 normalizedWeights[i] = weights[i] * invSum;
 
@@ -39,11 +39,11 @@ RppStatus down_mixing_host_tensor(Rpp32f *srcPtr,
         }
 
         // use weights to downmix to mono
-        for(int64_t o = 0, i = 0; o < samples; o++, i += channels)
+        for(int64_t dstIdx = 0, srcIdx = 0; dstIdx < samples; dstIdx++, srcIdx += channels)
         {
-            dstPtrTemp[o] = 0.0;
+            dstPtrTemp[dstIdx] = 0.0;
             for(int c = 0; c < channels; c++)
-                dstPtrTemp[o] += srcPtrTemp[i + c] * weights[c];
+                dstPtrTemp[dstIdx] += srcPtrTemp[srcIdx + c] * weights[c];
         }
     }
 
