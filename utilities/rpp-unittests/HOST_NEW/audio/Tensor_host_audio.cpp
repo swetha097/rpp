@@ -117,7 +117,6 @@ int main(int argc, char **argv)
     }
 
     char *src = argv[1];
-    std::cerr<<"src: "<<argv[0]<<std::endl;
     int ip_bitDepth = atoi(argv[2]);
     int test_case = atoi(argv[3]);
     int ip_channel = 1;
@@ -212,10 +211,8 @@ int main(int argc, char **argv)
         }
 
         inputAudioSize[count] = sfinfo.frames * sfinfo.channels;
-        // std::cerr<<"audioSize: "<<inputAudioSize[count]<<std::endl;
         srcLengthTensor[count] = sfinfo.frames;
         channelsTensor[count] = sfinfo.channels;
-        // std::cerr<<"channels: "<<channelsTensor[count]<<std::endl;
         maxLength = std::max(maxLength, inputAudioSize[count]);
 
         // Close input
