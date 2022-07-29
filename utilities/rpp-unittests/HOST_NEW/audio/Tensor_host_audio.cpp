@@ -402,8 +402,8 @@ int main(int argc, char **argv)
     // Display measured times
     cpu_time_used = ((double)(end - start)) / CLOCKS_PER_SEC;
     omp_time_used = end_omp - start_omp;
-    cout << "\nCPU Time - BatchPD : " << cpu_time_used;
-    cout << "\nOMP Time - BatchPD : " << omp_time_used;
+    cout << "\nCPU Time - Tensor: " << cpu_time_used;
+    cout << "\nOMP Time - Tensor: " << omp_time_used;
     printf("\n");
 
     rppDestroyHost(handle);

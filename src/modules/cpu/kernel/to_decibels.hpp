@@ -12,7 +12,7 @@ RppStatus to_decibels_host_tensor(Rpp32f *srcPtr,
     bool referenceMax = (referenceMagnitude == 0.0) ? false : true;
 
     // Calculate the intermediate values needed for DB conversion
-    Rpp32f minRatio = pow(10, cutOffDB / multiplier);
+    Rpp32f minRatio = std::pow(10, cutOffDB / multiplier);
     if(minRatio == 0.0f)
         minRatio = std::nextafter(0.0f, 1.0f);
 
@@ -34,7 +34,7 @@ RppStatus to_decibels_host_tensor(Rpp32f *srcPtr,
 
         Rpp32f invReferenceMagnitude = 1.f / referenceMagnitude;
         for(int i = 0 ; i < bufferLength ; i++)
-            dstPtrTemp[i] = multiplier * log10(std::max(minRatio, srcPtrTemp[i] * invReferenceMagnitude));
+            dstPtrTemp[i] = multiplier * std::log10(std::max(minRatio, srcPtrTemp[i] * invReferenceMagnitude));
     }
 
     return RPP_SUCCESS;
