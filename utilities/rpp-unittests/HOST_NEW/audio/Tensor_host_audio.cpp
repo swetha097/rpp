@@ -48,6 +48,11 @@ void verify_output(Rpp32f *dstPtr, int *srcLength, int bs, string test_case, Rpp
         current_file_name = current_file_name.substr(0, last_index);  // Remove extension from file name
         string out_file = ref_path + test_case + "/" + test_case + "_ref_" + current_file_name + ".txt";
         ref_file.open(out_file, ios::in);
+        if(!ref_file.is_open())
+        {
+            cerr<<"Unable to open the file specified! Please check the path of the file given as input"<<endl;
+            break;
+        }
         int offset = i * stride;
         int matched_indices = 0;
         for(int j = 0; j < srcLength[i]; j++)
@@ -85,6 +90,11 @@ void verify_non_silent_region_detection(int *detectionIndex, int *detectionLengt
         current_file_name = current_file_name.substr(0, last_index);  // Remove extension from file name
         string out_file = ref_path + test_case + "/" + test_case + "_ref_" + current_file_name + ".txt";
         ref_file.open(out_file, ios::in);
+        if(!ref_file.is_open())
+        {
+            cerr<<"Unable to open the file specified! Please check the path of the file given as input"<<endl;
+            break;
+        }
 
         Rpp32s ref_index, ref_length;
         Rpp32s out_index, out_length;
@@ -107,12 +117,12 @@ void verify_non_silent_region_detection(int *detectionIndex, int *detectionLengt
 int main(int argc, char **argv)
 {
     // Handle inputs
-    const int MIN_ARG_COUNT = 4;
+    const int MIN_ARG_COUNT = 3;
 
     if (argc < MIN_ARG_COUNT)
     {
         printf("\nImproper Usage! Needs all arguments!\n");
-        printf("\nUsage: ./Tensor_host_audio <src1 folder> <src2 folder (place same as src1 folder for single image functionalities)> <dst folder> <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <outputFormatToggle (pkd->pkd = 0 / pkd->pln = 1)> <case number = 0:84> <verbosity = 0/1>\n");
+        printf("\nUsage: ./Tensor_host_audio <src folder> <dst folder> <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <case number = 0:3>\n");
         return -1;
     }
 
