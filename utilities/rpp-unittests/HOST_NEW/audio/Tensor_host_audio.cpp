@@ -119,7 +119,6 @@ int main(int argc, char **argv)
     char *src = argv[1];
     int ip_bitDepth = atoi(argv[2]);
     int test_case = atoi(argv[3]);
-    int ip_channel = 1;
 
     // Set case names
     char funcName[1000];
@@ -143,21 +142,26 @@ int main(int argc, char **argv)
     }
 
     // Initialize tensor descriptors
-    RpptDesc srcDesc;
-    RpptDescPtr srcDescPtr;
+    RpptDesc srcDesc, dstDesc;
+    RpptDescPtr srcDescPtr, dstDescPtr;
     srcDescPtr = &srcDesc;
+    dstDescPtr = &dstDesc;
 
     // Set src/dst data types in tensor descriptors
     if (ip_bitDepth == 2)
+    {
         srcDescPtr->dataType = RpptDataType::F32;
+        dstDescPtr->dataType = RpptDataType::F32;
+    }
 
     // Other initializations
     int missingFuncFlag = 0;
     int i = 0, j = 0;
-    int maxHeight = 0, maxLength = 0;
-    int maxDstHeight = 0, maxDstWidth = 0;
+    int maxChannels = 0, maxLength = 0;
+    int maxDstLength = 0;
     unsigned long long count = 0;
-    unsigned long long ioBufferSize = 0;
+    unsigned long long iBufferSize = 0;
+    unsigned long long oBufferSize = 0;
     static int noOfAudioFiles = 0;
 
     // String ops on function name
@@ -213,7 +217,8 @@ int main(int argc, char **argv)
         inputAudioSize[count] = sfinfo.frames * sfinfo.channels;
         srcLengthTensor[count] = sfinfo.frames;
         channelsTensor[count] = sfinfo.channels;
-        maxLength = std::max(maxLength, inputAudioSize[count]);
+        maxLength = std::max(maxLength, srcLengthTensor[count]);
+        maxChannels = std::max(maxChannels, channelsTensor[count]);
 
         // Close input
         sf_close (infile);
@@ -223,14 +228,29 @@ int main(int argc, char **argv)
 
     // Set numDims, offset, n/c/h/w values for src/dst
     srcDescPtr->numDims = 4;
+    dstDescPtr->numDims = 4;
+
     srcDescPtr->offsetInBytes = 0;
+    dstDescPtr->offsetInBytes = 0;
+
     srcDescPtr->n = noOfAudioFiles;
+    dstDescPtr->n = noOfAudioFiles;
+
     srcDescPtr->h = 1;
+    dstDescPtr->h = 1;
+
     srcDescPtr->w = maxLength;
-    srcDescPtr->c = ip_channel;
+    dstDescPtr->w = maxLength;
+
+    srcDescPtr->c = maxChannels;
+    if(test_case == 3)
+        dstDescPtr->c = 1;
+    else
+        dstDescPtr->c = maxChannels;
 
     // Optionally set w stride as a multiple of 8 for src
     srcDescPtr->w = ((srcDescPtr->w / 8) * 8) + 8;
+    dstDescPtr->w = ((dstDescPtr->w / 8) * 8) + 8;
 
     // Set n/c/h/w strides for src/dst
     srcDescPtr->strides.nStride = srcDescPtr->c * srcDescPtr->w * srcDescPtr->h;
@@ -238,12 +258,18 @@ int main(int argc, char **argv)
     srcDescPtr->strides.wStride = srcDescPtr->c;
     srcDescPtr->strides.cStride = 1;
 
+    dstDescPtr->strides.nStride = dstDescPtr->c * dstDescPtr->w * dstDescPtr->h;
+    dstDescPtr->strides.hStride = dstDescPtr->c * dstDescPtr->w;
+    dstDescPtr->strides.wStride = dstDescPtr->c;
+    dstDescPtr->strides.cStride = 1;
+
     // Set buffer sizes for src/dst
-    ioBufferSize = (unsigned long long)srcDescPtr->h * (unsigned long long)srcDescPtr->w * (unsigned long long)srcDescPtr->c * (unsigned long long)srcDescPtr->n;
+    iBufferSize = (unsigned long long)srcDescPtr->h * (unsigned long long)srcDescPtr->w * (unsigned long long)srcDescPtr->c * (unsigned long long)srcDescPtr->n;
+    oBufferSize = (unsigned long long)dstDescPtr->h * (unsigned long long)dstDescPtr->w * (unsigned long long)dstDescPtr->c * (unsigned long long)dstDescPtr->n;
 
     // Initialize host buffers for input & output
-    Rpp32f *inputf32 = (Rpp32f *)calloc(ioBufferSize, sizeof(Rpp32f));
-    Rpp32f *outputf32 = (Rpp32f *)calloc(ioBufferSize, sizeof(Rpp32f));
+    Rpp32f *inputf32 = (Rpp32f *)calloc(iBufferSize, sizeof(Rpp32f));
+    Rpp32f *outputf32 = (Rpp32f *)calloc(oBufferSize, sizeof(Rpp32f));
 
     i = 0;
     dr = opendir(src);
@@ -375,12 +401,12 @@ int main(int argc, char **argv)
             start = clock();
             if (ip_bitDepth == 2)
             {
-                rppt_down_mixing_host(inputf32, srcDescPtr, outputf32, srcLengthTensor, channelsTensor, normalizeWeights);
+                rppt_down_mixing_host(inputf32, srcDescPtr, outputf32, dstDescPtr, srcLengthTensor, channelsTensor, normalizeWeights);
             }
             else
                 missingFuncFlag = 1;
 
-            verify_output(outputf32, srcLengthTensor, noOfAudioFiles, test_case_name, srcDescPtr->strides.nStride, audioNames);
+            verify_output(outputf32, srcLengthTensor, noOfAudioFiles, test_case_name, dstDescPtr->strides.nStride, audioNames);
             break;
         }
         default:
