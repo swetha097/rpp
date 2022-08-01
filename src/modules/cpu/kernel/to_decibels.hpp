@@ -4,6 +4,7 @@
 RppStatus to_decibels_host_tensor(Rpp32f *srcPtr,
                                   RpptDescPtr srcDescPtr,
                                   Rpp32f *dstPtr,
+                                  RpptDescPtr dstDescPtr,
                                   Rpp32s *srcLengthTensor,
                                   Rpp32f cutOffDB,
                                   Rpp32f multiplier,
@@ -21,7 +22,7 @@ RppStatus to_decibels_host_tensor(Rpp32f *srcPtr,
     for(int batchCount = 0; batchCount < srcDescPtr->n; batchCount++)
     {
         Rpp32f *srcPtrTemp = srcPtr + batchCount * srcDescPtr->strides.nStride;
-        Rpp32f *dstPtrTemp = dstPtr + batchCount * srcDescPtr->strides.nStride;
+        Rpp32f *dstPtrTemp = dstPtr + batchCount * dstDescPtr->strides.nStride;
         Rpp32s bufferLength = srcLengthTensor[batchCount];
 
         // Compute maximum value in the input buffer

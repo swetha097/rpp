@@ -284,7 +284,7 @@ int main(int argc, char **argv)
                 start = clock();
                 if (ip_bitDepth == 2)
                 {
-                    rppt_to_decibels_host(inputf32, srcDescPtr, outputf32, srcLengthTensor, cutOffDB, multiplier, referenceMagnitude);
+                    rppt_to_decibels_host(inputf32, srcDescPtr, outputf32, dstDescPtr, srcLengthTensor, cutOffDB, multiplier, referenceMagnitude);
                 }
                 else
                     missingFuncFlag = 1;
@@ -303,7 +303,7 @@ int main(int argc, char **argv)
                 start = clock();
                 if (ip_bitDepth == 2)
                 {
-                    rppt_pre_emphasis_filter_host(inputf32, srcDescPtr, outputf32, inputAudioSize, coeff, borderType);
+                    rppt_pre_emphasis_filter_host(inputf32, srcDescPtr, outputf32, dstDescPtr, inputAudioSize, coeff, borderType);
                 }
                 else
                     missingFuncFlag = 1;
