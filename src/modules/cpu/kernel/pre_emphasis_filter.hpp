@@ -6,7 +6,7 @@ RppStatus pre_emphasis_filter_host_tensor(Rpp32f *srcPtr,
                                           RpptDescPtr srcDescPtr,
                                           Rpp32f *dstPtr,
 										  RpptDescPtr dstDescPtr,
-                                          Rpp32s *srcSizeTensor,
+                                          Rpp32s *srcLengthTensor,
                                           Rpp32f *coeffTensor,
                                           Rpp32u borderType)
 {
@@ -16,7 +16,7 @@ RppStatus pre_emphasis_filter_host_tensor(Rpp32f *srcPtr,
 	{
 		Rpp32f *srcPtrTemp = srcPtr + batchCount * srcDescPtr->strides.nStride;
 		Rpp32f *dstPtrTemp = dstPtr + batchCount * dstDescPtr->strides.nStride;
-		Rpp32s srcSize = srcSizeTensor[batchCount];
+		Rpp32s bufferLength = srcLengthTensor[batchCount];
 		Rpp32f coeff = coeffTensor[batchCount];
 
 		if(borderType == RpptAudioBorderType::ZERO)
@@ -27,12 +27,12 @@ RppStatus pre_emphasis_filter_host_tensor(Rpp32f *srcPtr,
 			dstPtrTemp[0] = srcPtrTemp[0] - coeff * srcPtrTemp[1];
 
 		int vectorIncrement = 8;
-		int alignedLength = (srcSize / 8) * 8;
+		int alignedLength = (bufferLength / 8) * 8;
 		__m256 pCoeff = _mm256_set1_ps(coeff);
 
 		int vectorLoopCount = 1;
-		dstPtrTemp += 1;
-		srcPtrTemp += 1;
+		dstPtrTemp++;
+		srcPtrTemp++;
 		for(; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
 		{
 			__m256 pSrc[2];
@@ -44,7 +44,7 @@ RppStatus pre_emphasis_filter_host_tensor(Rpp32f *srcPtr,
 			dstPtrTemp += vectorIncrement;
 		}
 
-		for(; vectorLoopCount < srcSize; vectorLoopCount++)
+		for(; vectorLoopCount < bufferLength; vectorLoopCount++)
 			dstPtrTemp[vectorLoopCount] = srcPtrTemp[vectorLoopCount] - coeff * srcPtrTemp[vectorLoopCount - 1];
 	}
 

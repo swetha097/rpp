@@ -79,9 +79,9 @@ void verify_non_silent_region_detection(int *detectionIndex, int *detectionLengt
 {
     fstream ref_file;
     string ref_path = get_current_dir_name();
-    string pattern = "build";
+    string pattern = "HOST_NEW/audio/build";
     remove_substring(ref_path, pattern);
-    ref_path = ref_path + "ReferenceOutputs/";
+    ref_path = ref_path + "REFERENCE_OUTPUTS_AUDIO/";
     int file_match = 0;
     for (int i = 0; i < bs; i++)
     {

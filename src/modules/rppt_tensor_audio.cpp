@@ -77,7 +77,7 @@ RppStatus rppt_pre_emphasis_filter_host(RppPtr_t srcPtr,
                                         RpptDescPtr srcDescPtr,
                                         RppPtr_t dstPtr,
                                         RpptDescPtr dstDescPtr,
-                                        Rpp32s *srcSizeTensor,
+                                        Rpp32s *srcLengthTensor,
                                         Rpp32f *coeffTensor,
                                         RpptAudioBorderType borderType)
 {
@@ -85,7 +85,7 @@ RppStatus rppt_pre_emphasis_filter_host(RppPtr_t srcPtr,
                                     srcDescPtr,
                                     (Rpp32f*)dstPtr,
                                     dstDescPtr,
-                                    srcSizeTensor,
+                                    srcLengthTensor,
                                     coeffTensor,
                                     borderType);
 
