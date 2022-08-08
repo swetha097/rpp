@@ -2,13 +2,13 @@
 #include <dirent.h>
 #include <string.h>
 #include <iostream>
-#include "/opt/rocm/rpp/include/rpp.h"
+#include "rpp.h"
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #include <time.h>
 #include <omp.h>
-#include <half.hpp>
+#include <half/half.hpp>
 #include <fstream>
 #include <experimental/filesystem>
 
