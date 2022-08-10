@@ -21,8 +21,8 @@ RppStatus to_decibels_host_tensor(Rpp32f *srcPtr,
     Rpp32f log10Factor = 1 / std::log(10);
     multiplier *= log10Factor;
 
-    __m256 pMultiplier = _mm256_set1_ps(multiplier);
-    __m256 pMinRatio = _mm256_set1_ps(minRatio);
+    __m128 pMultiplier = _mm_set1_ps(multiplier);
+    __m128 pMinRatio = _mm_set1_ps(minRatio);
 
     omp_set_dynamic(0);
 #pragma omp parallel for num_threads(srcDescPtr->n)
@@ -41,20 +41,20 @@ RppStatus to_decibels_host_tensor(Rpp32f *srcPtr,
             referenceMagnitude = 1.0;
 
         Rpp32f invReferenceMagnitude = 1.f / referenceMagnitude;
-        __m256 pinvMag = _mm256_set1_ps(invReferenceMagnitude);
+        __m128 pinvMag = _mm_set1_ps(invReferenceMagnitude);
 
-        int vectorIncrement = 8;
-		int alignedLength = (bufferLength / 8) * 8;
+        int vectorIncrement = 4;
+		int alignedLength = (bufferLength / 4) * 4;
 		int vectorLoopCount = 0;
 		for(; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
 		{
-            __m256 pSrc;
-            pSrc = _mm256_loadu_ps(srcPtrTemp);
-            pSrc = _mm256_mul_ps(pSrc, pinvMag);
-            pSrc = _mm256_max_ps(pMinRatio, pSrc);
+            __m128 pSrc;
+            pSrc = _mm_loadu_ps(srcPtrTemp);
+            pSrc = _mm_mul_ps(pSrc, pinvMag);
+            pSrc = _mm_max_ps(pMinRatio, pSrc);
             pSrc = log_ps(pSrc);
-            pSrc = _mm256_mul_ps(pSrc, pMultiplier);
-            _mm256_storeu_ps(dstPtrTemp, pSrc);
+            pSrc = _mm_mul_ps(pSrc, pMultiplier);
+            _mm_storeu_ps(dstPtrTemp, pSrc);
 			srcPtrTemp += vectorIncrement;
 			dstPtrTemp += vectorIncrement;
         }
