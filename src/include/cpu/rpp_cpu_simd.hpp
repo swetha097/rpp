@@ -1673,7 +1673,7 @@ static inline __m256 log_ps(__m256 x)
 {
     __m256 e;
     __m256i emm0;
-    __m256 one = *(__m256 *)&_ps_1;
+    __m256 one = *(__m256 *)&_ps_1_avx;
     __m256 invalid_mask = _mm256_cmp_ps(x, avx_p0, _CMP_LE_OQ);
 
     // cut off denormalized stuff
@@ -1693,7 +1693,7 @@ static inline __m256 log_ps(__m256 x)
 
     // part 2: if( x < SQRTHF ) { e -= 1; x = x + x - 1.0; } else { x = x - 1.0; }
     __m256 z, y;
-    __m256 mask = _mm256_cmp_ps(x, *(__m256 *)&xmm_cephesSQRTHF, _CMP_LT_OQ);
+    __m256 mask = _mm256_cmp_ps(x, *(__m256 *)&avx_cephesSQRTHF, _CMP_LT_OQ);
     __m256 tmp = _mm256_and_ps(x, mask);
     x = _mm256_sub_ps(x, one);
     e = _mm256_sub_ps(e, _mm256_and_ps(one, mask));
