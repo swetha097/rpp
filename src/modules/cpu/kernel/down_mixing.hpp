@@ -1,11 +1,13 @@
 #include "rppdefs.h"
 #include <omp.h>
 
-float sum4(__m128 x)
+float hsum_ps(__m128 x)
 {
-    const __m128 hsum_0 = _mm_hadd_ps(x, x);
-    const __m128 hsum_1 = _mm_hadd_ps(hsum_0, hsum_0);
-    return _mm_cvtss_f32(hsum_1);
+    __m128 shuf = _mm_movehdup_ps(x);        // broadcast elements 3,1 to 2,0
+    __m128 sums = _mm_add_ps(x, shuf);
+    shuf = _mm_movehl_ps(shuf, sums);        // high half -> low half
+    sums = _mm_add_ss(sums, shuf);
+    return _mm_cvtss_f32(sums);
 }
 
 RppStatus down_mixing_host_tensor(Rpp32f *srcPtr,
@@ -63,7 +65,8 @@ RppStatus down_mixing_host_tensor(Rpp32f *srcPtr,
                 pDst = _mm_add_ps(pDst, pSrc);
                 srcPtrTemp += channelIncrement;
             }
-            dstPtrTemp[dstIdx] = sum4(pDst);
+
+            dstPtrTemp[dstIdx] = hsum_ps(pDst);
             for(; channelLoopCount < channels; channelLoopCount++)
             {
                 dstPtrTemp[dstIdx] += ((*srcPtrTemp) * weights[channelLoopCount]);
