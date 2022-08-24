@@ -110,3 +110,30 @@ RppStatus rppt_down_mixing_host(RppPtr_t srcPtr,
 
     return RPP_SUCCESS;
 }
+
+RppStatus rppt_slice_host(RppPtr_t srcPtr,
+                          RpptDescPtr srcDescPtr,
+                          RppPtr_t dstPtr,
+                          RpptDescPtr dstDescPtr,
+                          Rpp32s *srcLengthTensor,
+                          Rpp32s *anchorTensor,
+                          Rpp32s *shapeTensor,
+                          Rpp32s *axes,
+                          Rpp32f *fillValues,
+                          bool normalizedAnchor,
+                          bool normalizedShape)
+{
+    slice_host_tensor((Rpp32f*)srcPtr,
+                      srcDescPtr,
+                      (Rpp32f*)dstPtr,
+                      dstDescPtr,
+                      srcLengthTensor,
+                      anchorTensor,
+                      shapeTensor,
+                      axes,
+                      fillValues,
+                      normalizedAnchor,
+                      normalizedShape);
+
+    return RPP_SUCCESS;
+}

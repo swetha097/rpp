@@ -99,6 +99,27 @@ RppStatus rppt_pre_emphasis_filter_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr,
 
 RppStatus rppt_down_mixing_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32s *srcLengthTensor, Rpp32s *channelsTensor, bool normalizeWeights = false);
 
+/******************** slice ********************/
+
+// Extracts a subtensor or slice from the audio file
+
+// *param[in] srcPtr source tensor memory
+// *param[in] srcDescPtr source tensor descriptor
+// *param[out] dstPtr destination tensor memory
+// *param[in] dstDescPtr destination tensor descriptor
+// *param[in] srcLengthTensor number of samples per channel
+// *param[in] anchor starting index of the slice
+// *param[in] shape length of the slice
+// *param[in] axes axes along which slice is needed
+// *param[in] fillValues fill values based on out of Bound policy
+// *param[in] normalized anchor determines whether the anchor positional input should be interpreted as normalized or as absolute coordinates
+// *param[in] normalized shape determines whether the shape positional input should be interpreted as normalized or as absolute coordinates
+// *returns a  RppStatus enumeration.
+// *retval RPP_SUCCESS : successful completion
+// *retval RPP_ERROR : Error
+
+RppStatus rppt_slice_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32s *srcLengthTensor, Rpp32s *anchorTensor, Rpp32s *shapeTensor, Rpp32s *axes, Rpp32f *fillValues, bool normalizedAnchor, bool normalizedShape);
+
 #ifdef __cplusplus
 }
 #endif
