@@ -121,7 +121,8 @@ RppStatus rppt_slice_host(RppPtr_t srcPtr,
                           Rpp32s *axes,
                           Rpp32f *fillValues,
                           bool normalizedAnchor,
-                          bool normalizedShape)
+                          bool normalizedShape,
+                          RpptOutOfBoundsPolicy policyType)
 {
     slice_host_tensor((Rpp32f*)srcPtr,
                       srcDescPtr,
@@ -133,7 +134,8 @@ RppStatus rppt_slice_host(RppPtr_t srcPtr,
                       axes,
                       fillValues,
                       normalizedAnchor,
-                      normalizedShape);
+                      normalizedShape,
+                      policyType);
 
     return RPP_SUCCESS;
 }

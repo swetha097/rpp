@@ -246,6 +246,13 @@ typedef enum
     REFLECT,
 } RpptAudioBorderType;
 
+typedef enum
+{
+    PAD = 0,
+    TRIMTOSHAPE,
+    ERROR,
+} RpptOutOfBoundsPolicy;
+
 typedef struct
 {
     RppiPoint lt, rb;
