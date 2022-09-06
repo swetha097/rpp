@@ -146,6 +146,9 @@ int main(int argc, char **argv)
         case 3:
             strcpy(funcName, "down_mixing");
             break;
+        case 4:
+            strcpy(funcName, "slice");
+            break;
         default:
             strcpy(funcName, "test_case");
             break;
@@ -417,6 +420,35 @@ int main(int argc, char **argv)
                 missingFuncFlag = 1;
 
             verify_output(outputf32, srcLengthTensor, noOfAudioFiles, test_case_name, dstDescPtr->strides.nStride, audioNames);
+            break;
+        }
+        case 4:
+        {
+            test_case_name = "slice";
+            bool normalizedAnchor = false;
+            bool normalizedShape = false;
+            Rpp32s anchor[noOfAudioFiles];
+            Rpp32s shape[noOfAudioFiles];
+            Rpp32f fillValues[noOfAudioFiles];
+            Rpp32s axes = 0;
+            RpptOutOfBoundsPolicy policyType = RpptOutOfBoundsPolicy::ERROR;
+            for (i = 0; i < noOfAudioFiles; i++)
+            {
+                anchor[i] = 100;
+                shape[i] = 200;
+                fillValues[i] = 0.0f;
+            }
+
+            start_omp = omp_get_wtime();
+            start = clock();
+            if (ip_bitDepth == 2)
+            {
+                rppt_slice_host(inputf32, srcDescPtr, outputf32, dstDescPtr, srcLengthTensor, anchor, shape, &axes, fillValues, normalizedAnchor, normalizedShape, policyType);
+            }
+            else
+                missingFuncFlag = 1;
+
+            verify_output(outputf32, shape, noOfAudioFiles, test_case_name, dstDescPtr->strides.nStride, audioNames);
             break;
         }
         default:
