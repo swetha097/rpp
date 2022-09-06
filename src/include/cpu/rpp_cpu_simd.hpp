@@ -221,6 +221,34 @@ inline void rpp_mm256_print_ps(__m256 vPrintArray)
     }
 }
 
+inline void rpp_saturate48_0to1_avx(__m256 *p)
+{
+    p[0] = _mm256_min_ps(_mm256_max_ps(p[0], avx_p0), avx_p1);
+    p[1] = _mm256_min_ps(_mm256_max_ps(p[1], avx_p0), avx_p1);
+    p[2] = _mm256_min_ps(_mm256_max_ps(p[2], avx_p0), avx_p1);
+    p[3] = _mm256_min_ps(_mm256_max_ps(p[3], avx_p0), avx_p1);
+    p[4] = _mm256_min_ps(_mm256_max_ps(p[4], avx_p0), avx_p1);
+    p[5] = _mm256_min_ps(_mm256_max_ps(p[5], avx_p0), avx_p1);
+}
+
+inline void rpp_saturate24_0to1_avx(__m256 *p)
+{
+    p[0] = _mm256_min_ps(_mm256_max_ps(p[0], avx_p0), avx_p1);
+    p[1] = _mm256_min_ps(_mm256_max_ps(p[1], avx_p0), avx_p1);
+    p[2] = _mm256_min_ps(_mm256_max_ps(p[2], avx_p0), avx_p1);
+}
+
+inline void rpp_saturate16_0to1_avx(__m256 *p)
+{
+    p[0] = _mm256_min_ps(_mm256_max_ps(p[0], avx_p0), avx_p1);
+    p[1] = _mm256_min_ps(_mm256_max_ps(p[1], avx_p0), avx_p1);
+}
+
+inline void rpp_saturate8_0to1_avx(__m256 *p)
+{
+    p[0] = _mm256_min_ps(_mm256_max_ps(p[0], avx_p0), avx_p1);
+}
+
 // SSE loads and stores
 
 inline void rpp_load48_u8pkd3_to_f32pln3(Rpp8u *srcPtr, __m128 *p)
@@ -747,6 +775,7 @@ inline void rpp_store48_f32pln3_to_u8pln3_avx(Rpp8u *dstPtrR, Rpp8u *dstPtrG, Rp
 
 inline void rpp_store48_f32pln3_to_f32pln3_avx(Rpp32f *dstPtrR, Rpp32f *dstPtrG, Rpp32f *dstPtrB, __m256 *p)
 {
+    rpp_saturate48_0to1_avx(p);
     _mm256_storeu_ps(dstPtrR, p[0]);
     _mm256_storeu_ps(dstPtrG, p[2]);
     _mm256_storeu_ps(dstPtrB, p[4]);
@@ -757,6 +786,7 @@ inline void rpp_store48_f32pln3_to_f32pln3_avx(Rpp32f *dstPtrR, Rpp32f *dstPtrG,
 
 inline void rpp_store48_f32pln3_to_f32pkd3_avx(Rpp32f *dstPtr, __m256 *p)
 {
+    rpp_saturate48_0to1_avx(p);
     __m128 p128[4];
     p128[0] = _mm256_extractf128_ps(p[0], 0);
     p128[1] = _mm256_extractf128_ps(p[2], 0);
@@ -928,6 +958,7 @@ inline void rpp_load24_f32pkd3_to_f32pln3_mirror_avx(Rpp32f *srcPtr, __m256 *p)
 
 inline void rpp_store24_f32pln3_to_f32pln3_avx(Rpp32f *dstPtrR, Rpp32f *dstPtrG, Rpp32f *dstPtrB, __m256 *p)
 {
+    rpp_saturate24_0to1_avx(p);
     _mm256_storeu_ps(dstPtrR, p[0]);
     _mm256_storeu_ps(dstPtrG, p[1]);
     _mm256_storeu_ps(dstPtrB, p[2]);
@@ -955,6 +986,7 @@ inline void rpp_load24_f32pln3_to_f32pln3_mirror_avx(Rpp32f *srcPtrR, Rpp32f *sr
 
 inline void rpp_store24_f32pln3_to_f32pkd3_avx(Rpp32f *dstPtr, __m256 *p)
 {
+    rpp_saturate24_0to1_avx(p);
     __m128 p128[4];
     p128[0] = _mm256_extractf128_ps(p[0], 0);
     p128[1] = _mm256_extractf128_ps(p[1], 0);
@@ -982,6 +1014,7 @@ inline void rpp_load16_f32_to_f32_avx(Rpp32f *srcPtr, __m256 *p)
 
 inline void rpp_store16_f32_to_f32_avx(Rpp32f *dstPtr, __m256 *p)
 {
+    rpp_saturate16_0to1_avx(p);
     _mm256_storeu_ps(dstPtr, p[0]);
     _mm256_storeu_ps(dstPtr + 8, p[1]);
 }
@@ -1001,6 +1034,7 @@ inline void rpp_load8_f32_to_f32_mirror_avx(Rpp32f *srcPtr, __m256 *p)
 
 inline void rpp_store8_f32_to_f32_avx(Rpp32f *dstPtr, __m256 *p)
 {
+    rpp_saturate8_0to1_avx(p);
     _mm256_storeu_ps(dstPtr, p[0]);
 }
 
@@ -2334,6 +2368,7 @@ inline void rpp_bilinear_load_f32pln1_to_f32pln1_avx(Rpp32f **srcRowPtrsForInter
 
 inline void rpp_store8_f32pln1_to_f32pln1_avx(Rpp32f* dstPtr, __m256 p)
 {
+    rpp_saturate8_0to1_avx(&p);
     _mm256_storeu_ps(dstPtr, p);   /* store the 8 pixels in dst*/
 }
 
@@ -2426,6 +2461,7 @@ inline void rpp_bilinear_load_f16pln1_to_f32pln1_avx(Rpp16f **srcRowPtrsForInter
 
 inline void rpp_store24_f32pln3_to_f16pkd3_avx(Rpp16f* dstPtr, __m256* p)
 {
+    rpp_saturate24_0to1_avx(p);
     Rpp32f temp[3][8];
     _mm256_storeu_ps((Rpp32f *)temp[0], p[0]);
     _mm256_storeu_ps((Rpp32f *)temp[1], p[1]);
@@ -2441,6 +2477,7 @@ inline void rpp_store24_f32pln3_to_f16pkd3_avx(Rpp16f* dstPtr, __m256* p)
 
 inline void rpp_store8_f32pln1_to_f16pln1_avx(Rpp16f* dstPtr, __m256 p)
 {
+    rpp_saturate8_0to1_avx(&p);
     Rpp32f temp[8];
     _mm256_storeu_ps(temp, p);
     for(int i = 0; i < 8; i++)
@@ -2449,6 +2486,7 @@ inline void rpp_store8_f32pln1_to_f16pln1_avx(Rpp16f* dstPtr, __m256 p)
 
 inline void rpp_store24_f32pln3_to_f16pln3_avx(Rpp16f* dstRPtr, Rpp16f* dstGPtr, Rpp16f* dstBPtr, __m256* p)
 {
+    rpp_saturate24_0to1_avx(p);
     Rpp32f temp[3][8];  // 8 float pixels per channel
     _mm256_storeu_ps((Rpp32f *)temp[0], p[0]);
     _mm256_storeu_ps((Rpp32f *)temp[1], p[1]);

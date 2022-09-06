@@ -20,7 +20,6 @@ using half_float::half;
 
 typedef half Rpp16f;
 
-#define RPPPIXELCHECK(pixel) (pixel < (Rpp32f)0) ? ((Rpp32f)0) : ((pixel < (Rpp32f)255) ? pixel : ((Rpp32f)255))
 #define RPPMAX2(a,b) ((a > b) ? a : b)
 #define RPPMIN2(a,b) ((a < b) ? a : b)
 
@@ -1771,7 +1770,7 @@ int main(int argc, char **argv)
             for (int i = 0; i < oBufferSize; i++)
             {
                 outputFile << *outputf16Temp << ",";
-                *outputTemp = (Rpp8u)RPPPIXELCHECK(*outputf16Temp * 255.0);
+                *outputTemp = (Rpp8u)(*outputf16Temp * 255.0);
                 outputf16Temp++;
                 outputTemp++;
             }
@@ -1793,7 +1792,7 @@ int main(int argc, char **argv)
             for (int i = 0; i < oBufferSize; i++)
             {
                 outputFile << *outputf32Temp << ",";
-                *outputTemp = (Rpp8u)RPPPIXELCHECK(*outputf32Temp * 255.0);
+                *outputTemp = (Rpp8u)(*outputf32Temp * 255.0);
                 outputf32Temp++;
                 outputTemp++;
             }
@@ -1814,7 +1813,7 @@ int main(int argc, char **argv)
             for (int i = 0; i < oBufferSize; i++)
             {
                 outputFile << (Rpp32s) *outputi8Temp << ",";
-                *outputTemp = (Rpp8u) RPPPIXELCHECK(((Rpp32s) *outputi8Temp) + 128);
+                *outputTemp = (Rpp8u) ((Rpp32s) *outputi8Temp + 128);
                 outputi8Temp++;
                 outputTemp++;
             }
