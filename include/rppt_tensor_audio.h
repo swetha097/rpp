@@ -120,6 +120,25 @@ RppStatus rppt_down_mixing_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_
 
 RppStatus rppt_slice_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32s *srcLengthTensor, Rpp32s *anchorTensor, Rpp32s *shapeTensor, Rpp32s *axes, Rpp32f *fillValues, bool normalizedAnchor, bool normalizedShape, RpptOutOfBoundsPolicy policyType);
 
+// Mel Filter Bank augmentation
+
+// *param[in] srcPtr source tensor memory
+// *param[in] srcDescPtr source tensor descriptor
+// *param[out] dstPtr destination tensor memory
+// *param[in] dstDescPtr destination tensor descriptor
+// *param[in] srcDims
+// *param[in] maxFreq maximum frequency if not provided maxFreq = sampleRate / 2
+// *param[in] minFreq minimum frequency
+// *param[in] melFormula
+// *param[in] numFilter
+// *param[in] sampleRate
+// *param[in] normalize
+// *returns a  RppStatus enumeration.
+// *retval RPP_SUCCESS : successful completion
+// *retval RPP_ERROR : Error
+
+RppStatus rppt_mel_filter_bank_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, RpptImagePatchPtr srcDims, Rpp32f minFreq, Rpp32f maxFreq, std::string melFormula, Rpp32s numFilter, Rpp32f sampleRate, bool normalize);
+
 #ifdef __cplusplus
 }
 #endif

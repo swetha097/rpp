@@ -139,3 +139,30 @@ RppStatus rppt_slice_host(RppPtr_t srcPtr,
 
     return RPP_SUCCESS;
 }
+
+RppStatus rppt_mel_filter_bank_host(RppPtr_t srcPtr,
+                                    RpptDescPtr srcDescPtr,
+                                    RppPtr_t dstPtr,
+                                    RpptDescPtr dstDescPtr,
+                                    RpptImagePatchPtr srcDims,
+                                    Rpp32f maxFreq,
+                                    Rpp32f minFreq,
+                                    std::string melFormula,
+                                    Rpp32s numFilter,
+                                    Rpp32f sampleRate,
+                                    bool normalize)
+{
+    mel_filter_bank_host_tensor((Rpp32f*)(srcPtr),
+                                srcDescPtr,
+                                (Rpp32f*)(dstPtr),
+                                dstDescPtr,
+                                srcDims,
+                                maxFreq,
+                                minFreq,
+                                melFormula,
+                                numFilter,
+                                sampleRate,
+                                normalize);
+
+    return RPP_SUCCESS;
+}

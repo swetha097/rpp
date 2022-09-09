@@ -28,5 +28,6 @@ THE SOFTWARE.
 #include "kernel/pre_emphasis_filter.hpp"
 #include "kernel/down_mixing.hpp"
 #include "kernel/slice.hpp"
+#include "kernel/mel_filter_bank.hpp"
 
 #endif // HOST_TENSOR_AUDIO_HPP
