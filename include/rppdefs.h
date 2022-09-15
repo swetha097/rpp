@@ -243,15 +243,21 @@ typedef enum
 {
     ZERO = 0,
     CLAMP,
-    REFLECT,
+    REFLECT
 } RpptAudioBorderType;
 
 typedef enum
 {
     PAD = 0,
     TRIMTOSHAPE,
-    ERROR,
+    ERROR
 } RpptOutOfBoundsPolicy;
+
+typedef enum
+{
+    SLANEY = 0,
+    HTK,
+}RpptMelScaleFormula;
 
 typedef struct
 {

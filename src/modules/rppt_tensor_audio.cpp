@@ -147,7 +147,7 @@ RppStatus rppt_mel_filter_bank_host(RppPtr_t srcPtr,
                                     RpptImagePatchPtr srcDims,
                                     Rpp32f maxFreq,
                                     Rpp32f minFreq,
-                                    std::string melFormula,
+                                    RpptMelScaleFormula melFormula,
                                     Rpp32s numFilter,
                                     Rpp32f sampleRate,
                                     bool normalize)

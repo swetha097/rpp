@@ -114,6 +114,36 @@ void verify_non_silent_region_detection(int *detectionIndex, int *detectionLengt
         std::cerr<<"FAILED! "<<file_match<<"/"<<bs<<" outputs are matching with reference outputs"<<std::endl;
 }
 
+void read_spectrogram(Rpp32f *srcPtr, RpptImagePatch *srcDims, int bs, string test_case, Rpp32u stride, char audioNames[][1000])
+{
+    fstream ref_file;
+    string ref_path = get_current_dir_name();
+    string pattern = "HOST_NEW/audio/build";
+    remove_substring(ref_path, pattern);
+    ref_path = ref_path + "REFERENCE_OUTPUTS_AUDIO/";
+    for (int i = 0; i < bs; i++)
+    {
+        string current_file_name = audioNames[i];
+        size_t last_index = current_file_name.find_last_of(".");
+        current_file_name = current_file_name.substr(0, last_index);  // Remove extension from file name
+        string out_file = ref_path + test_case + "/" + test_case + "_ref_" + current_file_name + ".txt";
+        ref_file.open(out_file, ios::in);
+        if(!ref_file.is_open())
+        {
+            cerr<<"Unable to open the file specified! Please check the path of the file given as input"<<endl;
+            break;
+        }
+        int offset = i * stride;
+        for(int j = 0; j < srcDims->width * srcDims->height; j++)
+        {
+            Rpp32f ref_val, out_val;
+            ref_file>>ref_val;
+            srcPtr[offset + j] = ref_val;
+        }
+        ref_file.close();
+    }
+}
+
 int main(int argc, char **argv)
 {
     // Handle inputs
@@ -148,6 +178,9 @@ int main(int argc, char **argv)
             break;
         case 4:
             strcpy(funcName, "slice");
+            break;
+        case 5:
+            strcpy(funcName, "mel_filter_bank");
             break;
         default:
             strcpy(funcName, "test_case");
@@ -449,6 +482,43 @@ int main(int argc, char **argv)
                 missingFuncFlag = 1;
 
             verify_output(outputf32, shape, noOfAudioFiles, test_case_name, dstDescPtr->strides.nStride, audioNames);
+            break;
+        }
+        case 5:
+        {
+            test_case_name = "mel_filter_bank";
+
+            RpptImagePatch *srcDims = (RpptImagePatch *) calloc(noOfAudioFiles, sizeof(RpptImagePatch));
+            srcDims[0].width = 225;
+            srcDims[0].height = 257;
+            Rpp32f sampleRate = 16000;
+            Rpp32f minFreq = 0.0;
+            Rpp32f maxFreq = sampleRate / 2;
+            RpptMelScaleFormula melFormula = RpptMelScaleFormula::SLANEY;
+            Rpp32s numFilter = 128;
+            bool normalize = true;
+
+            Rpp32f *test_inputf32 = (Rpp32f *)calloc(srcDims[0].width * srcDims[0].height, sizeof(Rpp32f));
+            Rpp32f *test_outputf32 = (Rpp32f *)calloc(numFilter * srcDims[0].width, sizeof(Rpp32f));
+            read_spectrogram(test_inputf32, srcDims, noOfAudioFiles, "spectrogram", 0, audioNames);
+
+            start_omp = omp_get_wtime();
+            start = clock();
+            if (ip_bitDepth == 2)
+            {
+                rppt_mel_filter_bank_host(test_inputf32, srcDescPtr, test_outputf32, dstDescPtr, srcDims, maxFreq, minFreq, melFormula, numFilter, sampleRate, normalize);
+            }
+            else
+                missingFuncFlag = 1;
+
+            std::cerr<<"printing output values"<<std::endl;
+
+            for(int i = 0; i < numFilter * srcDims[0].width ; i++)
+                std::cerr<<test_outputf32[i]<<std::endl;
+
+            free(srcDims);
+            free(test_inputf32);
+            free(test_outputf32);
             break;
         }
         default:

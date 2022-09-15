@@ -3,51 +3,56 @@
 #include "rpp_cpu_common.hpp"
 
 template <typename T>
-struct HtkMelScale {
-    T hz_to_mel(T hz) {
-    // equivalent to `2595.0 * std::log10(1 + hz / 700.0)`
-    return T(1127) * std::log(T(1) + hz / T(700));
-  }
+struct HtkMelScale
+{
+    T hz_to_mel(T hz)
+	{
+		// equivalent to `2595.0 * std::log10(1 + hz / 700.0)`
+    	return T(1127) * std::log(T(1) + hz / T(700));
+  	}
 
-    T mel_to_hz(T mel) {
-    // equivalent to `700.0 * (std::pow(10, mel / 2595.0) - 1.0)`
-    return T(700) * (std::exp(mel / T(1127)) - T(1));
-  }
+    T mel_to_hz(T mel)
+	{
+    	// equivalent to `700.0 * (std::pow(10, mel / 2595.0) - 1.0)`
+    	return T(700) * (std::exp(mel / T(1127)) - T(1));
+  	}
 };
 
 template <typename T>
 struct SlaneyMelScale {
-  static constexpr T freq_low = 0;
-  static constexpr T fsp = 200.0 / 3.0;
+	static constexpr T freq_low = 0;
+	static constexpr T fsp = 200.0 / 3.0;
 
-  static constexpr T min_log_hz = 1000.0;
-  static constexpr T min_log_mel = (min_log_hz - freq_low) / fsp;
-  static constexpr T step_log = 0.068751777;  // Equivalent to std::log(6.4) / 27.0;
+	static constexpr T min_log_hz = 1000.0;
+	static constexpr T min_log_mel = (min_log_hz - freq_low) / fsp;
+	static constexpr T step_log = 0.068751777;  // Equivalent to std::log(6.4) / 27.0;
 
-  T hz_to_mel(T hz) {
-    T mel = 0;
-    if (hz >= min_log_hz) {
-      // non-linear scale
-      mel = min_log_mel + std::log(hz / min_log_hz) / step_log;
-    } else {
-      // linear scale
-      mel = (hz - freq_low) / fsp;
-    }
+	T hz_to_mel(T hz)
+	{
+		T mel = 0;
+		if (hz >= min_log_hz) {
+		// non-linear scale
+		mel = min_log_mel + std::log(hz / min_log_hz) / step_log;
+		} else {
+		// linear scale
+		mel = (hz - freq_low) / fsp;
+		}
 
-    return mel;
-  }
+		return mel;
+	}
 
-  T mel_to_hz(T mel) {
-    T hz = 0;
-    if (mel >= min_log_mel) {
-      // non linear scale
-      hz = min_log_hz * std::exp(step_log * (mel - min_log_mel));
-    } else {
-      // linear scale
-      hz = freq_low + mel * fsp;
-    }
-    return hz;
-  }
+	T mel_to_hz(T mel)
+	{
+		T hz = 0;
+		if (mel >= min_log_mel) {
+			// non linear scale
+			hz = min_log_hz * std::exp(step_log * (mel - min_log_mel));
+		} else {
+			// linear scale
+			hz = freq_low + mel * fsp;
+		}
+		return hz;
+	}
 };
 
 RppStatus mel_filter_bank_host_tensor(Rpp32f *srcPtr,
@@ -57,7 +62,7 @@ RppStatus mel_filter_bank_host_tensor(Rpp32f *srcPtr,
                                       RpptImagePatchPtr srcDims,
                                       Rpp32f maxFreq,
                                       Rpp32f minFreq,
-                                      std::string melFormula,
+                                      RpptMelScaleFormula melFormula,
                                       Rpp32s numFilter,
                                       Rpp32f sampleRate,
                                       bool normalize)
@@ -69,15 +74,16 @@ RppStatus mel_filter_bank_host_tensor(Rpp32f *srcPtr,
 		Rpp32f *srcPtrTemp = srcPtr + batchCount * srcDescPtr->strides.nStride;
 		Rpp32f *dstPtrTemp = dstPtr + batchCount * dstDescPtr->strides.nStride;
 
-        int nfft = (srcDims[batchCount].width - 1) * 2;
+        SlaneyMelScale<float> mel_scale;
+        std::vector<std::vector<float>> fbanks(numFilter);
+        int nfft = (srcDims[batchCount].height - 1) * 2;
 
         // Algorithm to generate traingular matrix
-        HtkMelScale<float> mel_scale;
-
-        std::vector<std::vector<float>> fbanks(numFilter);
         auto low_mel = mel_scale.hz_to_mel(minFreq);
         auto high_mel = mel_scale.hz_to_mel(maxFreq);
         float delta_mel = (high_mel - low_mel) / (numFilter + 1);
+
+        // Create mel scale points
         std::vector<float> mel_points(numFilter + 2, 0.0f);
         mel_points[0] = low_mel;
         for (int i = 1; i < numFilter + 1; i++) {
@@ -85,17 +91,18 @@ RppStatus mel_filter_bank_host_tensor(Rpp32f *srcPtr,
         }
         mel_points[numFilter + 1] = high_mel;
 
+        // Convert mel scale points to hz scale
+        std::vector<float> freq_grid(mel_points.size(), 0.0f);
+        freq_grid[0] = minFreq;
+        for (int i = 1; i < numFilter + 1; i++) {
+            freq_grid[i] = mel_scale.mel_to_hz(mel_points[i]);
+        }
+        freq_grid[numFilter + 1] = maxFreq;
+
         std::vector<float> fftfreqs(nfft / 2 + 1, 0.0f);
         for (int i = 0; i < nfft / 2 + 1; i++) {
             fftfreqs[i] = i * sampleRate / nfft;
         }
-
-        std::vector<float> freq_grid(mel_points.size(), 0.0f);
-        freq_grid[0] = minFreq;
-        for (int i = 1; i < numFilter+1; i++) {
-            freq_grid[i] = mel_scale.mel_to_hz(mel_points[i]);
-        }
-        freq_grid[numFilter+1] = maxFreq;
 
         for (int j = 0; j < numFilter; j++)
         {
@@ -113,21 +120,24 @@ RppStatus mel_filter_bank_host_tensor(Rpp32f *srcPtr,
                     auto upper = (f - freq_grid[j]) / (freq_grid[j + 1] - freq_grid[j]);
                     auto lower = (freq_grid[j + 2] - f) / (freq_grid[j + 2] - freq_grid[j + 1]);
                     fbank[i] = std::max(0.0f, std::min(upper, lower));
+                    if(normalize)
+                        fbank[i] *= (2.0f / (freq_grid[j + 2] - freq_grid[j]));
                 }
             }
         }
 
-        // Matrix multiplication of fbank and srcPtrTemp
-        int R2 = srcDims[batchCount].height;
-        for (int i = 0; i < numFilter; i++)
+		int dstHeight = numFilter;
+		int dstWidth = srcDims[batchCount].width;
+		int commonDim = srcDims[batchCount].height;
+        for (int i = 0; i < dstHeight; i++)
         {
-            for (int j = 0; j < nfft; j++)
+            for (int j = 0; j < dstWidth; j++)
             {
-                dstPtrTemp[i] = 0;
-                for (int k = 0; k < R2; k++)
-                {
-                    dstPtrTemp[i] += srcPtrTemp[i] * fbanks[k][j];
-                }
+                dstPtrTemp[i * dstWidth + j] = 0.0f;
+				for(int k = 0; k < commonDim; k++)
+				{
+					dstPtrTemp[i * dstWidth + j] += fbanks[i][k] * srcPtrTemp[k * dstWidth + j];
+				}
             }
         }
     }

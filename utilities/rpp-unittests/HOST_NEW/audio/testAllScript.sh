@@ -5,7 +5,7 @@
 cwd=$(pwd)
 
 # Input audio files - Eight audio files
-DEFAULT_SRC_FOLDER="$cwd/../../../TEST_AUDIO_FILES/eight_samples_src1/"
+DEFAULT_SRC_FOLDER="$cwd/../../../TEST_AUDIO_FILES/trail_sample/"
 
 # # Inputs for Testing Downmixing
 # # Input audio file - single audio file - multi channel
@@ -24,31 +24,31 @@ SRC_FOLDER="$DEFAULT_SRC_FOLDER"
 DST_FOLDER="$DEFAULT_DST_FOLDER"
 
 # <<<<<<<<<<<<<< EXECUTION OF ALL FUNCTIONALITIES (NEED NOT CHANGE) >>>>>>>>>>>>>>
-if [[ "$1" -lt 0 ]] | [[ "$1" -gt 4 ]]; then
-    echo "The starting case# must be in the 0-4 range!"
+if [[ "$1" -lt 0 ]] | [[ "$1" -gt 5 ]]; then
+    echo "The starting case# must be in the 0-5 range!"
     echo
     echo "The testAllScript.sh bash script runs the RPP audio unittest testsuite for AMDRPP functionalities in HOST/OCL/HIP backends."
     echo
     echo "Syntax: ./testAllScriptAudio.sh <S> <E>"
-    echo "S     CASE_START (Starting case# (0-4))"
-    echo "E     CASE_END (Ending case# (0-4))"
+    echo "S     CASE_START (Starting case# (0-5))"
+    echo "E     CASE_END (Ending case# (0-5))"
     exit 1
 fi
 
-if [[ "$2" -lt 0 ]] | [[ "$2" -gt 4 ]]; then
-    echo "The ending case# must be in the 0-4 range!"
+if [[ "$2" -lt 0 ]] | [[ "$2" -gt 5 ]]; then
+    echo "The ending case# must be in the 0-5 range!"
     echo
     echo "The testAllScript.sh bash script runs the RPP audio unittest testsuite for AMDRPP functionalities in HOST/OCL/HIP backends."
     echo
     echo "Syntax: ./testAllScriptAudio.sh <S> <E>"
-    echo "S     CASE_START (Starting case# (0-4))"
-    echo "E     CASE_END (Ending case# (0-4))"
+    echo "S     CASE_START (Starting case# (0-5))"
+    echo "E     CASE_END (Ending case# (0-5))"
     exit 1
 fi
 
 if (( "$#" < 2 )); then
     CASE_START="0"
-    CASE_END="4"
+    CASE_END="5"
 else
     CASE_START="$1"
     CASE_END="$2"
@@ -80,6 +80,8 @@ do
     else
         SRC_FOLDER="$cwd/../../../TEST_AUDIO_FILES/eight_samples_single_channel_src1/"
     fi
+
+    SRC_FOLDER="$cwd/../../../TEST_AUDIO_FILES/trail_sample/"
 
     printf "\n\n\n\n"
     echo "--------------------------------"
