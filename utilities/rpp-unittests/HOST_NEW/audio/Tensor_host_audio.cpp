@@ -11,7 +11,7 @@
 #include <half/half.hpp>
 #include <fstream>
 #include <experimental/filesystem>
-
+#include <iomanip>
 // Include this header file to use functions from libsndfile
 #include <sndfile.h>
 
@@ -511,10 +511,13 @@ int main(int argc, char **argv)
             else
                 missingFuncFlag = 1;
 
-            std::cerr<<"printing output values"<<std::endl;
+            int shape[1] = {numFilter * srcDims[0].width};
+            verify_output(test_outputf32, shape, noOfAudioFiles, test_case_name, dstDescPtr->strides.nStride, audioNames);
+
+            // std::cerr<<"printing output values"<<std::endl;
 
             for(int i = 0; i < numFilter * srcDims[0].width ; i++)
-                std::cerr<<test_outputf32[i]<<std::endl;
+                std::cerr<<std::setprecision(11)<<test_outputf32[i]<<endl;
 
             free(srcDims);
             free(test_inputf32);

@@ -2,53 +2,50 @@
 #include "rpp_cpu_simd.hpp"
 #include "rpp_cpu_common.hpp"
 
-template <typename T>
-struct HtkMelScale
+struct BaseMelScale
 {
-    T hz_to_mel(T hz)
-	{
-		// equivalent to `2595.0 * std::log10(1 + hz / 700.0)`
-    	return T(1127) * std::log(T(1) + hz / T(700));
-  	}
-
-    T mel_to_hz(T mel)
-	{
-    	// equivalent to `700.0 * (std::pow(10, mel / 2595.0) - 1.0)`
-    	return T(700) * (std::exp(mel / T(1127)) - T(1));
-  	}
+    public:
+        virtual float hz_to_mel(float hz) = 0;
+        virtual float mel_to_hz(float mel) = 0;
 };
 
-template <typename T>
-struct SlaneyMelScale {
-	static constexpr T freq_low = 0;
-	static constexpr T fsp = 200.0 / 3.0;
+struct HtkMelScale : public BaseMelScale
+{
+    float hz_to_mel(float hz) { return 1127.0f * std::log(1.0f + hz / 700.0f); }
+    float mel_to_hz(float mel) { return 700.0f * (std::exp(mel / 1127.0f) - 1.0f); }
+};
 
-	static constexpr T min_log_hz = 1000.0;
-	static constexpr T min_log_mel = (min_log_hz - freq_low) / fsp;
-	static constexpr T step_log = 0.068751777;  // Equivalent to std::log(6.4) / 27.0;
+struct SlaneyMelScale : public BaseMelScale
+{
+	static const float freq_low = 0;
+	static const float fsp = 200.0 / 3.0;
+	static const float min_log_hz = 1000.0;
+	static const float min_log_mel = (min_log_hz - freq_low) / fsp;
+	static const float step_log = 0.068751777;  // Equivalent to std::log(6.4) / 27.0;
 
-	T hz_to_mel(T hz)
+	float hz_to_mel(float hz)
 	{
-		T mel = 0;
-		if (hz >= min_log_hz) {
-		// non-linear scale
-		mel = min_log_mel + std::log(hz / min_log_hz) / step_log;
-		} else {
-		// linear scale
-		mel = (hz - freq_low) / fsp;
+		float mel = 0.0f;
+		if (hz >= min_log_hz)
+        {
+		    mel = min_log_mel + std::log(hz / min_log_hz) / step_log;
 		}
-
+        else
+        {
+		    mel = (hz - freq_low) / fsp;
+		}
 		return mel;
 	}
 
-	T mel_to_hz(T mel)
+	float mel_to_hz(float mel)
 	{
-		T hz = 0;
-		if (mel >= min_log_mel) {
-			// non linear scale
+		float hz = 0;
+		if (mel >= min_log_mel)
+        {
 			hz = min_log_hz * std::exp(step_log * (mel - min_log_mel));
-		} else {
-			// linear scale
+		}
+        else
+        {
 			hz = freq_low + mel * fsp;
 		}
 		return hz;
@@ -67,6 +64,18 @@ RppStatus mel_filter_bank_host_tensor(Rpp32f *srcPtr,
                                       Rpp32f sampleRate,
                                       bool normalize)
 {
+    BaseMelScale *melScalePtr;
+    switch(melFormula)
+    {
+        case RpptMelScaleFormula::HTK:
+            melScalePtr = new HtkMelScale;
+            break;
+        case RpptMelScaleFormula::SLANEY:
+        default:
+            melScalePtr = new SlaneyMelScale;
+            break;
+    }
+
 	omp_set_dynamic(0);
 #pragma omp parallel for num_threads(srcDescPtr->n)
 	for(int batchCount = 0; batchCount < srcDescPtr->n; batchCount++)
@@ -74,69 +83,66 @@ RppStatus mel_filter_bank_host_tensor(Rpp32f *srcPtr,
 		Rpp32f *srcPtrTemp = srcPtr + batchCount * srcDescPtr->strides.nStride;
 		Rpp32f *dstPtrTemp = dstPtr + batchCount * dstDescPtr->strides.nStride;
 
-        SlaneyMelScale<float> mel_scale;
-        std::vector<std::vector<float>> fbanks(numFilter);
         int nfft = (srcDims[batchCount].height - 1) * 2;
+        int numBins = nfft / 2 + 1;
+        int numFrames = srcDims[batchCount].width;
+        std::vector<std::vector<float>> filterBanks(numFilter);
 
         // Algorithm to generate traingular matrix
-        auto low_mel = mel_scale.hz_to_mel(minFreq);
-        auto high_mel = mel_scale.hz_to_mel(maxFreq);
-        float delta_mel = (high_mel - low_mel) / (numFilter + 1);
+        Rpp32f melLow = melScalePtr->hz_to_mel(minFreq);
+        Rpp32f melHigh = melScalePtr->hz_to_mel(maxFreq);
+        Rpp32f melStep = (melHigh - melLow) / (numFilter + 1);
 
         // Create mel scale points
-        std::vector<float> mel_points(numFilter + 2, 0.0f);
-        mel_points[0] = low_mel;
-        for (int i = 1; i < numFilter + 1; i++) {
-            mel_points[i] = mel_points[i - 1] + delta_mel;
-        }
-        mel_points[numFilter + 1] = high_mel;
+        std::vector<Rpp32f> melPoints(numFilter + 2, 0.0f);
+        melPoints[0] = melLow;
+        melPoints[numFilter + 1] = melHigh;
+        for (int i = 1; i < numFilter + 1; i++)
+           melPoints[i] = melPoints[i - 1] + melStep;
 
         // Convert mel scale points to hz scale
-        std::vector<float> freq_grid(mel_points.size(), 0.0f);
-        freq_grid[0] = minFreq;
-        for (int i = 1; i < numFilter + 1; i++) {
-            freq_grid[i] = mel_scale.mel_to_hz(mel_points[i]);
-        }
-        freq_grid[numFilter + 1] = maxFreq;
+        std::vector<Rpp32f> freqGrid(melPoints.size(), 0.0f);
+        freqGrid[0] = minFreq;
+        freqGrid[numFilter + 1] = maxFreq;
+        for (int i = 1; i < numFilter + 1; i++)
+            freqGrid[i] = melScalePtr->mel_to_hz(melPoints[i]);
 
-        std::vector<float> fftfreqs(nfft / 2 + 1, 0.0f);
-        for (int i = 0; i < nfft / 2 + 1; i++) {
-            fftfreqs[i] = i * sampleRate / nfft;
-        }
+        std::vector<float> fftFreqs(numBins, 0.0f);
+        float invFactor = sampleRate / nfft;
+        for (int i = 0; i < numBins; i++)
+            fftFreqs[i] = i * invFactor;
 
         for (int j = 0; j < numFilter; j++)
         {
-            auto &fbank = fbanks[j];
-            fbank.resize(nfft / 2 + 1, 0.0f);
+            auto &fbank = filterBanks[j];
+            fbank.resize(numBins, 0.0f);
             for (int i = 0; i < nfft/2 + 1; i++)
             {
-                auto f = fftfreqs[i];
+                auto f = fftFreqs[i];
                 if (f < minFreq || f > maxFreq)
                 {
                     fbank[i] = 0.0f;
                 }
                 else
                 {
-                    auto upper = (f - freq_grid[j]) / (freq_grid[j + 1] - freq_grid[j]);
-                    auto lower = (freq_grid[j + 2] - f) / (freq_grid[j + 2] - freq_grid[j + 1]);
+                    auto upper = (f - freqGrid[j]) / (freqGrid[j + 1] - freqGrid[j]);
+                    auto lower = (freqGrid[j + 2] - f) / (freqGrid[j + 2] - freqGrid[j + 1]);
                     fbank[i] = std::max(0.0f, std::min(upper, lower));
                     if(normalize)
-                        fbank[i] *= (2.0f / (freq_grid[j + 2] - freq_grid[j]));
+                        fbank[i] *= (2.0f / (freqGrid[j + 2] - freqGrid[j]));
                 }
             }
         }
 
-		int dstHeight = numFilter;
-		int dstWidth = srcDims[batchCount].width;
-		int commonDim = srcDims[batchCount].height;
-        for (int i = 0; i < dstHeight; i++)
+		// Matrix Multiplication of Input and Filter Bank
+        for (int i = 0; i < numFilter; i++)
         {
-            for (int j = 0; j < dstWidth; j++)
+            for (int j = 0; j < numFrames; j++)
             {
-                dstPtrTemp[i * dstWidth + j] = 0.0f;
-				for(int k = 0; k < commonDim; k++)
+                dstPtrTemp[i * numFrames + j] = 0.0f;
+				for(int k = 0; k < numBins; k++)
 				{
-					dstPtrTemp[i * dstWidth + j] += fbanks[i][k] * srcPtrTemp[k * dstWidth + j];
+					dstPtrTemp[i * numFrames + j] += filterBanks[i][k] * srcPtrTemp[k * numFrames + j];
 				}
             }
         }
