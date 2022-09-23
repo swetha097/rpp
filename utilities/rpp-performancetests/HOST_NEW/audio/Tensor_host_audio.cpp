@@ -54,6 +54,12 @@ int main(int argc, char **argv)
         case 3:
             strcpy(funcName, "down_mixing");
             break;
+        case 4:
+            strcpy(funcName, "slice");
+            break;
+        case 5:
+            strcpy(funcName, "mel_filter_bank");
+            break;
         default:
             strcpy(funcName, "test_case");
             break;
@@ -323,6 +329,67 @@ int main(int argc, char **argv)
                 }
                 else
                     missingFuncFlag = 1;
+
+                break;
+            }
+            case 4:
+            {
+                test_case_name = "slice";
+                bool normalizedAnchor = false;
+                bool normalizedShape = false;
+                Rpp32s anchor[noOfAudioFiles];
+                Rpp32s shape[noOfAudioFiles];
+                Rpp32f fillValues[noOfAudioFiles];
+                Rpp32s axes = 0;
+                RpptOutOfBoundsPolicy policyType = RpptOutOfBoundsPolicy::ERROR;
+                for (i = 0; i < noOfAudioFiles; i++)
+                {
+                    anchor[i] = 100;
+                    shape[i] = 200;
+                    fillValues[i] = 0.0f;
+                }
+
+                start_omp = omp_get_wtime();
+                start = clock();
+                if (ip_bitDepth == 2)
+                {
+                    rppt_slice_host(inputf32, srcDescPtr, outputf32, dstDescPtr, srcLengthTensor, anchor, shape, &axes, fillValues, normalizedAnchor, normalizedShape, policyType);
+                }
+                else
+                    missingFuncFlag = 1;
+
+                break;
+            }
+            case 5:
+            {
+                test_case_name = "mel_filter_bank";
+
+                RpptImagePatch *srcDims = (RpptImagePatch *) calloc(noOfAudioFiles, sizeof(RpptImagePatch));
+                srcDims[0].width = 225;
+                srcDims[0].height = 257;
+                Rpp32f sampleRate = 16000;
+                Rpp32f minFreq = 0.0;
+                Rpp32f maxFreq = sampleRate / 2;
+                RpptMelScaleFormula melFormula = RpptMelScaleFormula::SLANEY;
+                Rpp32s numFilter = 128;
+                bool normalize = false;
+
+                Rpp32f *test_inputf32 = (Rpp32f *)calloc(srcDims[0].width * srcDims[0].height, sizeof(Rpp32f));
+                Rpp32f *test_outputf32 = (Rpp32f *)calloc(numFilter * srcDims[0].width, sizeof(Rpp32f));
+                // read_spectrogram(test_inputf32, srcDims, noOfAudioFiles, "spectrogram", 0, audioNames);
+
+                start_omp = omp_get_wtime();
+                start = clock();
+                if (ip_bitDepth == 2)
+                {
+                    rppt_mel_filter_bank_host(test_inputf32, srcDescPtr, test_outputf32, dstDescPtr, srcDims, maxFreq, minFreq, melFormula, numFilter, sampleRate, normalize);
+                }
+                else
+                    missingFuncFlag = 1;
+
+                free(srcDims);
+                free(test_inputf32);
+                free(test_outputf32);
 
                 break;
             }
