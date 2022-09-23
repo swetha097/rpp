@@ -17,11 +17,11 @@ struct HtkMelScale : public BaseMelScale
 
 struct SlaneyMelScale : public BaseMelScale
 {
-	static const float freq_low = 0;
-	static const float fsp = 200.0 / 3.0;
-	static const float min_log_hz = 1000.0;
-	static const float min_log_mel = (min_log_hz - freq_low) / fsp;
-	static const float step_log = 0.068751777;  // Equivalent to std::log(6.4) / 27.0;
+	const float freq_low = 0;
+	const float fsp = 200.0 / 3.0;
+	const float min_log_hz = 1000.0;
+	const float min_log_mel = (min_log_hz - freq_low) / fsp;
+	const float step_log = 0.068751777;  // Equivalent to std::log(6.4) / 27.0;
 
 	float hz_to_mel(float hz)
 	{
@@ -83,67 +83,85 @@ RppStatus mel_filter_bank_host_tensor(Rpp32f *srcPtr,
 		Rpp32f *srcPtrTemp = srcPtr + batchCount * srcDescPtr->strides.nStride;
 		Rpp32f *dstPtrTemp = dstPtr + batchCount * dstDescPtr->strides.nStride;
 
+        // Extract nfft, number of Frames, numBins
         int nfft = (srcDims[batchCount].height - 1) * 2;
         int numBins = nfft / 2 + 1;
         int numFrames = srcDims[batchCount].width;
-        std::vector<std::vector<float>> filterBanks(numFilter);
 
-        // Algorithm to generate traingular matrix
-        Rpp32f melLow = melScalePtr->hz_to_mel(minFreq);
-        Rpp32f melHigh = melScalePtr->hz_to_mel(maxFreq);
-        Rpp32f melStep = (melHigh - melLow) / (numFilter + 1);
+        // Convert lower, higher freqeuncies to mel scale
+        double melLow = melScalePtr->hz_to_mel(minFreq);
+        double melHigh = melScalePtr->hz_to_mel(maxFreq);
+        double melStep = (melHigh - melLow) / (numFilter + 1);
+        double hzStep = static_cast<double>(sampleRate) / nfft;
+        double invHzStep = 1.0 / hzStep;
 
-        // Create mel scale points
-        std::vector<Rpp32f> melPoints(numFilter + 2, 0.0f);
-        melPoints[0] = melLow;
-        melPoints[numFilter + 1] = melHigh;
-        for (int i = 1; i < numFilter + 1; i++)
-           melPoints[i] = melPoints[i - 1] + melStep;
+        int fftbin_start_ = std::ceil(minFreq * invHzStep);
+        int fftbin_end_ = std::floor(maxFreq * invHzStep);
+        if (fftbin_end_ > numBins - 1)
+            fftbin_end_ = numBins - 1;
 
-        // Convert mel scale points to hz scale
-        std::vector<Rpp32f> freqGrid(melPoints.size(), 0.0f);
-        freqGrid[0] = minFreq;
-        freqGrid[numFilter + 1] = maxFreq;
-        for (int i = 1; i < numFilter + 1; i++)
-            freqGrid[i] = melScalePtr->mel_to_hz(melPoints[i]);
+        std::vector<float> weights_down_;
+        weights_down_.resize(numBins);
 
-        std::vector<float> fftFreqs(numBins, 0.0f);
-        float invFactor = sampleRate / nfft;
-        for (int i = 0; i < numBins; i++)
-            fftFreqs[i] = i * invFactor;
+        std::vector<float> norm_factors_;
+        norm_factors_.resize(numFilter, float(1));
 
-        for (int j = 0; j < numFilter; j++)
+        std::vector<int> intervals_;
+        intervals_.resize(numBins, -1);
+
+        int last_interval = numFilter;
+        int fftbin = fftbin_start_;
+        double mel0 = melLow, mel1 = melLow + melStep;
+        double f = fftbin * hzStep;
+        for (int interval = 0; interval < numFilter + 1; interval++, mel0 = mel1, mel1 += melStep)
         {
-            auto &fbank = filterBanks[j];
-            fbank.resize(numBins, 0.0f);
-            for (int i = 0; i < nfft/2 + 1; i++)
+            double f0 = melScalePtr->mel_to_hz(mel0);
+            double f1 = melScalePtr->mel_to_hz(interval == numFilter ? melHigh : mel1);
+            double slope = 1. / (f1 - f0);
+            for (; fftbin <= fftbin_end_ && f < f1; fftbin++, f = fftbin * hzStep)
             {
-                auto f = fftFreqs[i];
-                if (f < minFreq || f > maxFreq)
-                {
-                    fbank[i] = 0.0f;
-                }
-                else
-                {
-                    auto upper = (f - freqGrid[j]) / (freqGrid[j + 1] - freqGrid[j]);
-                    auto lower = (freqGrid[j + 2] - f) / (freqGrid[j + 2] - freqGrid[j + 1]);
-                    fbank[i] = std::max(0.0f, std::min(upper, lower));
-                    if(normalize)
-                        fbank[i] *= (2.0f / (freqGrid[j + 2] - freqGrid[j]));
-                }
+                weights_down_[fftbin] = (f1 - f) * slope;
+                intervals_[fftbin] = interval;
             }
         }
 
-		// Matrix Multiplication of Input and Filter Bank
-        for (int i = 0; i < numFilter; i++)
+        for (int64_t m = 0; m < numFilter; m++)
         {
-            for (int j = 0; j < numFrames; j++)
+            float* out_row = dstPtrTemp + m * numFrames;
+            for (int64_t t = 0; t < numFrames; t++)
+                out_row[t] = 0.0f;
+        }
+
+        const float *in_row = srcPtrTemp + fftbin_start_ * numFrames;
+        for (int64_t fftbin = fftbin_start_; fftbin <= fftbin_end_; fftbin++, in_row += numFrames)
+        {
+            auto filter_up = intervals_[fftbin];
+            auto weight_up = float(1) - weights_down_[fftbin];
+            auto filter_down = filter_up - 1;
+            auto weight_down = weights_down_[fftbin];
+
+            if (filter_down >= 0)
             {
-                dstPtrTemp[i * numFrames + j] = 0.0f;
-				for(int k = 0; k < numBins; k++)
-				{
-					dstPtrTemp[i * numFrames + j] += filterBanks[i][k] * srcPtrTemp[k * numFrames + j];
-				}
+                if (normalize)
+                weight_down *= norm_factors_[filter_down];
+
+                float *out_row = dstPtrTemp + filter_down * numFrames;
+                for (int t = 0; t < numFrames; t++)
+                {
+                    out_row[t] += weight_down * in_row[t];
+                }
+            }
+
+            if (filter_up >= 0 && filter_up < numFilter)
+            {
+                if (normalize)
+                weight_up *= norm_factors_[filter_up];
+
+                float *out_row = dstPtrTemp + filter_up * numFrames;
+                for (int t = 0; t < numFrames; t++)
+                {
+                    out_row[t] += weight_up * in_row[t];
+                }
             }
         }
     }
