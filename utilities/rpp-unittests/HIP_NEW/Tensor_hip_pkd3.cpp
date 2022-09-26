@@ -991,6 +991,7 @@ int main(int argc, char **argv)
 
                 // Uncomment to run test case with an ltrbROI override
                 /*for (i = 0; i < images; i++)
+                {
                     roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
                     roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
                     roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
@@ -1044,6 +1045,7 @@ int main(int argc, char **argv)
 
                 // Uncomment to run test case with an ltrbROI override
                 /*for (i = 0; i < images; i++)
+                {
                     roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
                     roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
                     roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
@@ -1202,7 +1204,7 @@ int main(int argc, char **argv)
     {
         test_case_name = "resize";
 
-        if (interpolationType != RpptInterpolationType::BILINEAR)
+        if (interpolationType == RpptInterpolationType::NEAREST_NEIGHBOR)
         {
             missingFuncFlag = 1;
             break;

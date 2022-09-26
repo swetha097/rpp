@@ -1024,8 +1024,6 @@ RppStatus rppt_resize_gpu(RppPtr_t srcPtr,
                           rppHandle_t rppHandle)
 {
 #ifdef HIP_COMPILE
-    Rpp32u paramIndex = 0;
-
     if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
     {
         hip_exec_resize_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
@@ -1075,7 +1073,7 @@ RppStatus rppt_resize_gpu(RppPtr_t srcPtr,
                                rpp::deref(rppHandle));
     }
 
-return RPP_SUCCESS;
+    return RPP_SUCCESS;
 #elif defined(OCL_COMPILE)
     return RPP_ERROR_NOT_IMPLEMENTED;
 #endif // backend
