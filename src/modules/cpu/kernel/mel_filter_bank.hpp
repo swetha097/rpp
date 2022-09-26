@@ -5,27 +5,27 @@
 struct BaseMelScale
 {
     public:
-        virtual float hz_to_mel(float hz) = 0;
-        virtual float mel_to_hz(float mel) = 0;
+        virtual Rpp32f hz_to_mel(Rpp32f hz) = 0;
+        virtual Rpp32f mel_to_hz(Rpp32f mel) = 0;
 };
 
 struct HtkMelScale : public BaseMelScale
 {
-    float hz_to_mel(float hz) { return 1127.0f * std::log(1.0f + hz / 700.0f); }
-    float mel_to_hz(float mel) { return 700.0f * (std::exp(mel / 1127.0f) - 1.0f); }
+    Rpp32f hz_to_mel(Rpp32f hz) { return 1127.0f * std::log(1.0f + hz / 700.0f); }
+    Rpp32f mel_to_hz(Rpp32f mel) { return 700.0f * (std::exp(mel / 1127.0f) - 1.0f); }
 };
 
 struct SlaneyMelScale : public BaseMelScale
 {
-	const float freq_low = 0;
-	const float fsp = 200.0 / 3.0;
-	const float min_log_hz = 1000.0;
-	const float min_log_mel = (min_log_hz - freq_low) / fsp;
-	const float step_log = 0.068751777;  // Equivalent to std::log(6.4) / 27.0;
+	const Rpp32f freq_low = 0;
+	const Rpp32f fsp = 200.0 / 3.0;
+	const Rpp32f min_log_hz = 1000.0;
+	const Rpp32f min_log_mel = (min_log_hz - freq_low) / fsp;
+	const Rpp32f step_log = 0.068751777;  // Equivalent to std::log(6.4) / 27.0;
 
-	float hz_to_mel(float hz)
+	Rpp32f hz_to_mel(Rpp32f hz)
 	{
-		float mel = 0.0f;
+		Rpp32f mel = 0.0f;
 		if (hz >= min_log_hz)
         {
 		    mel = min_log_mel + std::log(hz / min_log_hz) / step_log;
@@ -37,9 +37,9 @@ struct SlaneyMelScale : public BaseMelScale
 		return mel;
 	}
 
-	float mel_to_hz(float mel)
+	Rpp32f mel_to_hz(Rpp32f mel)
 	{
-		float hz = 0;
+		Rpp32f hz = 0;
 		if (mel >= min_log_mel)
         {
 			hz = min_log_hz * std::exp(step_log * (mel - min_log_mel));
@@ -84,85 +84,123 @@ RppStatus mel_filter_bank_host_tensor(Rpp32f *srcPtr,
 		Rpp32f *dstPtrTemp = dstPtr + batchCount * dstDescPtr->strides.nStride;
 
         // Extract nfft, number of Frames, numBins
-        int nfft = (srcDims[batchCount].height - 1) * 2;
-        int numBins = nfft / 2 + 1;
-        int numFrames = srcDims[batchCount].width;
+        Rpp32s nfft = (srcDims[batchCount].height - 1) * 2;
+        Rpp32s numBins = nfft / 2 + 1;
+        Rpp32s numFrames = srcDims[batchCount].width;
 
         // Convert lower, higher freqeuncies to mel scale
-        double melLow = melScalePtr->hz_to_mel(minFreq);
-        double melHigh = melScalePtr->hz_to_mel(maxFreq);
-        double melStep = (melHigh - melLow) / (numFilter + 1);
-        double hzStep = static_cast<double>(sampleRate) / nfft;
-        double invHzStep = 1.0 / hzStep;
+        Rpp64f melLow = melScalePtr->hz_to_mel(minFreq);
+        Rpp64f melHigh = melScalePtr->hz_to_mel(maxFreq);
+        Rpp64f melStep = (melHigh - melLow) / (numFilter + 1);
+        Rpp64f hzStep = static_cast<Rpp64f>(sampleRate) / nfft;
+        Rpp64f invHzStep = 1.0 / hzStep;
 
-        int fftbin_start_ = std::ceil(minFreq * invHzStep);
-        int fftbin_end_ = std::floor(maxFreq * invHzStep);
-        if (fftbin_end_ > numBins - 1)
-            fftbin_end_ = numBins - 1;
+        Rpp32s fftBinStart = std::ceil(minFreq * invHzStep);
+        Rpp32s fftBinEnd = std::floor(maxFreq * invHzStep);
+        fftBinEnd = std::min(fftBinEnd, numBins - 1);
 
-        std::vector<float> weights_down_;
-        weights_down_.resize(numBins);
+        std::vector<Rpp32f> weightsDown, normFactors;
+        weightsDown.resize(numBins);
+        normFactors.resize(numFilter, 1.0f);
 
-        std::vector<float> norm_factors_;
-        norm_factors_.resize(numFilter, float(1));
+        std::vector<Rpp32s> intervals;
+        intervals.resize(numBins, -1);
 
-        std::vector<int> intervals_;
-        intervals_.resize(numBins, -1);
-
-        int last_interval = numFilter;
-        int fftbin = fftbin_start_;
-        double mel0 = melLow, mel1 = melLow + melStep;
-        double f = fftbin * hzStep;
+        Rpp32s fftBin = fftBinStart;
+        Rpp64f mel0 = melLow, mel1 = melLow + melStep;
+        Rpp64f f = fftBin * hzStep;
         for (int interval = 0; interval < numFilter + 1; interval++, mel0 = mel1, mel1 += melStep)
         {
-            double f0 = melScalePtr->mel_to_hz(mel0);
-            double f1 = melScalePtr->mel_to_hz(interval == numFilter ? melHigh : mel1);
-            double slope = 1. / (f1 - f0);
-            for (; fftbin <= fftbin_end_ && f < f1; fftbin++, f = fftbin * hzStep)
+            Rpp64f f0 = melScalePtr->mel_to_hz(mel0);
+            Rpp64f f1 = melScalePtr->mel_to_hz(interval == numFilter ? melHigh : mel1);
+            Rpp64f slope = 1. / (f1 - f0);
+
+            if (normalize && interval < numFilter)
             {
-                weights_down_[fftbin] = (f1 - f) * slope;
-                intervals_[fftbin] = interval;
+                Rpp64f f2 = melScalePtr->mel_to_hz(mel1 + melStep);
+                normFactors[interval] = 2.0 / (f2 - f0);
+            }
+
+            for (; fftBin <= fftBinEnd && f < f1; fftBin++, f = fftBin * hzStep)
+            {
+                weightsDown[fftBin] = (f1 - f) * slope;
+                intervals[fftBin] = interval;
             }
         }
 
-        for (int64_t m = 0; m < numFilter; m++)
-        {
-            float* out_row = dstPtrTemp + m * numFrames;
-            for (int64_t t = 0; t < numFrames; t++)
-                out_row[t] = 0.0f;
-        }
+        // Set all values in dst buffer to 0.0
+        memset(dstPtrTemp, 0.0f, (size_t)(numFilter * numFrames * sizeof(Rpp32f)));
 
-        const float *in_row = srcPtrTemp + fftbin_start_ * numFrames;
-        for (int64_t fftbin = fftbin_start_; fftbin <= fftbin_end_; fftbin++, in_row += numFrames)
+        Rpp32u vectorIncrement = 8;
+		Rpp32u alignedLength = (numFrames / 8) * 8;
+        __m256 pSrc, pDst;
+        Rpp32f *srcRowPtr = srcPtrTemp + fftBinStart * numFrames;
+        for (int64_t fftBin = fftBinStart; fftBin <= fftBinEnd; fftBin++)
         {
-            auto filter_up = intervals_[fftbin];
-            auto weight_up = float(1) - weights_down_[fftbin];
-            auto filter_down = filter_up - 1;
-            auto weight_down = weights_down_[fftbin];
+            auto filterUp = intervals[fftBin];
+            auto weightUp = 1.0f - weightsDown[fftBin];
+            auto filterDown = filterUp - 1;
+            auto weightDown = weightsDown[fftBin];
 
-            if (filter_down >= 0)
+            if (filterDown >= 0)
             {
-                if (normalize)
-                weight_down *= norm_factors_[filter_down];
+                Rpp32f *dstRowPtrTemp = dstPtrTemp + filterDown * numFrames;
+                Rpp32f *srcRowPtrTemp = srcRowPtr;
 
-                float *out_row = dstPtrTemp + filter_down * numFrames;
-                for (int t = 0; t < numFrames; t++)
+                if (normalize)
+                    weightDown *= normFactors[filterDown];
+                __m256 pWeightDown = _mm256_set1_ps(weightDown);
+
+                int vectorLoopCount = 0;
+                for(; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                 {
-                    out_row[t] += weight_down * in_row[t];
+                    pSrc = _mm256_loadu_ps(srcRowPtrTemp);
+                    pSrc = _mm256_mul_ps(pSrc, pWeightDown);
+                    pDst = _mm256_loadu_ps(dstRowPtrTemp);
+                    pDst = _mm256_add_ps(pDst, pSrc);
+                    _mm256_storeu_ps(dstRowPtrTemp, pDst);
+                    dstRowPtrTemp += vectorIncrement;
+                    srcRowPtrTemp += vectorIncrement;
+                }
+
+                for (; vectorLoopCount < numFrames; vectorLoopCount++)
+                {
+                    (*dstRowPtrTemp) += weightDown * (*srcRowPtrTemp);
+                    dstRowPtrTemp++;
+                    srcRowPtrTemp++;
                 }
             }
 
-            if (filter_up >= 0 && filter_up < numFilter)
+            if (filterUp >= 0 && filterUp < numFilter)
             {
-                if (normalize)
-                weight_up *= norm_factors_[filter_up];
+                Rpp32f *dstRowPtrTemp = dstPtrTemp + filterUp * numFrames;
+                Rpp32f *srcRowPtrTemp = srcRowPtr;
 
-                float *out_row = dstPtrTemp + filter_up * numFrames;
-                for (int t = 0; t < numFrames; t++)
+                if (normalize)
+                    weightUp *= normFactors[filterUp];
+                __m256 pWeightUp = _mm256_set1_ps(weightUp);
+
+                int vectorLoopCount = 0;
+                for(; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                 {
-                    out_row[t] += weight_up * in_row[t];
+                    pSrc = _mm256_loadu_ps(srcRowPtrTemp);
+                    pSrc = _mm256_mul_ps(pSrc, pWeightUp);
+                    pDst = _mm256_loadu_ps(dstRowPtrTemp);
+                    pDst = _mm256_add_ps(pDst, pSrc);
+                    _mm256_storeu_ps(dstRowPtrTemp, pDst);
+                    dstRowPtrTemp += vectorIncrement;
+                    srcRowPtrTemp += vectorIncrement;
+                }
+
+                for (; vectorLoopCount < numFrames; vectorLoopCount++)
+                {
+                    (*dstRowPtrTemp) += weightUp * (*srcRowPtrTemp);
+                    dstRowPtrTemp++;
+                    srcRowPtrTemp++;
                 }
             }
+
+            srcRowPtr += numFrames;
         }
     }
 

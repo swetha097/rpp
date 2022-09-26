@@ -496,7 +496,7 @@ int main(int argc, char **argv)
             Rpp32f maxFreq = sampleRate / 2;
             RpptMelScaleFormula melFormula = RpptMelScaleFormula::SLANEY;
             Rpp32s numFilter = 128;
-            bool normalize = false;
+            bool normalize = true;
 
             Rpp32f *test_inputf32 = (Rpp32f *)calloc(srcDims[0].width * srcDims[0].height, sizeof(Rpp32f));
             Rpp32f *test_outputf32 = (Rpp32f *)calloc(numFilter * srcDims[0].width, sizeof(Rpp32f));
@@ -515,7 +515,6 @@ int main(int argc, char **argv)
             verify_output(test_outputf32, shape, noOfAudioFiles, test_case_name, dstDescPtr->strides.nStride, audioNames);
 
             // std::cerr<<"printing output values"<<std::endl;
-
             // for(int i = 0; i < numFilter * srcDims[0].width ; i++)
             //     std::cerr<<std::setprecision(11)<<test_outputf32[i]<<endl;
 
