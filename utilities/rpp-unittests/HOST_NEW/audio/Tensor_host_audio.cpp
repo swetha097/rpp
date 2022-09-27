@@ -464,7 +464,7 @@ int main(int argc, char **argv)
             Rpp32s shape[noOfAudioFiles];
             Rpp32f fillValues[noOfAudioFiles];
             Rpp32s axes = 0;
-            RpptOutOfBoundsPolicy policyType = RpptOutOfBoundsPolicy::ERROR;
+            RpptOutOfBoundsPolicy policyType = RpptOutOfBoundsPolicy::PAD;
             for (i = 0; i < noOfAudioFiles; i++)
             {
                 anchor[i] = 100;
@@ -480,6 +480,11 @@ int main(int argc, char **argv)
             }
             else
                 missingFuncFlag = 1;
+
+            std::cerr<<"printing output values"<<std::endl;
+            for(int i = 0; i < shape[0] ; i++)
+                std::cerr<<std::setprecision(11)<<outputf32[i]<<endl;
+
 
             verify_output(outputf32, shape, noOfAudioFiles, test_case_name, dstDescPtr->strides.nStride, audioNames);
             break;
