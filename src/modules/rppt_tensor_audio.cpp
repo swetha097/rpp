@@ -177,7 +177,7 @@ RppStatus rppt_spectrogram_host(RppPtr_t srcPtr,
                                 bool reflectPadding,
                                 Rpp32f *windowFunction,
                                 Rpp32s nfft,
-                                Rpp32f power,
+                                Rpp32s power,
                                 Rpp32s windowLength,
                                 Rpp32s windowStep,
                                 std::string layout)

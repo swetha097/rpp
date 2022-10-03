@@ -21,34 +21,6 @@ int getOutputSize(int length, int windowLength, int windowStep, bool centerWindo
     return ((length / windowStep) + 1);
 }
 
-void NaiveDft(std::vector<std::complex<float>> &out,
-              float *in,
-              int srcWidth,
-              int nfft,
-              bool full_spectrum = false)
-{
-    int n = srcWidth;
-    auto out_size = nfft/2 + 1;
-    out.clear();
-    out.reserve(out_size);
-
-    // Loop through each sample in the frequency domain
-    for (int64_t k = 0; k < out_size; k++)
-    {
-        float real = 0.0f, imag = 0.0f;
-        // Loop through each sample in the time domain
-        for (int64_t i = 0; i < n; i++)
-        {
-            auto x = in[i];
-            real += x * cos(2.0f * M_PI * k * i / n);
-            imag += -x * sin(2.0f * M_PI * k * i / n);
-        }
-        out.push_back({real, imag});
-    }
-}
-
-
-
 RppStatus spectrogram_host_tensor(Rpp32f *srcPtr,
                                   RpptDescPtr srcDescPtr,
                                   Rpp32f *dstPtr,
@@ -85,7 +57,7 @@ RppStatus spectrogram_host_tensor(Rpp32f *srcPtr,
         if(centerWindows)
             windowCenterOffset = windowLength / 2;
 
-        Rpp32f *windowOut = (Rpp32f *)malloc(nfft * numWindows * sizeof(float));
+        std::vector<Rpp32f> windowOutput(nfft * numWindows);
         for (int64_t w = 0; w < numWindows; w++)
         {
             int64_t windowStart = w * windowStep - windowCenterOffset;
@@ -93,48 +65,63 @@ RppStatus spectrogram_host_tensor(Rpp32f *srcPtr,
             {
                 for (int t = 0; t < windowLength; t++)
                 {
-                    int64_t out_idx = (vertical) ? (t * numWindows + w) : (w * windowLength + t);
-                    int64_t in_idx = windowStart + t;
-                    if(in_idx >= 0 && in_idx < bufferLength)
-                        windowOut[out_idx] = windowFn[t] * srcPtrTemp[in_idx];
+                    int64_t outIdx = (vertical) ? (t * numWindows + w) : (w * windowLength + t);
+                    int64_t inIdx = windowStart + t;
+                    if(inIdx >= 0 && inIdx < bufferLength)
+                        windowOutput[outIdx] = windowFn[t] * srcPtrTemp[inIdx];
                     else
-                       windowOut[out_idx] = 0;
+                       windowOutput[outIdx] = 0;
                 }
             }
             else
             {
                 for (int t = 0; t < windowLength; t++)
                 {
-                    int64_t out_idx = (vertical) ? (t * numWindows + w) : (w * windowLength + t);
-                    int64_t in_idx = windowStart + t;
-                    windowOut[out_idx] = windowFn[t] * srcPtrTemp[in_idx];
+                    int64_t outIdx = (vertical) ? (t * numWindows + w) : (w * windowLength + t);
+                    int64_t inIdx = windowStart + t;
+                    windowOutput[outIdx] = windowFn[t] * srcPtrTemp[inIdx];
                 }
             }
         }
 
-        // std::vector<std::complex<float>> outFft;
-        // NaiveDft(outFft, windowOut, numWindows, nfft, false);
-        // // auto *complex_fft = reinterpret_cast<std::complex<float> *>(outFft);
-        // int out_size = nfft / 2 + 1;
-        // int out_stride = numWindows;
-        // int in_stride = 1;
+        std::vector<Rpp32f> windowOutputTemp(nfft);
+        for (int w = 0; w < numWindows; w++)
+        {
+            for (int i = 0; i < nfft; i++)
+                windowOutputTemp[i] = windowOutput[i * numWindows + w];
 
-        // Rpp32f *finalOut = (Rpp32f *)malloc((nfft / 2 +1) * numWindows * sizeof(float));
+            // Allocate buffers for fft output
+            std::vector<std::complex<Rpp32f>> fftOutput;
+            fftOutput.clear();
+            fftOutput.reserve(numBins);
 
-        // for (int i = 0; i < out_size; i++)
-        // {
-        //     for(j = 0; j < numWindows; j++)
-        //     {
-        //         finalOut[j * out_size + i] = std::norm(outFft[i * in_stride]);
-        //     }
-        // }
+            // Compute FFT
+            for (int k = 0; k < numBins; k++)
+            {
+                Rpp32f real = 0.0f, imag = 0.0f;
+                for (int i = 0; i < windowOutputTemp.size(); i++)
+                {
+                    auto x = windowOutputTemp[i];
+                    real += x * cos(2.0f * M_PI * k * i / nfft);
+                    imag += -x * sin(2.0f * M_PI * k * i / nfft);
+                }
+                fftOutput.push_back({real, imag});
+            }
 
-        // MagnitudeSpectrumCalculator().Calculate(
-        //     args.spectrum_type, out_data, complex_fft, out_size, out_stride, 1);
-        // }
-
-        free(windowOut);
-        // free(finalOut);
+            if(power == 2)
+            {
+                // Compute power spectrum
+                for (int i = 0; i < numBins; i++)
+                    dstPtrTemp[i * numWindows + w] = std::norm(fftOutput[i]);
+            }
+            else
+            {
+                // Compute magnitude spectrum
+                for (int i = 0; i < numBins; i++)
+                    dstPtrTemp[i * numWindows + w] = std::abs(fftOutput[i]);
+            }
+        }
     }
+
 	return RPP_SUCCESS;
 }

@@ -5,7 +5,7 @@
 cwd=$(pwd)
 
 # Input audio files - Eight audio files
-DEFAULT_SRC_FOLDER="$cwd/../../../TEST_AUDIO_FILES/trail_sample/"
+DEFAULT_SRC_FOLDER="$cwd/../../../TEST_AUDIO_FILES/eight_samples_single_channel_src1/"
 
 # # Inputs for Testing Downmixing
 # # Input audio file - single audio file - multi channel
@@ -77,11 +77,13 @@ do
     elif [ "$case" -eq 3 ]
     then
         SRC_FOLDER="$cwd/../../../TEST_AUDIO_FILES/single_sample_multi_channel_src1/"
+    elif [ "$case" -eq 5 ]
+    then
+        SRC_FOLDER="$cwd/../../../TEST_AUDIO_FILES/trail_sample/"
     else
         SRC_FOLDER="$cwd/../../../TEST_AUDIO_FILES/eight_samples_single_channel_src1/"
     fi
 
-    SRC_FOLDER="$cwd/../../../TEST_AUDIO_FILES/trail_sample/"
 
     printf "\n\n\n\n"
     echo "--------------------------------"

@@ -540,20 +540,67 @@ int main(int argc, char **argv)
             bool reflectPadding = false;
             Rpp32f *windowFn = NULL;
             Rpp32s nfft = 2048;
-            Rpp32f power = 2;
+            Rpp32s power = 2;
             Rpp32s windowLength = nfft;
             Rpp32s windowStep = 512;
             std::string layout = "ft";
+
+            int maxDstWidth = 0;
+            int maxDstHeight = 0;
+            int windowOffset = 0;
+            if(!centerWindows)
+                windowOffset = windowLength;
+
+            if(layout == "ft")
+            {
+                for(int i = 0; i < noOfAudioFiles; i++)
+                {
+                    dstDims[i].height = nfft / 2 + 1;
+                    dstDims[i].width = ((srcLengthTensor[i] - windowOffset) / windowStep) + 1;
+                    maxDstHeight = std::max(maxDstHeight, (int)dstDims[i].height);
+                    maxDstWidth = std::max(maxDstWidth, (int)dstDims[i].width);
+                }
+            }
+            else
+            {
+                for(int i = 0; i < noOfAudioFiles; i++)
+                {
+                    dstDims[i].height = ((srcLengthTensor[i] - windowOffset) / windowStep) + 1;
+                    dstDims[i].width = nfft / 2 + 1;
+                    maxDstHeight = std::max(maxDstHeight, (int)dstDims[i].height);
+                    maxDstWidth = std::max(maxDstWidth, (int)dstDims[i].width);
+                }
+            }
+
+            dstDescPtr->h = maxDstHeight;
+            dstDescPtr->w = maxDstWidth;
+
+            // Optionally set w stride as a multiple of 8 for dst
+            dstDescPtr->w = ((dstDescPtr->w / 8) * 8) + 8;
+            dstDescPtr->h = ((dstDescPtr->h / 8) * 8) + 8;
+
+            dstDescPtr->strides.nStride = dstDescPtr->c * dstDescPtr->w * dstDescPtr->h;
+            dstDescPtr->strides.hStride = dstDescPtr->c * dstDescPtr->w;
+            dstDescPtr->strides.wStride = dstDescPtr->c;
+            dstDescPtr->strides.cStride = 1;
+
+            // Set buffer sizes for src/dst
+            unsigned long long spectrogramBufferSize = (unsigned long long)dstDescPtr->h * (unsigned long long)dstDescPtr->w * (unsigned long long)dstDescPtr->c * (unsigned long long)dstDescPtr->n;
+
+            // Initialize host buffers for input & output
+            Rpp32f *spectrogramf32 = (Rpp32f *)calloc(spectrogramBufferSize, sizeof(Rpp32f));
 
             start_omp = omp_get_wtime();
             start = clock();
             if (ip_bitDepth == 2)
             {
-                rppt_spectrogram_host(inputf32, srcDescPtr, outputf32, dstDescPtr, srcLengthTensor, dstDims, centerWindows, reflectPadding, windowFn, nfft, power, windowLength, windowStep, layout);
+                rppt_spectrogram_host(inputf32, srcDescPtr, spectrogramf32, dstDescPtr, srcLengthTensor, dstDims, centerWindows, reflectPadding, windowFn, nfft, power, windowLength, windowStep, layout);
             }
             else
                 missingFuncFlag = 1;
 
+            free(dstDims);
+            free(spectrogramf32);
             break;
         }
         default:
