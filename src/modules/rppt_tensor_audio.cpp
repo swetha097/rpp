@@ -166,3 +166,36 @@ RppStatus rppt_mel_filter_bank_host(RppPtr_t srcPtr,
 
     return RPP_SUCCESS;
 }
+
+RppStatus rppt_spectrogram_host(RppPtr_t srcPtr,
+                                RpptDescPtr srcDescPtr,
+                                RppPtr_t dstPtr,
+								RpptDescPtr dstDescPtr,
+                                Rpp32s *srcLengthTensor,
+                                RpptImagePatchPtr dstDims,
+                                bool centerWindows,
+                                bool reflectPadding,
+                                Rpp32f *windowFunction,
+                                Rpp32s nfft,
+                                Rpp32f power,
+                                Rpp32s windowLength,
+                                Rpp32s windowStep,
+                                std::string layout)
+{
+    spectrogram_host_tensor((Rpp32f*)(srcPtr),
+                            srcDescPtr,
+                            (Rpp32f*)(dstPtr),
+							dstDescPtr,
+                            srcLengthTensor,
+                            dstDims,
+                            centerWindows,
+                            reflectPadding,
+                            windowFunction,
+                            nfft,
+                            power,
+                            windowLength,
+                            windowStep,
+                            layout);
+
+    return RPP_SUCCESS;
+}

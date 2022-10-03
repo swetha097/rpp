@@ -182,6 +182,9 @@ int main(int argc, char **argv)
         case 5:
             strcpy(funcName, "mel_filter_bank");
             break;
+        case 6:
+            strcpy(funcName, "spectrogram");
+            break;
         default:
             strcpy(funcName, "test_case");
             break;
@@ -526,6 +529,31 @@ int main(int argc, char **argv)
             free(srcDims);
             free(test_inputf32);
             free(test_outputf32);
+            break;
+        }
+        case 6:
+        {
+            test_case_name = "spectrogram";
+
+            RpptImagePatch *dstDims = (RpptImagePatch *) calloc(noOfAudioFiles, sizeof(RpptImagePatch));
+            bool centerWindows = false;
+            bool reflectPadding = false;
+            Rpp32f *windowFn = NULL;
+            Rpp32s nfft = 2048;
+            Rpp32f power = 2;
+            Rpp32s windowLength = nfft;
+            Rpp32s windowStep = 512;
+            std::string layout = "ft";
+
+            start_omp = omp_get_wtime();
+            start = clock();
+            if (ip_bitDepth == 2)
+            {
+                rppt_spectrogram_host(inputf32, srcDescPtr, outputf32, dstDescPtr, srcLengthTensor, dstDims, centerWindows, reflectPadding, windowFn, nfft, power, windowLength, windowStep, layout);
+            }
+            else
+                missingFuncFlag = 1;
+
             break;
         }
         default:
