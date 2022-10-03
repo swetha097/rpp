@@ -24,31 +24,31 @@ SRC_FOLDER="$DEFAULT_SRC_FOLDER"
 DST_FOLDER="$DEFAULT_DST_FOLDER"
 
 # <<<<<<<<<<<<<< EXECUTION OF ALL FUNCTIONALITIES (NEED NOT CHANGE) >>>>>>>>>>>>>>
-if [[ "$1" -lt 0 ]] | [[ "$1" -gt 6 ]]; then
-    echo "The starting case# must be in the 0-6 range!"
+if [[ "$1" -lt 0 ]] | [[ "$1" -gt 7 ]]; then
+    echo "The starting case# must be in the 0-7 range!"
     echo
     echo "The testAllScript.sh bash script runs the RPP audio unittest testsuite for AMDRPP functionalities in HOST/OCL/HIP backends."
     echo
     echo "Syntax: ./testAllScriptAudio.sh <S> <E>"
-    echo "S     CASE_START (Starting case# (0-6))"
-    echo "E     CASE_END (Ending case# (0-6))"
+    echo "S     CASE_START (Starting case# (0-7))"
+    echo "E     CASE_END (Ending case# (0-7))"
     exit 1
 fi
 
-if [[ "$2" -lt 0 ]] | [[ "$2" -gt 6 ]]; then
-    echo "The ending case# must be in the 0-6 range!"
+if [[ "$2" -lt 0 ]] | [[ "$2" -gt 7 ]]; then
+    echo "The ending case# must be in the 0-7 range!"
     echo
     echo "The testAllScript.sh bash script runs the RPP audio unittest testsuite for AMDRPP functionalities in HOST/OCL/HIP backends."
     echo
     echo "Syntax: ./testAllScriptAudio.sh <S> <E>"
-    echo "S     CASE_START (Starting case# (0-6))"
-    echo "E     CASE_END (Ending case# (0-6))"
+    echo "S     CASE_START (Starting case# (0-7))"
+    echo "E     CASE_END (Ending case# (0-7))"
     exit 1
 fi
 
 if (( "$#" < 2 )); then
     CASE_START="0"
-    CASE_END="6"
+    CASE_END="7"
 else
     CASE_START="$1"
     CASE_END="$2"
@@ -77,7 +77,7 @@ do
     elif [ "$case" -eq 3 ]
     then
         SRC_FOLDER="$cwd/../../../TEST_AUDIO_FILES/single_sample_multi_channel_src1/"
-    elif [ "$case" -eq 5 ]
+    elif [ "$case" -eq 7 ]
     then
         SRC_FOLDER="$cwd/../../../TEST_AUDIO_FILES/trail_sample/"
     else

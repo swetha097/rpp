@@ -185,6 +185,9 @@ int main(int argc, char **argv)
         case 6:
             strcpy(funcName, "spectrogram");
             break;
+        case 7:
+            strcpy(funcName, "audio_resample");
+            break;
         default:
             strcpy(funcName, "test_case");
             break;
@@ -289,7 +292,7 @@ int main(int argc, char **argv)
     dstDescPtr->h = 1;
 
     srcDescPtr->w = maxLength;
-    dstDescPtr->w = maxLength;
+    dstDescPtr->w = 36200;
 
     srcDescPtr->c = maxChannels;
     if(test_case == 3)
@@ -609,6 +612,38 @@ int main(int argc, char **argv)
 
             free(dstDims);
             free(spectrogramf32);
+            break;
+        }
+        case 7:
+        {
+            test_case_name = "audio_resample";
+
+            Rpp32f inRateTensor[noOfAudioFiles];
+            Rpp32f outRateTensor[noOfAudioFiles];
+
+            for(int i = 0; i < noOfAudioFiles; i++)
+            {
+                inRateTensor[i] = 16000;
+                outRateTensor[i] = 20000;
+            }
+
+            Rpp32f quality;
+            Rpp32f scale;
+
+            start_omp = omp_get_wtime();
+            start = clock();
+            if (ip_bitDepth == 2)
+            {
+                rppt_audio_resample_host(inputf32, srcDescPtr, outputf32, dstDescPtr, inRateTensor, outRateTensor, srcLengthTensor, channelsTensor, quality, scale);
+            }
+            else
+                missingFuncFlag = 1;
+
+            for(int i = 0; i < 36200; i++)
+            {
+                std::cerr<<outputf32[i]<<std::endl;
+            }
+
             break;
         }
         default:

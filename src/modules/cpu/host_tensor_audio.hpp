@@ -30,5 +30,6 @@ THE SOFTWARE.
 #include "kernel/slice.hpp"
 #include "kernel/mel_filter_bank.hpp"
 #include "kernel/spectrogram.hpp"
+#include "kernel/audio_resample.hpp"
 
 #endif // HOST_TENSOR_AUDIO_HPP

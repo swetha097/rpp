@@ -199,3 +199,28 @@ RppStatus rppt_spectrogram_host(RppPtr_t srcPtr,
 
     return RPP_SUCCESS;
 }
+
+RppStatus rppt_audio_resample_host(RppPtr_t srcPtr,
+                                   RpptDescPtr srcDescPtr,
+                                   RppPtr_t dstPtr,
+                                   RpptDescPtr dstDescPtr,
+                                   Rpp32f *inRateTensor,
+                                   Rpp32f *outRateTensor,
+                                   Rpp32s *srcLengthTensor,
+                                   Rpp32s *channelsTensor,
+                                   Rpp32f quality,
+                                   Rpp32f scale)
+{
+    audio_resample_host_tensor((Rpp32f*)srcPtr,
+                               srcDescPtr,
+                               (Rpp32f*)dstPtr,
+                               dstDescPtr,
+                               inRateTensor,
+                               outRateTensor,
+                               srcLengthTensor,
+                               channelsTensor,
+                               quality,
+                               scale);
+
+    return RPP_SUCCESS;
+}
