@@ -186,7 +186,7 @@ int main(int argc, char **argv)
             strcpy(funcName, "spectrogram");
             break;
         case 7:
-            strcpy(funcName, "audio_resample");
+            strcpy(funcName, "resample");
             break;
         default:
             strcpy(funcName, "test_case");
@@ -605,7 +605,7 @@ int main(int argc, char **argv)
             start = clock();
             if (ip_bitDepth == 2)
             {
-                rppt_spectrogram_host(inputf32, srcDescPtr, spectrogramf32, dstDescPtr, srcLengthTensor, dstDims, centerWindows, reflectPadding, windowFn, nfft, power, windowLength, windowStep, layout);
+                rppt_spectrogram_host(inputf32, srcDescPtr, spectrogramf32, dstDescPtr, srcLengthTensor, centerWindows, reflectPadding, windowFn, nfft, power, windowLength, windowStep, layout);
             }
             else
                 missingFuncFlag = 1;
@@ -616,7 +616,7 @@ int main(int argc, char **argv)
         }
         case 7:
         {
-            test_case_name = "audio_resample";
+            test_case_name = "resample";
 
             Rpp32f inRateTensor[noOfAudioFiles];
             Rpp32f outRateTensor[noOfAudioFiles];
@@ -626,23 +626,16 @@ int main(int argc, char **argv)
                 inRateTensor[i] = 16000;
                 outRateTensor[i] = 20000;
             }
-
-            Rpp32f quality;
-            Rpp32f scale;
+            Rpp32f quality = 50.0;
 
             start_omp = omp_get_wtime();
             start = clock();
             if (ip_bitDepth == 2)
             {
-                rppt_audio_resample_host(inputf32, srcDescPtr, outputf32, dstDescPtr, inRateTensor, outRateTensor, srcLengthTensor, channelsTensor, quality, scale);
+                rppt_resample_host(inputf32, srcDescPtr, outputf32, dstDescPtr, inRateTensor, outRateTensor, srcLengthTensor, channelsTensor, quality);
             }
             else
                 missingFuncFlag = 1;
-
-            for(int i = 0; i < 36200; i++)
-            {
-                std::cerr<<outputf32[i]<<std::endl;
-            }
 
             break;
         }
