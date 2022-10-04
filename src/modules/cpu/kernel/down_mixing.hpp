@@ -27,50 +27,59 @@ RppStatus down_mixing_host_tensor(Rpp32f *srcPtr,
 
         Rpp32s channels = channelsTensor[batchCount];
         Rpp32s samples = srcLengthTensor[batchCount];
-        std::vector<float> weights;
-        weights.resize(channels, 1.f / channels);
-        std::vector<float> normalizedWeights;
 
-        if(normalizeWeights)
+        if(channels == 1)
         {
-            normalizedWeights.resize(channels);
-
-            // Compute sum of the weights
-            Rpp32f sum = 0.0;
-            for(int i = 0; i < channels; i++)
-                sum += weights[i];
-
-            // Normalize the weights
-            Rpp32f invSum = 1.0 / sum;
-            for(int i = 0; i < channels; i++)
-                normalizedWeights[i] = weights[i] * invSum;
-
-            weights = normalizedWeights;
+            // No need of downmixing, do a direct memcpy
+            memcpy(dstPtrTemp, srcPtrTemp, (size_t)(samples * sizeof(Rpp32f)));
         }
-
-        int channelIncrement = 4;
-		int alignedChannels = (channels / 4) * 4;
-
-        // use weights to downmix to mono
-        for(int64_t dstIdx = 0; dstIdx < samples; dstIdx++)
+        else
         {
-            __m128 pDst = _mm_setzero_ps();
-            int channelLoopCount = 0;
-            for(; channelLoopCount < alignedChannels; channelLoopCount += channelIncrement)
+            std::vector<float> weights;
+            weights.resize(channels, 1.f / channels);
+            std::vector<float> normalizedWeights;
+
+            if(normalizeWeights)
             {
-                __m128 pSrc, pWeights;
-                pWeights = _mm_setr_ps(weights[channelLoopCount], weights[channelLoopCount + 1], weights[channelLoopCount + 2], weights[channelLoopCount + 3]);
-                pSrc = _mm_loadu_ps(srcPtrTemp);
-                pSrc = _mm_mul_ps(pSrc, pWeights);
-                pDst = _mm_add_ps(pDst, pSrc);
-                srcPtrTemp += channelIncrement;
+                normalizedWeights.resize(channels);
+
+                // Compute sum of the weights
+                Rpp32f sum = 0.0;
+                for(int i = 0; i < channels; i++)
+                    sum += weights[i];
+
+                // Normalize the weights
+                Rpp32f invSum = 1.0 / sum;
+                for(int i = 0; i < channels; i++)
+                    normalizedWeights[i] = weights[i] * invSum;
+
+                weights = normalizedWeights;
             }
 
-            dstPtrTemp[dstIdx] = hsum_ps(pDst);
-            for(; channelLoopCount < channels; channelLoopCount++)
+            int channelIncrement = 4;
+            int alignedChannels = (channels / 4) * 4;
+
+            // use weights to downmix to mono
+            for(int64_t dstIdx = 0; dstIdx < samples; dstIdx++)
             {
-                dstPtrTemp[dstIdx] += ((*srcPtrTemp) * weights[channelLoopCount]);
-                srcPtrTemp++;
+                __m128 pDst = _mm_setzero_ps();
+                int channelLoopCount = 0;
+                for(; channelLoopCount < alignedChannels; channelLoopCount += channelIncrement)
+                {
+                    __m128 pSrc, pWeights;
+                    pWeights = _mm_setr_ps(weights[channelLoopCount], weights[channelLoopCount + 1], weights[channelLoopCount + 2], weights[channelLoopCount + 3]);
+                    pSrc = _mm_loadu_ps(srcPtrTemp);
+                    pSrc = _mm_mul_ps(pSrc, pWeights);
+                    pDst = _mm_add_ps(pDst, pSrc);
+                    srcPtrTemp += channelIncrement;
+                }
+
+                dstPtrTemp[dstIdx] = hsum_ps(pDst);
+                for(; channelLoopCount < channels; channelLoopCount++)
+                {
+                    dstPtrTemp[dstIdx] += ((*srcPtrTemp) * weights[channelLoopCount]);
+                    srcPtrTemp++;
+                }
             }
         }
     }

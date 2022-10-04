@@ -50,13 +50,13 @@ RppStatus rppt_non_silent_region_detection_host(RppPtr_t srcPtr, RpptDescPtr src
 
 /******************** to_decibels ********************/
 
-// To Decibels augmentation for 1D magnitude buffer
+// To Decibels augmentation for magnitude buffer
 
 // *param[in] srcPtr source tensor memory
 // *param[in] srcDescPtr source tensor descriptor
 // *param[out] dstPtr destination tensor memory
 // *param[in] dstDescPtr destination tensor descriptor
-// *param[in] srcLengthTensor number of samples per channel
+// *param[in] srcDims source dimensions
 // *param[in] cutOffDB  minimum or cut-off ratio in dB
 // *param[in] multiplier factor by which the logarithm is multiplied
 // *param[in] referenceMagnitude Reference magnitude if not provided maximum value of input used as reference
@@ -64,7 +64,7 @@ RppStatus rppt_non_silent_region_detection_host(RppPtr_t srcPtr, RpptDescPtr src
 // *retval RPP_SUCCESS : successful completion
 // *retval RPP_ERROR : Error
 
-RppStatus rppt_to_decibels_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32s *srcLengthTensor, Rpp32f cutOffDB, Rpp32f multiplier, Rpp32f referenceMagnitude);
+RppStatus rppt_to_decibels_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, RpptImagePatchPtr srcDims, Rpp32f cutOffDB, Rpp32f multiplier, Rpp32f referenceMagnitude);
 
 /******************** pre_emphasis_filter ********************/
 

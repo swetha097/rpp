@@ -409,16 +409,24 @@ int main(int argc, char **argv)
             Rpp32f multiplier = 10.0;
             Rpp32f referenceMagnitude = 0.0;
 
+            RpptImagePatch *srcDims = (RpptImagePatch *) calloc(noOfAudioFiles, sizeof(RpptImagePatch));
+            for (i = 0; i < noOfAudioFiles; i++)
+            {
+                srcDims[i].height = 1;
+                srcDims[i].width = srcLengthTensor[i];
+            }
+
             start_omp = omp_get_wtime();
             start = clock();
             if (ip_bitDepth == 2)
             {
-                rppt_to_decibels_host(inputf32, srcDescPtr, outputf32, dstDescPtr, srcLengthTensor, cutOffDB, multiplier, referenceMagnitude);
+                rppt_to_decibels_host(inputf32, srcDescPtr, outputf32, dstDescPtr, srcDims, cutOffDB, multiplier, referenceMagnitude);
             }
             else
                 missingFuncFlag = 1;
 
             verify_output(outputf32, srcLengthTensor, noOfAudioFiles, test_case_name, dstDescPtr->strides.nStride, audioNames);
+            free(srcDims);
             break;
         }
         case 2:
