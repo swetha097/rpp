@@ -625,17 +625,38 @@ int main(int argc, char **argv)
             {
                 inRateTensor[i] = 16000;
                 outRateTensor[i] = 20000;
+                Rpp32f scaleRatio = outRateTensor[i] / inRateTensor[i];
+                maxDstLength = std::max(maxDstLength, (int)std::ceil(scaleRatio * srcLengthTensor[i]));
+
             }
             Rpp32f quality = 50.0;
+
+            dstDescPtr->w = maxDstLength;
+
+            // Optionally set w stride as a multiple of 8 for dst
+            dstDescPtr->w = ((dstDescPtr->w / 8) * 8) + 8;
+
+            dstDescPtr->strides.nStride = dstDescPtr->c * dstDescPtr->w * dstDescPtr->h;
+            dstDescPtr->strides.hStride = dstDescPtr->c * dstDescPtr->w;
+            dstDescPtr->strides.wStride = dstDescPtr->c;
+            dstDescPtr->strides.cStride = 1;
+
+            // Set buffer sizes for dst
+            unsigned long long reSampledBufferSize = (unsigned long long)dstDescPtr->h * (unsigned long long)dstDescPtr->w * (unsigned long long)dstDescPtr->c * (unsigned long long)dstDescPtr->n;
+
+            // Initialize host buffers for output
+            Rpp32f *reSampledf32 = (Rpp32f *)calloc(reSampledBufferSize, sizeof(Rpp32f));
 
             start_omp = omp_get_wtime();
             start = clock();
             if (ip_bitDepth == 2)
             {
-                rppt_resample_host(inputf32, srcDescPtr, outputf32, dstDescPtr, inRateTensor, outRateTensor, srcLengthTensor, channelsTensor, quality);
+                rppt_resample_host(inputf32, srcDescPtr, reSampledf32, dstDescPtr, inRateTensor, outRateTensor, srcLengthTensor, channelsTensor, quality);
             }
             else
                 missingFuncFlag = 1;
+
+            free(reSampledf32);
 
             break;
         }
