@@ -115,6 +115,7 @@ RppStatus rppt_slice_host(RppPtr_t srcPtr,
                           Rpp32s *shapeTensor,
                           Rpp32s *axes,
                           Rpp32f *fillValues,
+                          Rpp32s numOfDims,
                           bool normalizedAnchor,
                           bool normalizedShape,
                           RpptOutOfBoundsPolicy policyType)
@@ -128,6 +129,7 @@ RppStatus rppt_slice_host(RppPtr_t srcPtr,
                       shapeTensor,
                       axes,
                       fillValues,
+                      numOfDims,
                       normalizedAnchor,
                       normalizedShape,
                       policyType);
@@ -213,5 +215,36 @@ RppStatus rppt_resample_host(RppPtr_t srcPtr,
                          channelsTensor,
                          quality);
 
+    return RPP_SUCCESS;
+}
+RppStatus rppt_normalize_audio_host(RppPtr_t srcPtr,
+                                    RpptDescPtr srcDescPtr,
+                                    RppPtr_t dstPtr,
+                                    RpptDescPtr dstDescPtr,
+                                    Rpp32s *srcLengthTensor,
+                                    Rpp32s *channelsTensor,
+                                    Rpp32s axisMask,
+                                    Rpp32f mean,
+                                    Rpp32f stdDev,
+                                    Rpp32f scale,
+                                    Rpp32f shift,
+                                    Rpp32f epsilon,
+                                    Rpp32s ddof,
+                                    Rpp32s numOfDims)
+{
+    normalize_audio_host_tensor((Rpp32f*)(srcPtr),
+                                srcDescPtr,
+                                (Rpp32f*)(dstPtr),
+                                dstDescPtr,
+                                srcLengthTensor,
+                                channelsTensor,
+                                axisMask,
+                                mean,
+                                stdDev,
+                                scale,
+                                shift,
+                                epsilon,
+                                ddof,
+                                numOfDims);
     return RPP_SUCCESS;
 }

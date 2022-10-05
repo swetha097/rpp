@@ -117,7 +117,7 @@ RppStatus rppt_down_mixing_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_
 // *retval RPP_SUCCESS : successful completion
 // *retval RPP_ERROR : Error
 
-RppStatus rppt_slice_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32s *srcLengthTensor, Rpp32s *anchorTensor, Rpp32s *shapeTensor, Rpp32s *axes, Rpp32f *fillValues, bool normalizedAnchor, bool normalizedShape, RpptOutOfBoundsPolicy policyType);
+RppStatus rppt_slice_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32s *srcLengthTensor, Rpp32s *anchorTensor, Rpp32s *shapeTensor, Rpp32s *axes, Rpp32f *fillValues, Rpp32s numOfDims, bool normalizedAnchor, bool normalizedShape, RpptOutOfBoundsPolicy policyType);
 
 // Mel Filter Bank augmentation
 
@@ -159,7 +159,7 @@ RppStatus rppt_mel_filter_bank_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, Rpp
 
 RppStatus rppt_spectrogram_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32s *srcLengthTensor, bool centerWindows, bool reflectPadding, Rpp32f *windowFunction, Rpp32s nfft, Rpp32s power, Rpp32s windowLength, Rpp32s windowStep, std::string layout);
 
-/******************** audio_resample ********************/
+/******************** resample ********************/
 
 // Resample audio signal based on the target sample rate
 
@@ -178,6 +178,10 @@ RppStatus rppt_spectrogram_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_
 
 RppStatus rppt_resample_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32f *inRateTensor, Rpp32f *outRateTensor, Rpp32s *srcLengthTensor, Rpp32s *channelsTensor, Rpp32f quality);
 
+/******************** normalize_audio ********************/
+
+RppStatus rppt_normalize_audio_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32s *srcLengthTensor, Rpp32s *channelsTensor, Rpp32s axisMask,
+                                    Rpp32f mean, Rpp32f stdDev, Rpp32f scale, Rpp32f shift, Rpp32f epsilon, Rpp32s ddof, Rpp32s numOfDims);
 #ifdef __cplusplus
 }
 #endif
