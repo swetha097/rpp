@@ -20,8 +20,7 @@ Rpp32f getMax(std::vector<float> &values, int length)
 RppStatus non_silent_region_detection_host_tensor(Rpp32f *srcPtr,
 												  RpptDescPtr srcDescPtr,
 												  Rpp32s *srcSizeTensor,
-												  Rpp32s *detectedIndexTensor,
-												  Rpp32s *detectionLengthTensor,
+												  Rpp32s *detectionDataTensor,
 												  Rpp32f *cutOffDBTensor,
 												  Rpp32s *windowLengthTensor,
 												  Rpp32f *referencePowerTensor,
@@ -84,8 +83,8 @@ RppStatus non_silent_region_detection_host_tensor(Rpp32f *srcPtr,
 
 		if(beginIdx == endIdx)
 		{
-			detectedIndexTensor[batchCount] = 0;
-			detectionLengthTensor[batchCount] = 0;
+			detectionDataTensor[2 * batchCount] = 0;
+			detectionDataTensor[2 * batchCount + 1] = 0;
 		}
 		else
 		{
@@ -97,13 +96,13 @@ RppStatus non_silent_region_detection_host_tensor(Rpp32f *srcPtr,
 					break;
 				}
 			}
-			detectedIndexTensor[batchCount] = beginIdx;
-			detectionLengthTensor[batchCount] = endIdx - beginIdx + 1;
+			detectionDataTensor[2 * batchCount] = beginIdx;
+			detectionDataTensor[2 * batchCount + 1] = endIdx - beginIdx + 1;
 		}
 
 		// Extend non silent region
-		if(detectionLengthTensor[batchCount] != 0)
-			detectionLengthTensor[batchCount] += windowLength - 1;
+		if(detectionDataTensor[2 * batchCount + 1] != 0)
+			detectionDataTensor[2 * batchCount + 1] += windowLength - 1;
 	}
 
 	return RPP_SUCCESS;
