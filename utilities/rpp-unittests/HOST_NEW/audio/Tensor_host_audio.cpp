@@ -725,7 +725,7 @@ int main(int argc, char **argv)
         case 8:
         {
             test_case_name = "normalize";
-            Rpp32s axis_mask = 2;
+            Rpp32s axis_mask = 1;
             Rpp32f mean, std_dev, scale, shift, epsilon;
             mean = std_dev = scale = shift = epsilon = 0.0f;
             Rpp32s ddof = 0;
@@ -741,12 +741,7 @@ int main(int argc, char **argv)
             else
                 missingFuncFlag = 1;
 
-            std::cerr<<"printing output values"<<std::endl;
-            for(int i = 0; i < 10 ; i++)
-                std::cerr<<std::setprecision(11) << outputf32[i]<<endl;
-
-
-            // verify_output(outputf32, shape, noOfAudioFiles, test_case_name, dstDescPtr->strides.nStride, audioNames);
+            verify_output(outputf32, dstDescPtr, dstDims, test_case_name, audioNames);
             break;
         }
         default:
