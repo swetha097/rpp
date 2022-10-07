@@ -21,6 +21,21 @@ int getOutputSize(int length, int windowLength, int windowStep, bool centerWindo
     return ((length / windowStep) + 1);
 }
 
+int getIdxReflect(int idx, int lo, int hi)
+{
+  if (hi - lo < 2)
+    return hi - 1;
+  for (;;) {
+    if (idx < lo)
+      idx = 2 * lo - idx;
+    else if (idx >= hi)
+      idx = 2 * hi - 2 - idx;
+    else
+      break;
+  }
+  return idx;
+}
+
 RppStatus spectrogram_host_tensor(Rpp32f *srcPtr,
                                   RpptDescPtr srcDescPtr,
                                   Rpp32f *dstPtr,
@@ -66,10 +81,18 @@ RppStatus spectrogram_host_tensor(Rpp32f *srcPtr,
                 {
                     int64_t outIdx = (vertical) ? (t * numWindows + w) : (w * windowLength + t);
                     int64_t inIdx = windowStart + t;
-                    if(inIdx >= 0 && inIdx < bufferLength)
+                    if (reflectPadding)
+                    {
+                        inIdx = getIdxReflect(inIdx, 0, bufferLength);
                         windowOutput[outIdx] = windowFn[t] * srcPtrTemp[inIdx];
+                    }
                     else
-                       windowOutput[outIdx] = 0;
+                    {
+                        if(inIdx >= 0 && inIdx < bufferLength)
+                            windowOutput[outIdx] = windowFn[t] * srcPtrTemp[inIdx];
+                        else
+                        windowOutput[outIdx] = 0;
+                    }
                 }
             }
             else

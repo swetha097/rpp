@@ -77,9 +77,6 @@ do
     elif [ "$case" -eq 3 ]
     then
         SRC_FOLDER="$cwd/../../../TEST_AUDIO_FILES/single_sample_multi_channel_src1/"
-    elif [ "$case" -eq 7 ]
-    then
-        SRC_FOLDER="$cwd/../../../TEST_AUDIO_FILES/trail_sample/"
     else
         SRC_FOLDER="$cwd/../../../TEST_AUDIO_FILES/eight_samples_single_channel_src1/"
     fi
