@@ -21,11 +21,10 @@ RppStatus non_silent_region_detection_host_tensor(Rpp32f *srcPtr,
 												  RpptDescPtr srcDescPtr,
 												  Rpp32s *srcSizeTensor,
 												  Rpp32s *detectionDataTensor,
-												  Rpp32f *cutOffDBTensor,
-												  Rpp32s *windowLengthTensor,
-												  Rpp32f *referencePowerTensor,
-												  Rpp32s *resetIntervalTensor,
-												  bool *referenceMaxTensor)
+												  Rpp32f cutOffDB,
+												  Rpp32s windowLength,
+												  Rpp32f referencePower,
+												  Rpp32s resetInterval)
 {
 	omp_set_dynamic(0);
 #pragma omp parallel for num_threads(srcDescPtr->n)
@@ -33,14 +32,10 @@ RppStatus non_silent_region_detection_host_tensor(Rpp32f *srcPtr,
 	{
 		Rpp32f *srcPtrTemp = srcPtr + batchCount * srcDescPtr->strides.nStride;
 		Rpp32s srcSize = srcSizeTensor[batchCount];
-		Rpp32s windowLength = windowLengthTensor[batchCount];
-		Rpp32f referencePower = referencePowerTensor[batchCount];
-		Rpp32f cutOffDB = cutOffDBTensor[batchCount];
-		bool referenceMax = referenceMaxTensor[batchCount];
+		bool referenceMax = (referencePower == 0.0f);
 
 		// set reset interval based on the user input
-		Rpp32s resetInterval = resetIntervalTensor[batchCount];
-		resetInterval = (resetInterval == -1) ? srcSize : resetInterval;
+		Rpp32s resetLength = (resetInterval == -1) ? srcSize : resetInterval;
 
 		// Calculate buffer size for mms array and allocate mms buffer
 		Rpp32s mmsBufferSize = srcSize - windowLength + 1;
@@ -57,7 +52,7 @@ RppStatus non_silent_region_detection_host_tensor(Rpp32f *srcPtr,
 				sumOfSquares += getSquare(srcPtrTemp[i]);
 			mmsBuffer[windowBegin] = sumOfSquares * meanFactor;
 
-			auto interval_endIdx = std::min(windowBegin + resetInterval, srcSize) - windowLength + 1;
+			auto interval_endIdx = std::min(windowBegin + resetLength, srcSize) - windowLength + 1;
 			for(windowBegin++; windowBegin < interval_endIdx; windowBegin++)
 			{
 				sumOfSquares += getSquare(srcPtrTemp[windowBegin + windowLength - 1]) - getSquare(srcPtrTemp[windowBegin - 1]);

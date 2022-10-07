@@ -30,12 +30,10 @@ RppStatus rppt_non_silent_region_detection_host(RppPtr_t srcPtr,
                                                 RpptDescPtr srcDescPtr,
                                                 Rpp32s *srcSize,
                                                 Rpp32s *detectionData,
-                                                Rpp32f *cutOffDB,
-                                                Rpp32s *windowLength,
-                                                Rpp32f *referencePower,
-                                                Rpp32s *resetInterval,
-                                                bool *referenceMax,
-                                                rppHandle_t rppHandle)
+                                                Rpp32f cutOffDB,
+                                                Rpp32s windowLength,
+                                                Rpp32f referencePower,
+                                                Rpp32s resetInterval)
 {
     non_silent_region_detection_host_tensor((Rpp32f*)(srcPtr),
                                             srcDescPtr,
@@ -44,8 +42,7 @@ RppStatus rppt_non_silent_region_detection_host(RppPtr_t srcPtr,
                                             cutOffDB,
                                             windowLength,
                                             referencePower,
-                                            resetInterval,
-                                            referenceMax);
+                                            resetInterval);
 
     return RPP_SUCCESS;
 }

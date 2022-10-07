@@ -411,26 +411,16 @@ int main(int argc, char **argv)
         {
             test_case_name = "non_silent_region_detection";
             Rpp32s detectionData[noOfAudioFiles * 2];
-            Rpp32f cutOffDB[noOfAudioFiles];
-            Rpp32s windowLength[noOfAudioFiles];
-            Rpp32f referencePower[noOfAudioFiles];
-            Rpp32s resetInterval[noOfAudioFiles];
-            bool referenceMax[noOfAudioFiles];
-
-            for (i = 0; i < noOfAudioFiles; i++)
-            {
-                cutOffDB[i] = -60.0;
-                windowLength[i] = 3;
-                referencePower[i] = 1.0;
-                resetInterval[i] = -1;
-                referenceMax[i] = true;
-            }
+            Rpp32f cutOffDB = -60.0;
+            Rpp32s windowLength = 3;
+            Rpp32f referencePower = 0.0f;
+            Rpp32s resetInterval = -1;
 
             start_omp = omp_get_wtime();
             start = clock();
             if (ip_bitDepth == 2)
             {
-                rppt_non_silent_region_detection_host(inputf32, srcDescPtr, inputAudioSize, detectionData, cutOffDB, windowLength, referencePower, resetInterval, referenceMax, handle);
+                rppt_non_silent_region_detection_host(inputf32, srcDescPtr, inputAudioSize, detectionData, cutOffDB, windowLength, referencePower, resetInterval);
             }
             else
                 missingFuncFlag = 1;

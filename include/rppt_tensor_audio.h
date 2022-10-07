@@ -41,12 +41,11 @@ extern "C" {
 // *param[in] windowLength size of the sliding window used to calculate of the short-term power of the signal
 // *param[in] referencePower reference power that is used to convert the signal to dB.
 // *param[in] resetInterval number of samples after which the moving mean average is recalculated to avoid loss of precision
-// *param[in] referenceMax bool value to specify to use referencePower or not
 // *returns a  RppStatus enumeration.
 // *retval RPP_SUCCESS : successful completion
 // *retval RPP_ERROR : Error
 
-RppStatus rppt_non_silent_region_detection_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, Rpp32s *srcSize, Rpp32s *detectionData, Rpp32f *cutOffDB, Rpp32s *windowLength, Rpp32f *referencePower, Rpp32s *resetInterval, bool *referenceMax, rppHandle_t handle);
+RppStatus rppt_non_silent_region_detection_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, Rpp32s *srcSize, Rpp32s *detectionData, Rpp32f cutOffDB, Rpp32s windowLength, Rpp32f referencePower, Rpp32s resetInterval);
 
 /******************** to_decibels ********************/
 
