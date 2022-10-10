@@ -119,21 +119,20 @@ RppStatus slice_host_tensor(Rpp32f *srcPtr,
                 }
             }
         } else if(srcDescPtr->c > 1) {
-            Rpp32s srcBufferLength = srcLengthTensor[sampleBatchCount + 1];
             Rpp32f anchorRaw[numOfDims], shapeRaw[numOfDims];
             Rpp32s anchor[numOfDims], shape[numOfDims];
 
             anchorRaw[0] = anchorTensor[sampleBatchCount];
             anchorRaw[1] = anchorTensor[sampleBatchCount + 1];
-            shapeRaw[0] = shape[0];
-            shapeRaw[1] = shape[1];
+            shapeRaw[0] = shapeTensor[0];
+            shapeRaw[1] = shapeTensor[1];
             if(normalizedAnchor) {
-                anchorRaw[0] *= srcBufferLength;
-                anchorRaw[1] *= srcBufferLength;
+                anchorRaw[0] *= srcLengthTensor[sampleBatchCount];
+                anchorRaw[1] *= srcLengthTensor[sampleBatchCount + 1];
             }
             if(normalizedShape) {
                 shapeRaw[0] *= srcLengthTensor[sampleBatchCount];
-                shapeRaw[1] *= srcLengthTensor[sampleBatchCount];
+                shapeRaw[1] *= srcLengthTensor[sampleBatchCount + 1];
             }
 
             anchor[0] = std::llround(anchorRaw[0]);
@@ -144,11 +143,11 @@ RppStatus slice_host_tensor(Rpp32f *srcPtr,
             // Rpp32s sliceEnd = anchor + shape;
             // bool channelsProcessed = false;
 
-            Rpp32s channelBound = std::min(srcLengthTensor[sampleBatchCount + 1], shape[1]);
             Rpp32s frameLengthBound = std::min(srcLengthTensor[sampleBatchCount], shape[0]);
-
+            Rpp32s channelBound = std::min(srcLengthTensor[sampleBatchCount + 1], shape[1]);
             bool needPad = (anchor[0] < 0) || ((anchor[0] + shape[0]) > srcLengthTensor[sampleBatchCount]);
             bool needPad1 = (anchor[1] < 0) || ((anchor[1] + shape[1]) > srcLengthTensor[sampleBatchCount + 1]);
+
             srcPtrTemp = srcPtrTemp + anchor[0] * srcDescPtr->strides.wStride;
             int row = 0;
             for(; row < frameLengthBound; row++)
@@ -159,13 +158,12 @@ RppStatus slice_host_tensor(Rpp32f *srcPtr,
                 for(; col < channelBound; col++) {
                     *dstPtrTempRow++ = *(srcPtrTempRow + col);
                 }
-                Rpp32s rem = anchor[1] + shape[1];
                 if(col < shape[1] && needPad1)
                 {
                     for(; col < shape[1]; col++)
                         *dstPtrTempRow++ = fillValue;
                 }
-                dstPtrTemp += dstDescPtr->strides.wStride;
+                dstPtrTemp += channelBound;
             }
             if(row < shape[0]  && needPad)
             {
@@ -175,7 +173,6 @@ RppStatus slice_host_tensor(Rpp32f *srcPtr,
                     memset(dstPtrRowTemp, fillValue,  dstDescPtr->strides.wStride);
                     dstPtrTemp += dstDescPtr->strides.wStride;
                 }
-
             }
         }
     }
