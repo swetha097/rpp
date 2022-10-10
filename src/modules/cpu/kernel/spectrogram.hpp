@@ -48,7 +48,7 @@ RppStatus spectrogram_host_tensor(Rpp32f *srcPtr,
                                   Rpp32s power,
                                   Rpp32s windowLength,
                                   Rpp32s windowStep,
-                                  std::string layout)
+                                  RpptSpectrogramLayout layout)
 {
 	omp_set_dynamic(0);
 #pragma omp parallel for num_threads(srcDescPtr->n)
@@ -57,7 +57,7 @@ RppStatus spectrogram_host_tensor(Rpp32f *srcPtr,
         Rpp32f *srcPtrTemp = srcPtr + batchCount * srcDescPtr->strides.nStride;
 		Rpp32f *dstPtrTemp = dstPtr + batchCount * dstDescPtr->strides.nStride;
         Rpp32s bufferLength = srcLengthTensor[batchCount];
-        bool vertical = (layout == "ft");
+        bool vertical = (layout == RpptSpectrogramLayout::FT);
 
         // Generate hanning window
         std::vector<float> windowFn;

@@ -619,7 +619,7 @@ int main(int argc, char **argv)
             Rpp32s windowLength = 512;
             Rpp32s windowStep = 256;
             Rpp32s nfft = windowLength;
-            std::string layout = "ft";
+            RpptSpectrogramLayout layout = RpptSpectrogramLayout::FT;
 
             int windowOffset = 0;
             if(!centerWindows)
@@ -627,7 +627,7 @@ int main(int argc, char **argv)
 
             maxDstWidth = 0;
             maxDstHeight = 0;
-            if(layout == "ft")
+            if(layout == RpptSpectrogramLayout::FT)
             {
                 for(int i = 0; i < noOfAudioFiles; i++)
                 {

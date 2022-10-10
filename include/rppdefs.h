@@ -262,6 +262,12 @@ typedef enum
     HTK,
 }RpptMelScaleFormula;
 
+typedef enum
+{
+    FT = 0,
+    TF,
+}RpptSpectrogramLayout;
+
 typedef struct
 {
     RppiPoint lt, rb;

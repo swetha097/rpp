@@ -176,7 +176,7 @@ RppStatus rppt_spectrogram_host(RppPtr_t srcPtr,
                                 Rpp32s power,
                                 Rpp32s windowLength,
                                 Rpp32s windowStep,
-                                std::string layout)
+                                RpptSpectrogramLayout layout)
 {
     spectrogram_host_tensor((Rpp32f*)(srcPtr),
                             srcDescPtr,
