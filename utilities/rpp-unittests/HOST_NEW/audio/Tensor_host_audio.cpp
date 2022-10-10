@@ -499,8 +499,8 @@ int main(int argc, char **argv)
 
             bool normalizedAnchor = false;
             bool normalizedShape = false;
-            Rpp32s anchor[noOfAudioFiles];
-            Rpp32s shape[noOfAudioFiles];
+            Rpp32f anchor[noOfAudioFiles];
+            Rpp32f shape[noOfAudioFiles];
             Rpp32f fillValues[noOfAudioFiles];
             Rpp32s axes = 0;
             Rpp32s numOfDims = srcDescPtr->c == 1 ? 1 : 2;
