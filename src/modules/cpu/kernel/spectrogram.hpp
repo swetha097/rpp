@@ -106,6 +106,7 @@ RppStatus spectrogram_host_tensor(Rpp32f *srcPtr,
             }
         }
 
+        Rpp32u wStride = dstDescPtr->strides.hStride;
         std::vector<Rpp32f> windowOutputTemp(nfft);
         for (int w = 0; w < numWindows; w++)
         {
@@ -134,13 +135,13 @@ RppStatus spectrogram_host_tensor(Rpp32f *srcPtr,
             {
                 // Compute power spectrum
                 for (int i = 0; i < numBins; i++)
-                    dstPtrTemp[i * numWindows + w] = std::norm(fftOutput[i]);
+                    dstPtrTemp[i * wStride + w] = std::norm(fftOutput[i]);
             }
             else
             {
                 // Compute magnitude spectrum
                 for (int i = 0; i < numBins; i++)
-                    dstPtrTemp[i * numWindows + w] = std::abs(fftOutput[i]);
+                    dstPtrTemp[i * wStride + w] = std::abs(fftOutput[i]);
             }
         }
     }

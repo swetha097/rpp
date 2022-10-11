@@ -43,7 +43,7 @@ RppStatus slice_host_tensor(Rpp32f *srcPtr,
         Rpp32f fillValue = *fillValues;
         Rpp32s sampleBatchCount = batchCount * numOfDims;
 
-        if(srcDescPtr->c == 1)
+        if(srcDescPtr->strides.wStride == 1)
         {
             // If normalized between 0 - 1 convert to actual indices
             Rpp32s srcBufferLength = srcLengthTensor[batchCount];
@@ -118,7 +118,7 @@ RppStatus slice_host_tensor(Rpp32f *srcPtr,
                     }
                 }
             }
-        } else if(srcDescPtr->c > 1) {
+        } else if(srcDescPtr->strides.wStride > 1) {
             Rpp32f anchorRaw[numOfDims], shapeRaw[numOfDims];
             Rpp32s anchor[numOfDims], shape[numOfDims];
 
@@ -163,7 +163,7 @@ RppStatus slice_host_tensor(Rpp32f *srcPtr,
                     for(; col < shape[1]; col++)
                         *dstPtrTempRow++ = fillValue;
                 }
-                dstPtrTemp += channelBound;
+                dstPtrTemp += dstDescPtr->strides.wStride;
             }
             if(row < shape[0]  && needPad)
             {

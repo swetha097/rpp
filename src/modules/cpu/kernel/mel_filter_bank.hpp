@@ -141,7 +141,7 @@ RppStatus mel_filter_bank_host_tensor(Rpp32f *srcPtr,
 
             if (filterDown >= 0)
             {
-                Rpp32f *dstRowPtrTemp = dstPtrTemp + filterDown * numFrames;
+                Rpp32f *dstRowPtrTemp = dstPtrTemp + filterDown * dstDescPtr->strides.hStride;
                 Rpp32f *srcRowPtrTemp = srcRowPtr;
 
                 if (normalize)
@@ -170,7 +170,7 @@ RppStatus mel_filter_bank_host_tensor(Rpp32f *srcPtr,
 
             if (filterUp >= 0 && filterUp < numFilter)
             {
-                Rpp32f *dstRowPtrTemp = dstPtrTemp + filterUp * numFrames;
+                Rpp32f *dstRowPtrTemp = dstPtrTemp + filterUp *  dstDescPtr->strides.hStride;
                 Rpp32f *srcRowPtrTemp = srcRowPtr;
 
                 if (normalize)
@@ -196,8 +196,7 @@ RppStatus mel_filter_bank_host_tensor(Rpp32f *srcPtr,
                     srcRowPtrTemp++;
                 }
             }
-
-            srcRowPtr += numFrames;
+            srcRowPtr += srcDescPtr->strides.hStride;
         }
     }
 
