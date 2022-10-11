@@ -24,31 +24,31 @@ SRC_FOLDER="$DEFAULT_SRC_FOLDER"
 DST_FOLDER="$DEFAULT_DST_FOLDER"
 
 # <<<<<<<<<<<<<< EXECUTION OF ALL FUNCTIONALITIES (NEED NOT CHANGE) >>>>>>>>>>>>>>
-if [[ "$1" -lt 0 ]] | [[ "$1" -gt 5 ]]; then
-    echo "The starting case# must be in the 0-5 range!"
+if [[ "$1" -lt 0 ]] | [[ "$1" -gt 9 ]]; then
+    echo "The starting case# must be in the 0-9 range!"
     echo
     echo "The rawLogsGenScript.sh bash script runs the RPP Performance testsuite for AMDRPP audio functionalities in HOST backends"
     echo
     echo "Syntax: ./rawLogsGenScript.sh <S> <E>"
-    echo "S     CASE_START (Starting case# (0-5))"
-    echo "E     CASE_END (Ending case# (0-5))"
+    echo "S     CASE_START (Starting case# (0-9))"
+    echo "E     CASE_END (Ending case# (0-9))"
     exit 1
 fi
 
-if [[ "$2" -lt 0 ]] | [[ "$2" -gt 5 ]]; then
-    echo "The ending case# must be in the 0-5 range!"
+if [[ "$2" -lt 0 ]] | [[ "$2" -gt 9 ]]; then
+    echo "The ending case# must be in the 0-9 range!"
     echo
     echo "The rawLogsGenScript.sh bash script runs the RPP Performance testsuite for AMDRPP audio functionalities in HOST backends"
     echo
     echo "Syntax: ./rawLogsGenScript.sh <S> <E>"
-    echo "S     CASE_START (Starting case# (0-5))"
-    echo "E     CASE_END (Ending case# (0-5))"
+    echo "S     CASE_START (Starting case# (0-9))"
+    echo "E     CASE_END (Ending case# (0-9))"
     exit 1
 fi
 
 if (( "$#" < 2 )); then
     CASE_START="0"
-    CASE_END="5"
+    CASE_END="9"
 else
     CASE_START="$1"
     CASE_END="$2"

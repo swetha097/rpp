@@ -65,7 +65,7 @@ void verify_output(Rpp32f *dstPtr, RpptDescPtr dstDescPtr, RpptImagePatchPtr dst
                 ref_file>>ref_val;
                 out_val = dstPtrTemp[j];
                 bool invalid_comparision = ((out_val == 0.0f) && (ref_val != 0.0f));
-                if(!invalid_comparision && abs(out_val - ref_val) < 1e-4)
+                if(!invalid_comparision && abs(out_val - ref_val) < 1e-2)
                     matched_indices += 1;
             }
             dstPtrRow += dstDescPtr->strides.hStride;
@@ -665,7 +665,6 @@ int main(int argc, char **argv)
 
             // Optionally set w stride as a multiple of 8 for dst
             dstDescPtr->w = ((dstDescPtr->w / 8) * 8) + 8;
-            dstDescPtr->h = ((dstDescPtr->h / 8) * 8) + 8;
 
             dstDescPtr->strides.nStride = dstDescPtr->c * dstDescPtr->w * dstDescPtr->h;
             dstDescPtr->strides.hStride = dstDescPtr->c * dstDescPtr->w;

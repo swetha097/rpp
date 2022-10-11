@@ -3,8 +3,8 @@ import subprocess
 import argparse
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--case_start', type=str, default='0', help='Testing range starting case # - (0-5)')
-parser.add_argument('--case_end', type=str, default='5', help='Testing range ending case # - (0-5)')
+parser.add_argument('--case_start', type=str, default='0', help='Testing range starting case # - (0-9)')
+parser.add_argument('--case_end', type=str, default='9', help='Testing range ending case # - (0-9)')
 args = parser.parse_args()
 
 caseStart = args.case_start
@@ -14,12 +14,12 @@ if caseEnd < caseStart:
     print("Ending case# must be greater than starting case#. Aborting!")
     exit(0)
 
-if caseStart < "0" or caseStart > "5":
-    print("Starting case# must be in the 0-5 range. Aborting!")
+if caseStart < "0" or caseStart > "9":
+    print("Starting case# must be in the 0-9 range. Aborting!")
     exit(0)
 
-if caseEnd < "0" or caseEnd > "5":
-    print("Ending case# must be in the 0-5 range. Aborting!")
+if caseEnd < "0" or caseEnd > "9":
+    print("Ending case# must be in the 0-9 range. Aborting!")
     exit(0)
 
 subprocess.call(["./rawLogsGenScript.sh", caseStart, caseEnd])

@@ -2,14 +2,48 @@
 #include "rpp_cpu_simd.hpp"
 #include "rpp_cpu_common.hpp"
 #include<complex>
+#define pack 8
+
+Rpp32f reduce_add_ps1(__m256 src)
+{
+    __m256 src_add = _mm256_add_ps(src, _mm256_permute2f128_ps(src, src, 1));
+    src_add = _mm256_add_ps(src_add, _mm256_shuffle_ps(src_add, src_add, _MM_SHUFFLE(1, 0, 3, 2)));
+    src_add = _mm256_add_ps(src_add, _mm256_shuffle_ps(src_add, src_add, _MM_SHUFFLE(2, 3, 0, 1)));
+    Rpp32f *addResult = (Rpp32f *)&src_add;
+    return addResult[0];
+}
+
+__m256 cosFn(__m256 a_n) {
+    float* a = (float*)&a_n;
+    for(int i = 0; i < pack; i++) {
+        a[i] = std::cos(a[i]);
+    }
+    return a_n;
+}
+
+__m256 sinFn(__m256 a_n) {
+    float* a = (float*)&a_n;
+    for(int i = 0; i < pack; i++) {
+        a[i] = std::sin(a[i]);
+    }
+    return a_n;
+}
 
 void HannWindow(float *output, int nfft)
 {
   int N = nfft;
   double a = (2 * M_PI / N);
-  for (int t = 0; t < N; t++) {
-    double phase = a * (t + 0.5);
-    output[t] = (0.5 * (1.0 - std::cos(phase)));
+  int v_n = (!(N%pack)) ? N/pack: (N/pack)+1;
+  __m256 t_n = _mm256_set_ps(7,6,5,4,3,2,1,0);
+  __m256 nextstep_n = _mm256_set1_ps(pack);
+  __m256 accum_n = _mm256_set1_ps(0.5);
+  __m256 sub_n = _mm256_set1_ps(1);
+  __m256 a_n = _mm256_set1_ps(a);
+  for (int t = 0; t < v_n; t++) {
+    __m256 phase_n = _mm256_mul_ps(a_n, _mm256_add_ps(t_n, accum_n));
+    __m256 output_n = _mm256_mul_ps(accum_n,_mm256_sub_ps(sub_n, cosFn(phase_n)));
+    _mm256_storeu_ps(output+(t*pack), output_n);
+    t_n = _mm256_add_ps(t_n,nextstep_n);
   }
 }
 
@@ -106,8 +140,12 @@ RppStatus spectrogram_host_tensor(Rpp32f *srcPtr,
             }
         }
 
-        Rpp32u wStride = dstDescPtr->strides.hStride;
+        Rpp32u hStride = dstDescPtr->strides.hStride;
         std::vector<Rpp32f> windowOutputTemp(nfft);
+
+        __m256 nextstep_n = _mm256_set1_ps(pack);
+        __m256 mpi_n = _mm256_set1_ps(M_PI * 2.0f);
+        __m256 nfft_n = _mm256_set1_ps(1.0f / nfft);
         for (int w = 0; w < numWindows; w++)
         {
             for (int i = 0; i < nfft; i++)
@@ -122,11 +160,16 @@ RppStatus spectrogram_host_tensor(Rpp32f *srcPtr,
             for (int k = 0; k < numBins; k++)
             {
                 Rpp32f real = 0.0f, imag = 0.0f;
-                for (int i = 0; i < windowOutputTemp.size(); i++)
+                int out_size = windowOutputTemp.size();
+                int v_n = (!(out_size%pack)) ? out_size/pack: (out_size/pack)+1;
+                __m256 i_n = _mm256_set_ps(7,6,5,4,3,2,1,0);
+                __m256 k_n = _mm256_set1_ps(k);
+                for (int i = 0; i < v_n; i++)
                 {
-                    auto x = windowOutputTemp[i];
-                    real += x * cos(2.0f * M_PI * k * i / nfft);
-                    imag += -x * sin(2.0f * M_PI * k * i / nfft);
+                    __m256 x_n = _mm256_loadu_ps(windowOutputTemp.data()+(i*pack));
+                    real += reduce_add_ps1(_mm256_mul_ps(cosFn(_mm256_mul_ps(_mm256_mul_ps(_mm256_mul_ps(k_n,i_n), mpi_n),nfft_n)),x_n));
+                    imag += reduce_add_ps1(_mm256_mul_ps(sinFn(_mm256_mul_ps(_mm256_mul_ps(_mm256_mul_ps(k_n,i_n), mpi_n),nfft_n)),x_n));
+                    i_n = _mm256_add_ps(i_n,nextstep_n);
                 }
                 fftOutput.push_back({real, imag});
             }
@@ -135,13 +178,13 @@ RppStatus spectrogram_host_tensor(Rpp32f *srcPtr,
             {
                 // Compute power spectrum
                 for (int i = 0; i < numBins; i++)
-                    dstPtrTemp[i * wStride + w] = std::norm(fftOutput[i]);
+                    dstPtrTemp[i * hStride + w] = std::norm(fftOutput[i]);
             }
             else
             {
                 // Compute magnitude spectrum
                 for (int i = 0; i < numBins; i++)
-                    dstPtrTemp[i * wStride + w] = std::abs(fftOutput[i]);
+                    dstPtrTemp[i * hStride + w] = std::abs(fftOutput[i]);
             }
         }
     }
