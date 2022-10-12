@@ -125,6 +125,18 @@ int main(int argc, char **argv)
         case 5:
             strcpy(funcName, "mel_filter_bank");
             break;
+        case 6:
+            strcpy(funcName, "spectrogram");
+            break;
+        case 7:
+            strcpy(funcName, "resample");
+            break;
+        case 8:
+            strcpy(funcName, "normalize");
+            break;
+        case 9:
+            strcpy(funcName, "normalize");
+            break;
         default:
             strcpy(funcName, "test_case");
             break;
@@ -424,13 +436,12 @@ int main(int argc, char **argv)
                     shape[i] = 200;
                     fillValues[i] = 0.0f;
                 }
-                Rpp32s numOfDims = 2;
 
                 start_omp = omp_get_wtime();
                 start = clock();
                 if (ip_bitDepth == 2)
                 {
-                    rppt_slice_host(inputf32, srcDescPtr, outputf32, dstDescPtr, srcLengthTensor, anchor, shape, &axes, fillValues, numOfDims, normalizedAnchor, normalizedShape, policyType);
+                    rppt_slice_host(inputf32, srcDescPtr, outputf32, dstDescPtr, srcLengthTensor, anchor, shape, axes, fillValues, normalizedAnchor, normalizedShape, policyType);
                 }
                 else
                     missingFuncFlag = 1;
@@ -640,13 +651,12 @@ int main(int argc, char **argv)
                 test_case_name = "pad";
                 bool normalizedAnchor = false;
                 bool normalizedShape = false;
-                Rpp32s numOfDims = 2;
-                Rpp32f anchor[noOfAudioFiles * numOfDims];
-                Rpp32f shape[noOfAudioFiles * numOfDims];
+                Rpp32f anchor[noOfAudioFiles * 2];
+                Rpp32f shape[noOfAudioFiles * 2];
                 Rpp32f fillValues[noOfAudioFiles];
                 Rpp32s axes = 0;
                 RpptOutOfBoundsPolicy policyType = RpptOutOfBoundsPolicy::PAD;
-                Rpp32s srcDimsTensor[noOfAudioFiles * numOfDims];
+                Rpp32s srcDimsTensor[noOfAudioFiles * 2];
 
                 // Read source dimension
                 read_from_text_files(inputf32, srcDescPtr, srcDims, "spectrogram", 1, audioNames);
@@ -663,7 +673,7 @@ int main(int argc, char **argv)
                 maxDstHeight = maxSrcHeight;
                 maxDstWidth = maxSrcWidth;
 
-                for (i = 0; i < noOfAudioFiles * numOfDims; i += numOfDims)
+                for (i = 0; i < noOfAudioFiles * 2; i += 2)
                 {
                     srcDimsTensor[i] = (int)srcDims[i / 2].height;
                     srcDimsTensor[i + 1] = (int)srcDims[i / 2].width;
@@ -707,7 +717,7 @@ int main(int argc, char **argv)
                 start = clock();
                 if (ip_bitDepth == 2)
                 {
-                    rppt_slice_host(inputf32, srcDescPtr, outputf32, dstDescPtr, srcDimsTensor, anchor, shape, &axes, fillValues, numOfDims, normalizedAnchor, normalizedShape, policyType);
+                    rppt_slice_host(inputf32, srcDescPtr, outputf32, dstDescPtr, srcDimsTensor, anchor, shape, axes, fillValues, normalizedAnchor, normalizedShape, policyType);
                 }
                 else
                     missingFuncFlag = 1;

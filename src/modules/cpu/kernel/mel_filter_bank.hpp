@@ -2,21 +2,21 @@
 #include "rpp_cpu_simd.hpp"
 #include "rpp_cpu_common.hpp"
 
-struct BaseMelScale
-{
+struct BaseMelScale {
     public:
         virtual Rpp32f hz_to_mel(Rpp32f hz) = 0;
         virtual Rpp32f mel_to_hz(Rpp32f mel) = 0;
+        virtual ~BaseMelScale() = default;
 };
 
-struct HtkMelScale : public BaseMelScale
-{
+struct HtkMelScale : public BaseMelScale {
     Rpp32f hz_to_mel(Rpp32f hz) { return 1127.0f * std::log(1.0f + hz / 700.0f); }
     Rpp32f mel_to_hz(Rpp32f mel) { return 700.0f * (std::exp(mel / 1127.0f) - 1.0f); }
+    public:
+        ~HtkMelScale() {};
 };
 
-struct SlaneyMelScale : public BaseMelScale
-{
+struct SlaneyMelScale : public BaseMelScale {
 	const Rpp32f freq_low = 0;
 	const Rpp32f fsp = 200.0 / 3.0;
 	const Rpp32f min_log_hz = 1000.0;
@@ -27,8 +27,7 @@ struct SlaneyMelScale : public BaseMelScale
     const Rpp32f inv_step_log = 1.0f / step_log;
     const Rpp32f inv_fsp = 1.0f / fsp;
 
-	Rpp32f hz_to_mel(Rpp32f hz)
-	{
+	Rpp32f hz_to_mel(Rpp32f hz) {
 		Rpp32f mel = 0.0f;
 		if (hz >= min_log_hz)
 		    mel = min_log_mel + std::log(hz *inv_min_log_hz) * inv_step_log;
@@ -38,8 +37,7 @@ struct SlaneyMelScale : public BaseMelScale
 		return mel;
 	}
 
-	Rpp32f mel_to_hz(Rpp32f mel)
-	{
+	Rpp32f mel_to_hz(Rpp32f mel) {
 		Rpp32f hz = 0.0f;
 		if (mel >= min_log_mel)
 			hz = min_log_hz * std::exp(step_log * (mel - min_log_mel));
@@ -47,6 +45,8 @@ struct SlaneyMelScale : public BaseMelScale
 			hz = freq_low + mel * fsp;
 		return hz;
 	}
+    public:
+        ~SlaneyMelScale() {};
 };
 
 RppStatus mel_filter_bank_host_tensor(Rpp32f *srcPtr,
@@ -62,14 +62,13 @@ RppStatus mel_filter_bank_host_tensor(Rpp32f *srcPtr,
                                       bool normalize)
 {
     BaseMelScale *melScalePtr;
-    switch(melFormula)
-    {
+    switch(melFormula) {
         case RpptMelScaleFormula::HTK:
             melScalePtr = new HtkMelScale;
             break;
         case RpptMelScaleFormula::SLANEY:
         default:
-            melScalePtr = new SlaneyMelScale;
+            melScalePtr = new SlaneyMelScale();
             break;
     }
 
@@ -106,20 +105,17 @@ RppStatus mel_filter_bank_host_tensor(Rpp32f *srcPtr,
         Rpp32s fftBin = fftBinStart;
         Rpp64f mel0 = melLow, mel1 = melLow + melStep;
         Rpp64f f = fftBin * hzStep;
-        for (int interval = 0; interval < numFilter + 1; interval++, mel0 = mel1, mel1 += melStep)
-        {
+        for (int interval = 0; interval < numFilter + 1; interval++, mel0 = mel1, mel1 += melStep) {
             Rpp64f f0 = melScalePtr->mel_to_hz(mel0);
             Rpp64f f1 = melScalePtr->mel_to_hz(interval == numFilter ? melHigh : mel1);
             Rpp64f slope = 1. / (f1 - f0);
 
-            if (normalize && interval < numFilter)
-            {
+            if (normalize && interval < numFilter) {
                 Rpp64f f2 = melScalePtr->mel_to_hz(mel1 + melStep);
                 normFactors[interval] = 2.0 / (f2 - f0);
             }
 
-            for (; fftBin <= fftBinEnd && f < f1; fftBin++, f = fftBin * hzStep)
-            {
+            for (; fftBin <= fftBinEnd && f < f1; fftBin++, f = fftBin * hzStep) {
                 weightsDown[fftBin] = (f1 - f) * slope;
                 intervals[fftBin] = interval;
             }
@@ -132,15 +128,13 @@ RppStatus mel_filter_bank_host_tensor(Rpp32f *srcPtr,
 		Rpp32u alignedLength = (numFrames / 8) * 8;
         __m256 pSrc, pDst;
         Rpp32f *srcRowPtr = srcPtrTemp + fftBinStart * numFrames;
-        for (int64_t fftBin = fftBinStart; fftBin <= fftBinEnd; fftBin++)
-        {
+        for (int64_t fftBin = fftBinStart; fftBin <= fftBinEnd; fftBin++) {
             auto filterUp = intervals[fftBin];
             auto weightUp = 1.0f - weightsDown[fftBin];
             auto filterDown = filterUp - 1;
             auto weightDown = weightsDown[fftBin];
 
-            if (filterDown >= 0)
-            {
+            if (filterDown >= 0) {
                 Rpp32f *dstRowPtrTemp = dstPtrTemp + filterDown * dstDescPtr->strides.hStride;
                 Rpp32f *srcRowPtrTemp = srcRowPtr;
 
@@ -149,8 +143,7 @@ RppStatus mel_filter_bank_host_tensor(Rpp32f *srcPtr,
                 __m256 pWeightDown = _mm256_set1_ps(weightDown);
 
                 int vectorLoopCount = 0;
-                for(; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
-                {
+                for(; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement) {
                     pSrc = _mm256_loadu_ps(srcRowPtrTemp);
                     pSrc = _mm256_mul_ps(pSrc, pWeightDown);
                     pDst = _mm256_loadu_ps(dstRowPtrTemp);
@@ -160,16 +153,14 @@ RppStatus mel_filter_bank_host_tensor(Rpp32f *srcPtr,
                     srcRowPtrTemp += vectorIncrement;
                 }
 
-                for (; vectorLoopCount < numFrames; vectorLoopCount++)
-                {
+                for (; vectorLoopCount < numFrames; vectorLoopCount++) {
                     (*dstRowPtrTemp) += weightDown * (*srcRowPtrTemp);
                     dstRowPtrTemp++;
                     srcRowPtrTemp++;
                 }
             }
 
-            if (filterUp >= 0 && filterUp < numFilter)
-            {
+            if (filterUp >= 0 && filterUp < numFilter) {
                 Rpp32f *dstRowPtrTemp = dstPtrTemp + filterUp *  dstDescPtr->strides.hStride;
                 Rpp32f *srcRowPtrTemp = srcRowPtr;
 
@@ -178,8 +169,7 @@ RppStatus mel_filter_bank_host_tensor(Rpp32f *srcPtr,
                 __m256 pWeightUp = _mm256_set1_ps(weightUp);
 
                 int vectorLoopCount = 0;
-                for(; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
-                {
+                for(; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement) {
                     pSrc = _mm256_loadu_ps(srcRowPtrTemp);
                     pSrc = _mm256_mul_ps(pSrc, pWeightUp);
                     pDst = _mm256_loadu_ps(dstRowPtrTemp);
@@ -189,16 +179,17 @@ RppStatus mel_filter_bank_host_tensor(Rpp32f *srcPtr,
                     srcRowPtrTemp += vectorIncrement;
                 }
 
-                for (; vectorLoopCount < numFrames; vectorLoopCount++)
-                {
+                for (; vectorLoopCount < numFrames; vectorLoopCount++) {
                     (*dstRowPtrTemp) += weightUp * (*srcRowPtrTemp);
                     dstRowPtrTemp++;
                     srcRowPtrTemp++;
                 }
             }
+
             srcRowPtr += srcDescPtr->strides.hStride;
         }
     }
+    delete melScalePtr;
 
     return RPP_SUCCESS;
 }
