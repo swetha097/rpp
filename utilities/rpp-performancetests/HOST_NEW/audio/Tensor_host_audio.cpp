@@ -423,18 +423,25 @@ int main(int argc, char **argv)
             case 4:
             {
                 test_case_name = "slice";
+
                 bool normalizedAnchor = false;
                 bool normalizedShape = false;
-                Rpp32f anchor[noOfAudioFiles];
-                Rpp32f shape[noOfAudioFiles];
                 Rpp32f fillValues[noOfAudioFiles];
                 Rpp32s axes = 0;
-                RpptOutOfBoundsPolicy policyType = RpptOutOfBoundsPolicy::ERROR;
+                RpptOutOfBoundsPolicy policyType = RpptOutOfBoundsPolicy::PAD;
+                Rpp32s numDims = (srcDescPtr->c == 1) ? 1 : 2;
+                Rpp32s srcDimsTensor[noOfAudioFiles * numDims];
+                Rpp32f anchor[noOfAudioFiles * numDims];
+                Rpp32f shape[noOfAudioFiles * numDims];
+
+                // 1D slice test
                 for (i = 0; i < noOfAudioFiles; i++)
                 {
+                    srcDimsTensor[i] = srcLengthTensor[i];
+                    shape[i] =  dstDims[i].width = 200;
+                    dstDims[i].height = 1;
                     anchor[i] = 100;
-                    shape[i] = 200;
-                    fillValues[i] = 0.0f;
+                    fillValues[i] = 0.5f;
                 }
 
                 start_omp = omp_get_wtime();

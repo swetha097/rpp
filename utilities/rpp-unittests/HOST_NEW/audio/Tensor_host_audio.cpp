@@ -514,23 +514,21 @@ int main(int argc, char **argv)
 
             bool normalizedAnchor = false;
             bool normalizedShape = false;
-            Rpp32f anchor[noOfAudioFiles];
-            Rpp32f shape[noOfAudioFiles];
             Rpp32f fillValues[noOfAudioFiles];
             Rpp32s axes = 0;
             RpptOutOfBoundsPolicy policyType = RpptOutOfBoundsPolicy::PAD;
-            Rpp32s srcDimsTensor[noOfAudioFiles * 2];
+            Rpp32s numDims = (srcDescPtr->c == 1) ? 1 : 2;
+            Rpp32s srcDimsTensor[noOfAudioFiles * numDims];
+            Rpp32f anchor[noOfAudioFiles * numDims];
+            Rpp32f shape[noOfAudioFiles * numDims];
 
-            for (i = 0; i < noOfAudioFiles * 2; i+=2)
+            // 1D slice arguments
+            for (i = 0; i < noOfAudioFiles; i++)
             {
                 srcDimsTensor[i] = srcLengthTensor[i];
-                srcDimsTensor[i + 1] = channelsTensor[i];
-                shape[i] =  dstDims[i].height = 200;
-                shape[i + 1] = dstDims[i].width = 1;
-                for(int d = 0; d < 2; d++)
-                {
-                    anchor[i + d] = 100;
-                }
+                shape[i] =  dstDims[i].width = 200;
+                dstDims[i].height = 1;
+                anchor[i] = 100;
                 fillValues[i] = 0.5f;
             }
 
@@ -543,12 +541,7 @@ int main(int argc, char **argv)
             else
                 missingFuncFlag = 1;
 
-            // std::cerr<<"printing output values"<<std::endl;
-            // Rpp32s size = numOfDims == 1 ? shape[0] : shape[0] * shape[1];
-            // for(int i = 0; i < size; i++)
-            //     std::cerr<<std::setprecision(11)<<outputf32[i]<<endl;
-
-            // verify_output(outputf32, dstDescPtr, dstDims, test_case_name, audioNames);
+            verify_output(outputf32, dstDescPtr, dstDims, test_case_name, audioNames);
             break;
         }
         case 5:
