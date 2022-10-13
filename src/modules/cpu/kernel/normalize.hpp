@@ -4,8 +4,7 @@
 
 #define PACK 8
 
-Rpp32f reduce_add_ps2(__m256 src)
-{
+Rpp32f reduce_add_ps2(__m256 src) {
     __m256 src_add = _mm256_add_ps(src, _mm256_permute2f128_ps(src, src, 1));
     src_add = _mm256_add_ps(src_add, _mm256_shuffle_ps(src_add, src_add, _MM_SHUFFLE(1, 0, 3, 2)));
     src_add = _mm256_add_ps(src_add, _mm256_shuffle_ps(src_add, src_add, _MM_SHUFFLE(2, 3, 0, 1)));
@@ -17,8 +16,8 @@ void compute_2D_mean(Rpp32f *srcPtr, Rpp32f *meanPtr, Rpp32u *dims, Rpp32u *stri
     Rpp32f *srcPtrTemp = srcPtr;
     for(Rpp32u i = 0; i < dims[0]; i++) {
         meanPtr[i] = 0;
-        int v_n = (!(dims[1]%PACK)) ? dims[1]/PACK: (dims[1]/PACK)+1;
-        __m256 j_n = _mm256_set_ps(7,6,5,4,3,2,1,0);
+        int v_n = (!(dims[1] % PACK)) ? dims[1] / PACK: (dims[1] / PACK) + 1;
+        __m256 j_n = _mm256_set_ps(7, 6, 5, 4, 3, 2, 1, 0);
         __m256 pack_n = _mm256_set1_ps(PACK);
         __m256 stride_n = _mm256_set1_ps(stride[0]);
         for(Rpp32u j = 0; j < v_n; j++) {
@@ -37,8 +36,8 @@ void compute_2D_inv_std_dev(Rpp32f *srcPtr, Rpp32f *meanPtr, Rpp32f *stdDevPtr, 
     Rpp32f *srcPtrTemp = srcPtr;
     for(Rpp32u i = 0; i < dims[0]; i++) {
         stdDevPtr[i] = 0;
-        int v_n = (!(dims[1]%PACK)) ? dims[1]/PACK: (dims[1]/PACK)+1;
-        __m256 j_n = _mm256_set_ps(7,6,5,4,3,2,1,0);
+        int v_n = (!(dims[1] % PACK)) ? dims[1] / PACK: (dims[1] / PACK) + 1;
+        __m256 j_n = _mm256_set_ps(7, 6, 5, 4, 3, 2, 1, 0);
         __m256 pack_n = _mm256_set1_ps(PACK);
         __m256 stride_n = _mm256_set1_ps(stride[0]);
         __m256 meanptr_n = _mm256_set1_ps(meanPtr[i]);
@@ -121,8 +120,8 @@ RppStatus normalize_audio_host_tensor(Rpp32f* srcPtr,
             paramStride[1] = 1;
         }
 
-        Rpp32f* meanTensor = (Rpp32f *)malloc(srcReductionDims[0] * sizeof(Rpp32f));
-        Rpp32f* stdDevTensor = (Rpp32f *)malloc(srcReductionDims[0] * sizeof(Rpp32f));
+        Rpp32f *meanTensor = (Rpp32f *)malloc(srcReductionDims[0] * sizeof(Rpp32f));
+        Rpp32f *stdDevTensor = (Rpp32f *)malloc(srcReductionDims[0] * sizeof(Rpp32f));
 
         meanTensor[0] = mean;
         stdDevTensor[0] = stdDev;
