@@ -84,6 +84,10 @@ RppStatus mel_filter_bank_host_tensor(Rpp32f *srcPtr,
         Rpp32s numBins = nfft / 2 + 1;
         Rpp32s numFrames = srcDims[batchCount].width;
 
+        if(maxFreq == 0.0f)
+            maxFreq = sampleRate / 2;
+
+
         // Convert lower, higher freqeuncies to mel scale
         Rpp64f melLow = melScalePtr->hz_to_mel(minFreq);
         Rpp64f melHigh = melScalePtr->hz_to_mel(maxFreq);
