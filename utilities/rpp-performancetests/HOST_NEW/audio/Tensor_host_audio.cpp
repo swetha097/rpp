@@ -344,7 +344,8 @@ int main(int argc, char **argv)
             case 0:
             {
                 test_case_name = "non_silent_region_detection";
-                Rpp32s detectionData[noOfAudioFiles * 2];
+                Rpp32s detectedIndex[noOfAudioFiles];
+                Rpp32s detectionLength[noOfAudioFiles];
                 Rpp32f cutOffDB = -60.0;
                 Rpp32s windowLength = 3;
                 Rpp32f referencePower = 0.0f;
@@ -354,7 +355,7 @@ int main(int argc, char **argv)
                 start = clock();
                 if (ip_bitDepth == 2)
                 {
-                    rppt_non_silent_region_detection_host(inputf32, srcDescPtr, inputAudioSize, detectionData, cutOffDB, windowLength, referencePower, resetInterval);
+                    rppt_non_silent_region_detection_host(inputf32, srcDescPtr, inputAudioSize, detectedIndex, detectionLength, cutOffDB, windowLength, referencePower, resetInterval);
                 }
                 else
                     missingFuncFlag = 1;

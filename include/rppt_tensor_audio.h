@@ -45,7 +45,7 @@ extern "C" {
 // *retval RPP_SUCCESS : successful completion
 // *retval RPP_ERROR : Error
 
-RppStatus rppt_non_silent_region_detection_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, Rpp32s *srcSize, Rpp32s *detectionData, Rpp32f cutOffDB, Rpp32s windowLength, Rpp32f referencePower, Rpp32s resetInterval);
+RppStatus rppt_non_silent_region_detection_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, Rpp32s *srcSize, Rpp32s *detectedIndexTensor, Rpp32s *detectionLengthTensor, Rpp32f cutOffDB, Rpp32s windowLength, Rpp32f referencePower, Rpp32s resetInterval);
 
 /******************** to_decibels ********************/
 

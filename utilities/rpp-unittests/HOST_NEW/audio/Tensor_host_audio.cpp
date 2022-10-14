@@ -82,7 +82,7 @@ void verify_output(Rpp32f *dstPtr, RpptDescPtr dstDescPtr, RpptImagePatchPtr dst
         std::cerr<<"FAILED! "<<file_match<<"/"<<dstDescPtr->n<<" outputs are matching with reference outputs"<<std::endl;
 }
 
-void verify_non_silent_region_detection(int *detectionData, string test_case, int bs, char audioNames[][1000])
+void verify_non_silent_region_detection(int *detectedIndex, int *detectionLength, string test_case, int bs, char audioNames[][1000])
 {
     fstream ref_file;
     string ref_path = get_current_dir_name();
@@ -107,8 +107,8 @@ void verify_non_silent_region_detection(int *detectionData, string test_case, in
         Rpp32s out_index, out_length;
         ref_file>>ref_index;
         ref_file>>ref_length;
-        out_index = detectionData[2 * i];
-        out_length = detectionData[2 * i + 1];
+        out_index = detectedIndex[i];
+        out_length = detectionLength[i];
 
         if((out_index == ref_index) && (out_length == ref_length))
             file_match += 1;
@@ -428,7 +428,8 @@ int main(int argc, char **argv)
         case 0:
         {
             test_case_name = "non_silent_region_detection";
-            Rpp32s detectionData[noOfAudioFiles * 2];
+            Rpp32s detectedIndex[noOfAudioFiles];
+            Rpp32s detectionLength[noOfAudioFiles];
             Rpp32f cutOffDB = -60.0;
             Rpp32s windowLength = 3;
             Rpp32f referencePower = 0.0f;
@@ -438,12 +439,12 @@ int main(int argc, char **argv)
             start = clock();
             if (ip_bitDepth == 2)
             {
-                rppt_non_silent_region_detection_host(inputf32, srcDescPtr, inputAudioSize, detectionData, cutOffDB, windowLength, referencePower, resetInterval);
+                rppt_non_silent_region_detection_host(inputf32, srcDescPtr, inputAudioSize, detectedIndex, detectionLength, cutOffDB, windowLength, referencePower, resetInterval);
             }
             else
                 missingFuncFlag = 1;
 
-            verify_non_silent_region_detection(detectionData, test_case_name, noOfAudioFiles, audioNames);
+            verify_non_silent_region_detection(detectedIndex, detectionLength, test_case_name, noOfAudioFiles, audioNames);
             break;
         }
         case 1:
