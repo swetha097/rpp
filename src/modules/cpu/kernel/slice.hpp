@@ -14,7 +14,10 @@ void applyPolicy(RpptOutOfBoundsPolicy policyType, Rpp32s *anchor, Rpp32s *slice
             break;
         case RpptOutOfBoundsPolicy::ERROR:
         default:
-            bool isOutOfBounds = (*anchor < 0) || (*anchor > *srcBufferLength);
+            bool anchorCheck = (*anchor < 0) || (*anchor > *srcBufferLength);
+            bool shapeCheck = ((*anchor + *sliceEnd) < 0) || ((*anchor + *sliceEnd) > *srcBufferLength);
+            if(anchorCheck || shapeCheck)
+                std::cerr<<"Invalid values passed"<<"\n"; // TODO - Throw error when outOfBound values passed
             break;
     }
 }
@@ -137,6 +140,14 @@ RppStatus slice_host_tensor(Rpp32f *srcPtr,
             shape[0] = std::llround(shapeRaw[0]);
             anchor[1] = std::llround(anchorRaw[1]);
             shape[1] = std::llround(shapeRaw[1]);
+
+            Rpp32s sliceEnd[2];
+            sliceEnd[0] = anchor[0] + shape[0];
+            sliceEnd[1] = anchor[1] + shape[1];
+            applyPolicy(policyType, &anchor[0], &sliceEnd[0], &srcDimsTensor[sampleBatchCount]);    // check the policy and update the values accordingly
+            applyPolicy(policyType, &anchor[1], &sliceEnd[1], &srcDimsTensor[sampleBatchCount + 1]);    // check the policy and update the values accordingly
+            shape[0] = sliceEnd[0] - anchor[0];
+            shape[1] = sliceEnd[1] - anchor[1];
 
             Rpp32s rowBound = std::min(srcDimsTensor[sampleBatchCount], shape[0]);
             Rpp32s colBound = std::min(srcDimsTensor[sampleBatchCount + 1], shape[1]);

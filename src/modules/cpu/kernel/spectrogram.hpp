@@ -28,8 +28,7 @@ __m256 sinFn(__m256 a_n) {
     return a_n;
 }
 
-void HannWindow(float *output, int nfft) {
-    int N = nfft;
+void HannWindow(float *output, int N) {
     double a = (2 * M_PI / N);
     int v_n = (!(N % pack)) ? N / pack: (N / pack) + 1;
     __m256 t_n = _mm256_set_ps(7, 6, 5, 4, 3, 2, 1, 0);
@@ -91,8 +90,11 @@ RppStatus spectrogram_host_tensor(Rpp32f *srcPtr,
 
         // Generate hanning window
         std::vector<float> windowFn;
-        windowFn.resize(nfft);
-        HannWindow(windowFn.data(), nfft);
+        windowFn.resize(windowLength);
+        HannWindow(windowFn.data(), windowLength);
+
+        if(nfft == 0.0f)
+            nfft = windowLength;
 
         Rpp32s numBins = nfft / 2 + 1;
         Rpp32s numWindows = getOutputSize(bufferLength, windowLength, windowStep, centerWindows);
@@ -101,7 +103,7 @@ RppStatus spectrogram_host_tensor(Rpp32f *srcPtr,
         if (centerWindows)
             windowCenterOffset = windowLength / 2;
 
-        std::vector<Rpp32f> windowOutput(nfft * numWindows);
+        std::vector<Rpp32f> windowOutput(numWindows * windowLength);
         for (int64_t w = 0; w < numWindows; w++) {
             int64_t windowStart = w * windowStep - windowCenterOffset;
             if (windowStart < 0 || (windowStart + windowLength) > bufferLength) {
@@ -129,10 +131,10 @@ RppStatus spectrogram_host_tensor(Rpp32f *srcPtr,
 
         Rpp32u hStride = dstDescPtr->strides.hStride;
         std::vector<Rpp32f> windowOutputTemp(nfft);
+        Rpp32s windowOutputTempSize = windowOutputTemp.size();
+        Rpp32s alignedLength = (windowOutputTempSize / 8) * 8;
+        const __m256 pMinusOne = _mm256_set1_ps(-1.0f);
 
-        __m256 nextstep_n = _mm256_set1_ps(pack);
-        __m256 mpi_n = _mm256_set1_ps(M_PI * 2.0f);
-        __m256 nfft_n = _mm256_set1_ps(1.0f / nfft);
         for (int w = 0; w < numWindows; w++) {
             for (int i = 0; i < nfft; i++)
                 windowOutputTemp[i] = windowOutput[i * numWindows + w];
@@ -145,15 +147,27 @@ RppStatus spectrogram_host_tensor(Rpp32f *srcPtr,
             // Compute FFT
             for (int k = 0; k < numBins; k++) {
                 Rpp32f real = 0.0f, imag = 0.0f;
-                int out_size = windowOutputTemp.size();
-                int v_n = (!(out_size % pack)) ? out_size / pack: (out_size / pack) + 1;
-                __m256 i_n = _mm256_set_ps(7, 6, 5, 4, 3, 2, 1, 0);
-                __m256 k_n = _mm256_set1_ps(k);
-                for (int i = 0; i < v_n; i++) {
-                    __m256 x_n = _mm256_loadu_ps(windowOutputTemp.data() + (i * pack));
-                    real += reduce_add_ps1(_mm256_mul_ps(cosFn(_mm256_mul_ps(_mm256_mul_ps(_mm256_mul_ps(k_n, i_n), mpi_n),nfft_n)), x_n));
-                    imag += reduce_add_ps1(_mm256_mul_ps(sinFn(_mm256_mul_ps(_mm256_mul_ps(_mm256_mul_ps(k_n, i_n), mpi_n),nfft_n)), x_n));
-                    i_n = _mm256_add_ps(i_n, nextstep_n);
+                __m256 pReal, pImag;
+                pReal = avx_p0;
+                pImag = avx_p0;
+                __m256 pInd = _mm256_set_ps(7, 6, 5, 4, 3, 2, 1, 0);
+                Rpp32f factor = (2.0f * k * M_PI) / nfft;
+                __m256 pFactor = _mm256_set1_ps(factor);
+                int i = 0;
+                for (; i < alignedLength; i += 8) {
+                    __m256 pSrc, pSin, pCos;
+                    pSrc = _mm256_loadu_ps(windowOutputTemp.data() + i);
+                    sincos_ps(_mm256_mul_ps(pInd, pFactor), &pSin, &pCos);
+                    pReal = _mm256_add_ps(pReal, _mm256_mul_ps(pSrc, pCos));
+                    pImag = _mm256_add_ps(pImag, _mm256_mul_ps(_mm256_mul_ps(pSrc, pMinusOne), pSin));
+                    pInd = _mm256_add_ps(pInd, avx_p8);
+                }
+                real = reduce_add_ps1(pReal);
+                imag = reduce_add_ps1(pImag);
+                for(; i < windowOutputTempSize; i++) {
+                    Rpp32f x = windowOutputTemp[i];
+                    real += x * std::cos(factor * i);
+                    imag += -x * std::sin(factor * i);
                 }
 
                 fftOutput.push_back({real, imag});
