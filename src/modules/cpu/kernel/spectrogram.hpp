@@ -136,8 +136,10 @@ RppStatus spectrogram_host_tensor(Rpp32f *srcPtr,
         const __m256 pMinusOne = _mm256_set1_ps(-1.0f);
 
         for (int w = 0; w < numWindows; w++) {
-            for (int i = 0; i < nfft; i++)
-                windowOutputTemp[i] = windowOutput[i * numWindows + w];
+            for (int i = 0; i < nfft; i++) {
+                int64_t inIdx = (vertical) ? (i * numWindows + w) : (w * windowLength + i);
+                windowOutputTemp[i] = windowOutput[inIdx];
+            }
 
             // Allocate buffers for fft output
             std::vector<std::complex<Rpp32f>> fftOutput;
@@ -175,12 +177,16 @@ RppStatus spectrogram_host_tensor(Rpp32f *srcPtr,
 
             if (power == 2) {
                 // Compute power spectrum
-                for (int i = 0; i < numBins; i++)
-                    dstPtrTemp[i * hStride + w] = std::norm(fftOutput[i]);
+                for (int i = 0; i < numBins; i++) {
+                    int64_t outIdx = (vertical) ? (i * hStride + w) : (w * hStride + i);
+                    dstPtrTemp[outIdx] = std::norm(fftOutput[i]);
+                }
             } else {
                 // Compute magnitude spectrum
-                for (int i = 0; i < numBins; i++)
-                    dstPtrTemp[i * hStride + w] = std::abs(fftOutput[i]);
+                for (int i = 0; i < numBins; i++) {
+                    int64_t outIdx = (vertical) ? (i * hStride + w) : (w * hStride + i);
+                    dstPtrTemp[outIdx] = std::abs(fftOutput[i]);
+                }
             }
         }
     }
