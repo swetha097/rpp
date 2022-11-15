@@ -35,7 +35,22 @@ RppStatus to_decibels_host_tensor(Rpp32f *srcPtr,
 
         // Compute maximum value in the input buffer
         if(!referenceMax)
-            referenceMagnitude = *(std::max_element(srcPtrCurrent, srcPtrCurrent + (height * width)));
+        {
+            referenceMagnitude = -std::numeric_limits<float>::max();
+            Rpp32f *srcPtrTemp = srcPtrCurrent;
+            if(width == 1)
+            {
+                referenceMagnitude = std::max(referenceMagnitude, *(std::max_element(srcPtrTemp, srcPtrTemp + height)));
+            }
+            else
+            {
+                for(int i = 0; i < height; i++)
+                {
+                    referenceMagnitude = std::max(referenceMagnitude, *(std::max_element(srcPtrTemp, srcPtrTemp + width)));
+                    srcPtrTemp += srcDescPtr->strides.hStride;
+                }
+            }
+        }
 
         // Avoid division by zero
         if(referenceMagnitude == 0.0)
@@ -44,39 +59,68 @@ RppStatus to_decibels_host_tensor(Rpp32f *srcPtr,
         Rpp32f invReferenceMagnitude = 1.f / referenceMagnitude;
         __m256 pinvMag = _mm256_set1_ps(invReferenceMagnitude);
 
-        int vectorIncrement = 8;
-		int alignedLength = (width / 8) * 8;
-		int vectorLoopCount = 0;
-
-        Rpp32f *srcPtrRow, *dstPtrRow;
-        srcPtrRow = srcPtrCurrent;
-        dstPtrRow = dstPtrCurrent;
-        for(int i = 0; i < height; i++)
+        // Interpret as 1D array
+        if(width == 1)
         {
-            Rpp32f *srcPtrTemp, *dstPtrTemp;
-            srcPtrTemp = srcPtrRow;
-            dstPtrTemp = dstPtrRow;
+            int vectorIncrement = 8;
+            int alignedLength = (height / 8) * 8;
+            int vectorLoopCount = 0;
+
             for(; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
             {
                 __m256 pSrc;
-                pSrc = _mm256_loadu_ps(srcPtrTemp);
+                pSrc = _mm256_loadu_ps(srcPtrCurrent);
                 pSrc = _mm256_mul_ps(pSrc, pinvMag);
                 pSrc = _mm256_max_ps(pMinRatio, pSrc);
                 pSrc = log_ps(pSrc);
                 pSrc = _mm256_mul_ps(pSrc, pMultiplier);
-                _mm256_storeu_ps(dstPtrTemp, pSrc);
-                srcPtrTemp += vectorIncrement;
-                dstPtrTemp += vectorIncrement;
+                _mm256_storeu_ps(dstPtrCurrent, pSrc);
+                srcPtrCurrent += vectorIncrement;
+                dstPtrCurrent += vectorIncrement;
             }
             for(; vectorLoopCount < width; vectorLoopCount++)
             {
-                *dstPtrTemp = multiplier * std::log(std::max(minRatio, (*srcPtrTemp) * invReferenceMagnitude));
-                srcPtrTemp++;
-                dstPtrTemp++;
+                *dstPtrCurrent = multiplier * std::log(std::max(minRatio, (*srcPtrCurrent) * invReferenceMagnitude));
+                srcPtrCurrent++;
+                dstPtrCurrent++;
             }
+        }
+        else
+        {
+            int vectorIncrement = 8;
+            int alignedLength = (width / 8) * 8;
 
-            srcPtrRow += srcDescPtr->strides.hStride;
-            dstPtrRow += dstDescPtr->strides.hStride;
+            Rpp32f *srcPtrRow, *dstPtrRow;
+            srcPtrRow = srcPtrCurrent;
+            dstPtrRow = dstPtrCurrent;
+            for(int i = 0; i < height; i++)
+            {
+                Rpp32f *srcPtrTemp, *dstPtrTemp;
+                srcPtrTemp = srcPtrRow;
+                dstPtrTemp = dstPtrRow;
+                int vectorLoopCount = 0;
+                for(; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
+                {
+                    __m256 pSrc;
+                    pSrc = _mm256_loadu_ps(srcPtrTemp);
+                    pSrc = _mm256_mul_ps(pSrc, pinvMag);
+                    pSrc = _mm256_max_ps(pMinRatio, pSrc);
+                    pSrc = log_ps(pSrc);
+                    pSrc = _mm256_mul_ps(pSrc, pMultiplier);
+                    _mm256_storeu_ps(dstPtrTemp, pSrc);
+                    srcPtrTemp += vectorIncrement;
+                    dstPtrTemp += vectorIncrement;
+                }
+                for(; vectorLoopCount < width; vectorLoopCount++)
+                {
+                    *dstPtrTemp = multiplier * std::log(std::max(minRatio, (*srcPtrTemp) * invReferenceMagnitude));
+                    srcPtrTemp++;
+                    dstPtrTemp++;
+                }
+
+                srcPtrRow += srcDescPtr->strides.hStride;
+                dstPtrRow += dstDescPtr->strides.hStride;
+            }
         }
     }
 

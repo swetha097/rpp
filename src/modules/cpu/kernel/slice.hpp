@@ -122,8 +122,8 @@ RppStatus slice_host_tensor(Rpp32f *srcPtr,
             Rpp32s anchor[2], shape[2];
             anchorRaw[0] = anchorTensor[sampleBatchCount];
             anchorRaw[1] = anchorTensor[sampleBatchCount + 1];
-            shapeRaw[0] = shapeTensor[0];
-            shapeRaw[1] = shapeTensor[1];
+            shapeRaw[0] = shapeTensor[sampleBatchCount];
+            shapeRaw[1] = shapeTensor[sampleBatchCount + 1];
             Rpp32f fillValue = fillValues[batchCount];
 
             // If normalized between 0 - 1 convert to actual indices

@@ -82,7 +82,7 @@ void verify_output(Rpp32f *dstPtr, RpptDescPtr dstDescPtr, RpptImagePatchPtr dst
         std::cerr<<"FAILED! "<<file_match<<"/"<<dstDescPtr->n<<" outputs are matching with reference outputs"<<std::endl;
 }
 
-void verify_non_silent_region_detection(int *detectedIndex, int *detectionLength, string test_case, int bs, char audioNames[][1000])
+void verify_non_silent_region_detection(float *detectedIndex, float *detectionLength, string test_case, int bs, char audioNames[][1000])
 {
     fstream ref_file;
     string ref_path = get_current_dir_name();
@@ -428,8 +428,8 @@ int main(int argc, char **argv)
         case 0:
         {
             test_case_name = "non_silent_region_detection";
-            Rpp32s detectedIndex[noOfAudioFiles];
-            Rpp32s detectionLength[noOfAudioFiles];
+            Rpp32f detectedIndex[noOfAudioFiles];
+            Rpp32f detectionLength[noOfAudioFiles];
             Rpp32f cutOffDB = -60.0;
             Rpp32s windowLength = 3;
             Rpp32f referencePower = 0.0f;
@@ -456,8 +456,8 @@ int main(int argc, char **argv)
 
             for (i = 0; i < noOfAudioFiles; i++)
             {
-                srcDims[i].height = 1;
-                srcDims[i].width = srcLengthTensor[i];
+                srcDims[i].height = srcLengthTensor[i];
+                srcDims[i].width = 1;
             }
 
             start_omp = omp_get_wtime();
