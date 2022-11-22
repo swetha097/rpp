@@ -117,7 +117,7 @@ RppStatus rppt_down_mixing_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_
 // *retval RPP_SUCCESS : successful completion
 // *retval RPP_ERROR : Error
 
-RppStatus rppt_slice_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32s *srcLengthTensor, Rpp32f *anchorTensor, Rpp32f *shapeTensor, Rpp32s axisMask, Rpp32f *fillValues, bool normalizedAnchor, bool normalizedShape, RpptOutOfBoundsPolicy policyType);
+RppStatus rppt_slice_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32s *srcLengthTensor, Rpp32f *anchorTensor, Rpp32f *shapeTensor, Rpp32f *fillValues);
 
 // Mel Filter Bank augmentation
 

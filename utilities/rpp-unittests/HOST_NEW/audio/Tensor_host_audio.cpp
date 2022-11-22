@@ -513,31 +513,29 @@ int main(int argc, char **argv)
         {
             test_case_name = "slice";
 
-            bool normalizedAnchor = false;
-            bool normalizedShape = false;
             Rpp32f fillValues[noOfAudioFiles];
-            Rpp32s axes = 0;
-            RpptOutOfBoundsPolicy policyType = RpptOutOfBoundsPolicy::PAD;
-            Rpp32s numDims = (srcDescPtr->c == 1) ? 1 : 2;
+            Rpp32s numDims = 2;
             Rpp32s srcDimsTensor[noOfAudioFiles * numDims];
             Rpp32f anchor[noOfAudioFiles * numDims];
             Rpp32f shape[noOfAudioFiles * numDims];
 
             // 1D slice arguments
-            for (i = 0; i < noOfAudioFiles; i++)
+            for (i = 0, j = i * 2; i < noOfAudioFiles; i++, j += 2)
             {
-                srcDimsTensor[i] = srcLengthTensor[i];
-                shape[i] =  dstDims[i].width = 200;
-                dstDims[i].height = 1;
-                anchor[i] = 100;
-                fillValues[i] = 0.5f;
+                srcDimsTensor[j] = srcLengthTensor[i];
+                srcDimsTensor[j + 1] = 1;
+                shape[j] =  dstDims[i].width = 200;
+                shape[j + 1] = dstDims[i].height = 1;
+                anchor[j] = 100;
+                anchor[j + 1] = 0;
             }
+            fillValues[0] = 0.5f;
 
             start_omp = omp_get_wtime();
             start = clock();
             if (ip_bitDepth == 2)
             {
-                rppt_slice_host(inputf32, srcDescPtr, outputf32, dstDescPtr, srcDimsTensor, anchor, shape, axes, fillValues, normalizedAnchor, normalizedShape, policyType);
+                rppt_slice_host(inputf32, srcDescPtr, outputf32, dstDescPtr, srcDimsTensor, anchor, shape, fillValues);
             }
             else
                 missingFuncFlag = 1;
@@ -750,13 +748,9 @@ int main(int argc, char **argv)
         case 9:
         {
             test_case_name = "pad";
-            bool normalizedAnchor = false;
-            bool normalizedShape = false;
             Rpp32f anchor[noOfAudioFiles * 2];
             Rpp32f shape[noOfAudioFiles * 2];
             Rpp32f fillValues[noOfAudioFiles];
-            Rpp32s axes = 0;
-            RpptOutOfBoundsPolicy policyType = RpptOutOfBoundsPolicy::PAD;
             Rpp32s srcDimsTensor[noOfAudioFiles * 2];
 
             // Read source dimension
@@ -778,13 +772,13 @@ int main(int argc, char **argv)
             {
                 srcDimsTensor[i] = (int)srcDims[i / 2].height;
                 srcDimsTensor[i + 1] = (int)srcDims[i / 2].width;
-                shape[i] = maxSrcHeight;
-                shape[i + 1] = maxSrcWidth;
+                shape[i] = maxDstHeight;
+                shape[i + 1] = maxDstWidth;
                 anchor[i] = 0.0f;
                 anchor[i + 1] = 0.0f;
                 fillValues[i / 2] = 40.0f;
-                dstDims[i].height = maxSrcHeight;
-                dstDims[i].width = maxSrcWidth;
+                dstDims[i].height = maxDstHeight;
+                dstDims[i].width = maxDstWidth;
             }
 
             srcDescPtr->h = maxSrcHeight;
@@ -818,7 +812,7 @@ int main(int argc, char **argv)
             start = clock();
             if (ip_bitDepth == 2)
             {
-                rppt_slice_host(inputf32, srcDescPtr, outputf32, dstDescPtr, srcDimsTensor, anchor, shape, axes, fillValues, normalizedAnchor, normalizedShape, policyType);
+                rppt_slice_host(inputf32, srcDescPtr, outputf32, dstDescPtr, srcDimsTensor, anchor, shape, fillValues);
             }
             else
                 missingFuncFlag = 1;
