@@ -15,13 +15,8 @@ DEFAULT_SRC_FOLDER="$cwd/../../../TEST_AUDIO_FILES/eight_samples_single_channel_
 # # Input audio files - three audio files - single channel
 # DEFAULT_SRC_FOLDER="$cwd/../../../TEST_AUDIO_FILES/three_samples_single_channel_src1/"
 
-# Output audio files
-mkdir "$cwd/../../OUTPUT_AUDIO_FILES_HOST_NEW"
-DEFAULT_DST_FOLDER="$cwd/../../OUTPUT_AUDIO_FILES_HOST_NEW"
-
 # <<<<<<<<<<<<<< FOR MANUAL OVERRIDE, JUST REPLACE AND POINT TO THE SOURCE AND DESTINATION FOLDERS HERE >>>>>>>>>>>>>>
 SRC_FOLDER="$DEFAULT_SRC_FOLDER"
-DST_FOLDER="$DEFAULT_DST_FOLDER"
 
 # <<<<<<<<<<<<<< EXECUTION OF ALL FUNCTIONALITIES (NEED NOT CHANGE) >>>>>>>>>>>>>>
 if [[ "$1" -lt 0 ]] | [[ "$1" -gt 9 ]]; then
@@ -54,7 +49,6 @@ else
     CASE_END="$2"
 fi
 
-rm -rvf "$DST_FOLDER"/*
 shopt -s extglob
 mkdir build
 cd build

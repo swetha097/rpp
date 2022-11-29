@@ -135,7 +135,7 @@ int main(int argc, char **argv)
             strcpy(funcName, "normalize");
             break;
         case 9:
-            strcpy(funcName, "normalize");
+            strcpy(funcName, "pad");
             break;
         default:
             strcpy(funcName, "test_case");
@@ -263,10 +263,6 @@ int main(int argc, char **argv)
     else
         dstDescPtr->c = maxChannels;
 
-    // Optionally set w stride as a multiple of 8 for src
-    // srcDescPtr->w = ((srcDescPtr->w / 8) * 8) + 8;
-    // dstDescPtr->w = ((dstDescPtr->w / 8) * 8) + 8;
-
     // Set n/c/h/w strides for src/dst
     srcDescPtr->strides.nStride = srcDescPtr->c * srcDescPtr->w * srcDescPtr->h;
     srcDescPtr->strides.hStride = srcDescPtr->c * srcDescPtr->w;
@@ -371,8 +367,8 @@ int main(int argc, char **argv)
 
                 for (i = 0; i < noOfAudioFiles; i++)
                 {
-                    srcDims[i].height = 1;
-                    srcDims[i].width = srcLengthTensor[i];
+                    srcDims[i].height = srcLengthTensor[i];
+                    srcDims[i].width = 1;
                 }
 
                 start_omp = omp_get_wtime();
@@ -431,15 +427,17 @@ int main(int argc, char **argv)
                 Rpp32f anchor[noOfAudioFiles * numDims];
                 Rpp32f shape[noOfAudioFiles * numDims];
 
-                // 1D slice test
-                for (i = 0; i < noOfAudioFiles; i++)
+                // 1D slice arguments
+                for (i = 0, j = i * 2; i < noOfAudioFiles; i++, j += 2)
                 {
-                    srcDimsTensor[i] = srcLengthTensor[i];
-                    shape[i] =  dstDims[i].width = 200;
-                    dstDims[i].height = 1;
-                    anchor[i] = 100;
-                    fillValues[i] = 0.5f;
+                    srcDimsTensor[j] = srcLengthTensor[i];
+                    srcDimsTensor[j + 1] = 1;
+                    shape[j] =  dstDims[i].width = 200;
+                    shape[j + 1] = dstDims[i].height = 1;
+                    anchor[j] = 100;
+                    anchor[j + 1] = 0;
                 }
+                fillValues[0] = 0.5f;
 
                 start_omp = omp_get_wtime();
                 start = clock();
@@ -484,10 +482,6 @@ int main(int argc, char **argv)
                 srcDescPtr->w = maxSrcWidth;
                 dstDescPtr->h = maxDstHeight;
                 dstDescPtr->w = maxDstWidth;
-
-                // Optionally set w stride as a multiple of 8 for dst
-                srcDescPtr->w = ((srcDescPtr->w / 8) * 8) + 8;
-                dstDescPtr->w = ((dstDescPtr->w / 8) * 8) + 8;
 
                 srcDescPtr->strides.nStride = srcDescPtr->c * srcDescPtr->w * srcDescPtr->h;
                 srcDescPtr->strides.hStride = srcDescPtr->c * srcDescPtr->w;
@@ -562,9 +556,6 @@ int main(int argc, char **argv)
                 dstDescPtr->w = maxDstWidth;
                 dstDescPtr->h = maxDstHeight;
 
-                // Optionally set w stride as a multiple of 8 for dst
-                dstDescPtr->w = ((dstDescPtr->w / 8) * 8) + 8;
-
                 dstDescPtr->strides.nStride = dstDescPtr->c * dstDescPtr->w * dstDescPtr->h;
                 dstDescPtr->strides.hStride = dstDescPtr->c * dstDescPtr->w;
                 dstDescPtr->strides.wStride = dstDescPtr->c;
@@ -603,9 +594,6 @@ int main(int argc, char **argv)
                 }
                 Rpp32f quality = 50.0f;
                 dstDescPtr->w = maxDstWidth;
-
-                // Optionally set w stride as a multiple of 8 for dst
-                dstDescPtr->w = ((dstDescPtr->w / 8) * 8) + 8;
 
                 dstDescPtr->strides.nStride = dstDescPtr->c * dstDescPtr->w * dstDescPtr->h;
                 dstDescPtr->strides.hStride = dstDescPtr->c * dstDescPtr->w;
@@ -677,13 +665,13 @@ int main(int argc, char **argv)
                 {
                     srcDimsTensor[i] = (int)srcDims[i / 2].height;
                     srcDimsTensor[i + 1] = (int)srcDims[i / 2].width;
-                    shape[i] = maxSrcHeight;
-                    shape[i + 1] = maxSrcWidth;
+                    shape[i] = maxDstHeight;
+                    shape[i + 1] = maxDstWidth;
                     anchor[i] = 0.0f;
                     anchor[i + 1] = 0.0f;
                     fillValues[i / 2] = 40.0f;
-                    dstDims[i].height = maxSrcHeight;
-                    dstDims[i].width = maxSrcWidth;
+                    dstDims[i].height = maxDstHeight;
+                    dstDims[i].width = maxDstWidth;
                 }
 
                 srcDescPtr->h = maxSrcHeight;
@@ -742,11 +730,11 @@ int main(int argc, char **argv)
 
         cpu_time_used = ((double)(end - start)) / CLOCKS_PER_SEC;
         omp_time_used = end_omp - start_omp;
-        if (cpu_time_used > max_time_used)
-            max_time_used = cpu_time_used;
-        if (cpu_time_used < min_time_used)
-            min_time_used = cpu_time_used;
-        avg_time_used += cpu_time_used;
+        if (omp_time_used > max_time_used)
+            max_time_used = omp_time_used;
+        if (omp_time_used < min_time_used)
+            min_time_used = omp_time_used;
+        avg_time_used += omp_time_used;
     }
 
     avg_time_used /= 100;

@@ -576,10 +576,6 @@ int main(int argc, char **argv)
             dstDescPtr->h = maxDstHeight;
             dstDescPtr->w = maxDstWidth;
 
-            // Optionally set w stride as a multiple of 8 for dst
-            srcDescPtr->w = ((srcDescPtr->w / 8) * 8) + 8;
-            dstDescPtr->w = ((dstDescPtr->w / 8) * 8) + 8;
-
             srcDescPtr->strides.nStride = srcDescPtr->c * srcDescPtr->w * srcDescPtr->h;
             srcDescPtr->strides.hStride = srcDescPtr->c * srcDescPtr->w;
             srcDescPtr->strides.wStride = srcDescPtr->c;
@@ -654,9 +650,6 @@ int main(int argc, char **argv)
             dstDescPtr->w = maxDstWidth;
             dstDescPtr->h = maxDstHeight;
 
-            // Optionally set w stride as a multiple of 8 for dst
-            dstDescPtr->w = ((dstDescPtr->w / 8) * 8) + 8;
-
             dstDescPtr->strides.nStride = dstDescPtr->c * dstDescPtr->w * dstDescPtr->h;
             dstDescPtr->strides.hStride = dstDescPtr->c * dstDescPtr->w;
             dstDescPtr->strides.wStride = dstDescPtr->c;
@@ -696,9 +689,6 @@ int main(int argc, char **argv)
             }
             Rpp32f quality = 50.0f;
             dstDescPtr->w = maxDstWidth;
-
-            // Optionally set w stride as a multiple of 8 for dst
-            dstDescPtr->w = ((dstDescPtr->w / 8) * 8) + 8;
 
             dstDescPtr->strides.nStride = dstDescPtr->c * dstDescPtr->w * dstDescPtr->h;
             dstDescPtr->strides.hStride = dstDescPtr->c * dstDescPtr->w;
