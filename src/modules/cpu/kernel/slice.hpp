@@ -22,8 +22,8 @@ RppStatus slice_host_tensor(Rpp32f *srcPtr,
         // Slice for 1D input
         if (srcDescPtr->strides.wStride == 1 && dstDescPtr->strides.wStride == 1) {
             Rpp32s srcBufferLength = srcDimsTensor[sampleBatchCount];
-            Rpp32f anchorRaw = anchorTensor[sampleBatchCount];
-            Rpp32f shapeRaw = shapeTensor[sampleBatchCount];
+            Rpp32f anchorRaw = anchorTensor[batchCount];
+            Rpp32f shapeRaw = shapeTensor[batchCount];
             Rpp32f fillValue = fillValues[0];
 
             Rpp32s anchor = std::llround(anchorRaw);
@@ -82,7 +82,6 @@ RppStatus slice_host_tensor(Rpp32f *srcPtr,
                 }
             }
         } else {
-            Rpp32s sampleBatchCount = batchCount * 2;
             Rpp32f anchorRaw[2], shapeRaw[2];
             Rpp32s anchor[2], shape[2];
             anchorRaw[0] = anchorTensor[sampleBatchCount];

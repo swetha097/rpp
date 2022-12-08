@@ -422,20 +422,17 @@ int main(int argc, char **argv)
                 test_case_name = "slice";
 
                 Rpp32f fillValues[noOfAudioFiles];
-                Rpp32s numDims = 2;
-                Rpp32s srcDimsTensor[noOfAudioFiles * numDims];
-                Rpp32f anchor[noOfAudioFiles * numDims];
-                Rpp32f shape[noOfAudioFiles * numDims];
+                Rpp32s srcDimsTensor[noOfAudioFiles * 2];
+                Rpp32f anchor[noOfAudioFiles];
+                Rpp32f shape[noOfAudioFiles];
 
                 // 1D slice arguments
                 for (i = 0, j = i * 2; i < noOfAudioFiles; i++, j += 2)
                 {
                     srcDimsTensor[j] = srcLengthTensor[i];
                     srcDimsTensor[j + 1] = 1;
-                    shape[j] =  dstDims[i].width = 200;
-                    shape[j + 1] = dstDims[i].height = 1;
-                    anchor[j] = 100;
-                    anchor[j + 1] = 0;
+                    shape[i] =  dstDims[i].width = 200;
+                    anchor[i] = 100;
                 }
                 fillValues[0] = 0.5f;
 
