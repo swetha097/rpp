@@ -376,6 +376,7 @@ int main(int argc, char **argv)
     Rpp32f *outputf32 = (Rpp32f *)calloc(oBufferSize, sizeof(Rpp32f));
 
     i = 0;
+    count = 0;
     dr = opendir(src);
     while ((de = readdir(dr)) != NULL)
     {
@@ -409,6 +410,7 @@ int main(int argc, char **argv)
                 std::cerr<<"F32 Unable to read audio file completely"<<std::endl;
         }
         i++;
+        count++;
 
         // Close input
         sf_close (infile);
