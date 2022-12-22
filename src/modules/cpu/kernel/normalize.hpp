@@ -527,8 +527,8 @@ void normalize_2D_tensor_cpu(Rpp32f *srcPtr, RpptDescPtr srcDescPtr, Rpp32f *dst
             paramIdx += paramStride[0];
         }
         paramIdx = (!paramStride[1]) ? 0 : paramIdx + paramStride[1];
-        srcPtrTemp += srcDescPtr->strides.hStride;
-        dstPtrTemp += dstDescPtr->strides.hStride;
+        srcPtrTemp += (dstDescPtr->h > 1 and dstDescPtr->w > 1) ? srcDescPtr->strides.hStride : srcDescPtr->strides.wStride;
+        dstPtrTemp += (dstDescPtr->h > 1 and dstDescPtr->w > 1) ? dstDescPtr->strides.hStride : dstDescPtr->strides.wStride;
     }
 }
 
@@ -591,8 +591,8 @@ void normalize_2D_tensor_allaxis(Rpp32f *srcPtr, RpptDescPtr srcDescPtr, Rpp32f 
             srcPtrTempRow += PACK;
             dstPtrTempRow += PACK;
         }
-        srcPtrTemp += srcDescPtr->strides.hStride;
-        dstPtrTemp += dstDescPtr->strides.hStride;
+        srcPtrTemp += (dstDescPtr->h > 1 and dstDescPtr->w > 1) ? srcDescPtr->strides.hStride : srcDescPtr->strides.wStride;
+        dstPtrTemp += (dstDescPtr->h > 1 and dstDescPtr->w > 1) ? dstDescPtr->strides.hStride : dstDescPtr->strides.wStride;
     }
 }
 
@@ -642,8 +642,8 @@ void normalize_2D_tensor_axis1(Rpp32f *srcPtr, RpptDescPtr srcDescPtr, Rpp32f *d
         __m256 dstPtrTempRow_n = _mm256_add_ps(_mm256_mul_ps(_mm256_sub_ps(srcPtrTempRow_n, meanptr_n), invStdDevPtr_n), shift_n);
         _mm256_maskstore_ps(dstPtrTempRow, k_n, dstPtrTempRow_n);
 
-        srcPtrTemp += srcDescPtr->strides.hStride;
-        dstPtrTemp += dstDescPtr->strides.hStride;
+        srcPtrTemp += (dstDescPtr->h > 1 and dstDescPtr->w > 1) ? srcDescPtr->strides.hStride : srcDescPtr->strides.wStride;
+        dstPtrTemp += (dstDescPtr->h > 1 and dstDescPtr->w > 1) ? dstDescPtr->strides.hStride : dstDescPtr->strides.wStride;
     }
 }
 
@@ -693,8 +693,8 @@ void normalize_2D_tensor_axis2(Rpp32f *srcPtr, RpptDescPtr srcDescPtr, Rpp32f *d
         __m256 dstPtrTempRow_n = _mm256_add_ps(_mm256_mul_ps(_mm256_sub_ps(srcPtrTempRow_n, meanptr_n), invStdDevPtr_n), shift_n);
         _mm256_maskstore_ps(dstPtrTempRow, k_n, dstPtrTempRow_n);
 
-        srcPtrTemp += srcDescPtr->strides.hStride;
-        dstPtrTemp += dstDescPtr->strides.hStride;
+        srcPtrTemp += (dstDescPtr->h > 1 and dstDescPtr->w > 1) ? srcDescPtr->strides.hStride : srcDescPtr->strides.wStride;
+        dstPtrTemp += (dstDescPtr->h > 1 and dstDescPtr->w > 1) ? dstDescPtr->strides.hStride : dstDescPtr->strides.wStride;
     }
 }
 
@@ -768,7 +768,7 @@ RppStatus normalize_audio_host_tensor(Rpp32f* srcPtr,
             srcReductionDims[1] = srcAudioDims[0] * srcAudioDims[1];
             paramStride[0] = paramStride[1] = 0;
         } else if (axis_mask == 1) {
-            srcStride[0] = srcDescPtr->strides.hStride;
+            srcStride[0] = (dstDescPtr->h > 1 and dstDescPtr->w > 1) ? srcDescPtr->strides.hStride : srcDescPtr->strides.wStride;
             srcStride[1] = srcDescPtr->strides.cStride;
             srcReductionDims[0] = srcAudioDims[1];
             srcReductionDims[1] = srcAudioDims[0];
@@ -776,7 +776,7 @@ RppStatus normalize_audio_host_tensor(Rpp32f* srcPtr,
             paramStride[1] = 0;
         } else if (axis_mask == 2) {
             srcStride[0] = srcDescPtr->strides.cStride;
-            srcStride[1] = srcDescPtr->strides.hStride;
+            srcStride[1] = (dstDescPtr->h > 1 and dstDescPtr->w > 1) ? srcDescPtr->strides.hStride : srcDescPtr->strides.wStride;
             srcReductionDims[0] = srcAudioDims[0];
             srcReductionDims[1] = srcAudioDims[1];
             paramStride[0] = 0;
