@@ -291,12 +291,12 @@ void compute_2D_mean_axis2_4samples(Rpp32f *srcPtr, Rpp32f *meanPtr, Rpp32u *dim
 }
 
 void compute_2D_mean_axis2(Rpp32f *srcPtr, Rpp32f *meanPtr, Rpp32u *dims, Rpp32u *stride) {
-    Rpp32f *srcPtrTemp = srcPtr;
     Rpp32u rem = dims[1]%PACK;
     Rpp32u v_n = (!rem) ? dims[1]/PACK: (dims[1]/PACK)+1;
 
     // Outer loop source length
     for(Rpp32u i = 0; i < dims[0]; i++) {
+        Rpp32f *srcPtrTemp = srcPtr + (i * stride[1]);
         meanPtr[i] = 0;
 
         __m256 meanPtr_n  = _mm256_setzero_ps();
@@ -319,8 +319,6 @@ void compute_2D_mean_axis2(Rpp32f *srcPtr, Rpp32f *meanPtr, Rpp32u *dims, Rpp32u
 
         __m256 srcPtrTemp_n = _mm256_maskload_ps(srcPtrTemp, k_n);
         meanPtr_n = _mm256_add_ps(srcPtrTemp_n, meanPtr_n);
-
-        srcPtrTemp += rem;
 
         meanPtr[i] += accumalate_ps(meanPtr_n);
         meanPtr[i] = meanPtr[i] / dims[1];
@@ -438,12 +436,12 @@ void compute_2D_inv_std_dev_axis1(Rpp32f *srcPtr, Rpp32f *meanPtr, Rpp32f *stdDe
 }
 
 void compute_2D_inv_std_dev_axis2(Rpp32f *srcPtr, Rpp32f *meanPtr, Rpp32f *stdDevPtr, Rpp32u *dims, Rpp32u *stride) {
-    Rpp32f *srcPtrTemp = srcPtr;
     Rpp32u rem = dims[1]%PACK;
     Rpp32u v_n = (!rem) ? dims[1]/PACK: (dims[1]/PACK)+1;
 
     // Outer loop source length
     for(Rpp32u i = 0; i < dims[0]; i++) {
+        Rpp32f *srcPtrTemp = srcPtr + (i * stride[1]);
         stdDevPtr[i] = 0;
         __m256 meanptr_n = _mm256_set1_ps(meanPtr[i]);
         __m256 stdDevPtr_n = _mm256_setzero_ps();
@@ -468,8 +466,6 @@ void compute_2D_inv_std_dev_axis2(Rpp32f *srcPtr, Rpp32f *meanPtr, Rpp32f *stdDe
 
         __m256 diff_n = _mm256_sub_ps(_mm256_maskload_ps(srcPtrTemp, k_n), meanptr_n);
         stdDevPtr_n = _mm256_add_ps(stdDevPtr_n, _mm256_mul_ps(diff_n, diff_n));
-
-        srcPtrTemp += rem;
 
         stdDevPtr[i] += accumalate_ps(stdDevPtr_n);
         stdDevPtr[i] = stdDevPtr[i] / dims[1];
@@ -792,7 +788,7 @@ RppStatus normalize_audio_host_tensor(Rpp32f* srcPtr,
             if (axis_mask == 1)
                 compute_2D_mean_axis1(srcPtrTemp, meanTensor, srcReductionDims, srcStride);
             else if (axis_mask == 2)
-                compute_2D_mean_axis2_4samples(srcPtrTemp, meanTensor, srcReductionDims, srcStride);
+                compute_2D_mean_axis2(srcPtrTemp, meanTensor, srcReductionDims, srcStride);
             else if (axis_mask == 3)
                 compute_2D_mean_axis3(srcPtrTemp, meanTensor, srcReductionDims, srcStride);
         }
