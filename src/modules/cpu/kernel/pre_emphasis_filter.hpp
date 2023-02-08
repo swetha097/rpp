@@ -45,7 +45,12 @@ RppStatus pre_emphasis_filter_host_tensor(Rpp32f *srcPtr,
         }
 
         for(; vectorLoopCount < bufferLength; vectorLoopCount++)
+        {
             *dstPtrTemp = *srcPtrTemp - coeff * (*(srcPtrTemp - 1));
+            srcPtrTemp++;
+            dstPtrTemp++;
+        }
+
     }
 
     return RPP_SUCCESS;
