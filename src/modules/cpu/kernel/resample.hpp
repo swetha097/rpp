@@ -8,16 +8,20 @@ inline double Hann(double x) {
 
 struct ResamplingWindow {
     inline std::pair<int, int> input_range(Rpp32f x) {
-        int i0 = std::ceil(x) - lobes;
-        int i1 = std::floor(x) + lobes;
+        int xc = ceilf(x);
+        int i0 = xc - lobes;
+        int i1 = xc + lobes;
         return {i0, i1};
     }
 
     inline Rpp32f operator()(Rpp32f x) {
         Rpp32f fi = x * scale + center;
-        int i = std::floor(fi);
+        Rpp32s i = floorf(fi);
         Rpp32f di = fi - i;
-        return lookup[i] + di * (lookup[i + 1] - lookup[i]);
+        i = std::max(std::min(i, lookup_size - 2), 0);
+        Rpp32f curr = lookup[i];
+        Rpp32f next = lookup[i + 1];
+        return curr + di * (next - curr);
     }
 
     inline __m128 operator()(__m128 x) {
@@ -25,6 +29,7 @@ struct ResamplingWindow {
         __m128i i = _mm_cvtps_epi32(fi);
         __m128 fifloor = _mm_cvtepi32_ps(i);
         __m128 di = _mm_sub_ps(fi, fifloor);
+        i = _mm_max_epi32(_mm_min_epi32(i, pxLookupMax), xmm_px0);
         int idx[4];
         _mm_storeu_si128(reinterpret_cast<__m128i*>(idx), i);
         __m128 curr = _mm_setr_ps(lookup[idx[0]],   lookup[idx[1]],
@@ -35,7 +40,9 @@ struct ResamplingWindow {
     }
 
     Rpp32f scale = 1, center = 1;
-    int lobes = 0, coeffs = 0;
+    Rpp32s lobes = 0, coeffs = 0;
+    Rpp32s lookup_size = 0;
+    __m128i pxLookupMax;
     std::vector<Rpp32f> lookup;
 };
 
@@ -45,7 +52,9 @@ inline void windowed_sinc(ResamplingWindow &window,
     Rpp32f scale_envelope = 2.0f / coeffs;
     window.coeffs = coeffs;
     window.lobes = lobes;
-    window.lookup.resize(coeffs + 2);
+    window.lookup.resize(coeffs + 5);
+    window.lookup_size = window.lookup.size();
+    window.pxLookupMax = _mm_set1_epi32(window.lookup_size - 2);
     int center = (coeffs - 1) * 0.5f;
     for (int i = 0; i < coeffs; i++) {
         Rpp32f x = (i - center) * scale;
@@ -108,13 +117,13 @@ RppStatus resample_host_tensor(Rpp32f *srcPtr,
                         if (i0 + inBlockRounded < 0)
                             i0 = -inBlockRounded;
                         if (i1 + inBlockRounded >= srcLength)
-                            i1 = srcLength - 1 - inBlockRounded;
+                            i1 = srcLength - inBlockRounded;
                         Rpp32f f = 0;
                         int i = i0;
 
                         __m128 f4 = _mm_setzero_ps();
                         __m128 x4 = _mm_setr_ps(i - inPos, i + 1 - inPos, i + 2 - inPos, i + 3 - inPos);
-                        for (; i + 3 <= i1; i += 4) {
+                        for (; i + 3 < i1; i += 4) {
                             __m128 w4 = window(x4);
 
                             f4 = _mm_add_ps(f4, _mm_mul_ps(_mm_loadu_ps(inBlockPtr + i), w4));
@@ -126,7 +135,7 @@ RppStatus resample_host_tensor(Rpp32f *srcPtr,
                         f = _mm_cvtss_f32(f4);
 
                         Rpp32f x = i - inPos;
-                        for (; i <= i1; i++, x++) {
+                        for (; i < i1; i++, x++) {
                             Rpp32f w = window(x);
                             f += inBlockPtr[i] * w;
                         }
@@ -160,7 +169,7 @@ RppStatus resample_host_tensor(Rpp32f *srcPtr,
                         int ofs0 = i0 * numChannels;
                         int ofs1 = i1 * numChannels;
 
-                        for (int in_ofs = ofs0; in_ofs <= ofs1; in_ofs += numChannels, x++) {
+                        for (int in_ofs = ofs0; in_ofs < ofs1; in_ofs += numChannels, x++) {
                             Rpp32f w = window(x);
                             for (int c = 0; c < numChannels; c++)
                                 tmp[c] += inBlockPtr[in_ofs + c] * w;
