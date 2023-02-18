@@ -26,7 +26,7 @@ struct ResamplingWindow {
 
     inline __m128 operator()(__m128 x) {
         __m128 fi = _mm_add_ps(x * _mm_set1_ps(scale), _mm_set1_ps(center));
-        __m128i i = _mm_cvtps_epi32(fi);
+        __m128i i = _mm_cvttps_epi32(fi);
         __m128 fifloor = _mm_cvtepi32_ps(i);
         __m128 di = _mm_sub_ps(fi, fifloor);
         i = _mm_max_epi32(_mm_min_epi32(i, pxLookupMax), xmm_px0);
@@ -99,7 +99,7 @@ RppStatus resample_host_tensor(Rpp32f *srcPtr,
             int64_t outBegin = 0;
             int64_t outEnd = std::ceil(srcLength * outRate / inRate);
             int64_t inPos = 0;
-            int64_t block = 1 << 10;
+            int64_t block = 1 << 8;
             double scale = inRate / outRate;
             Rpp32f fscale = scale;
 
@@ -116,7 +116,7 @@ RppStatus resample_host_tensor(Rpp32f *srcPtr,
                         std::tie(i0, i1) = window.input_range(inPos);
                         if (i0 + inBlockRounded < 0)
                             i0 = -inBlockRounded;
-                        if (i1 + inBlockRounded >= srcLength)
+                        if (i1 + inBlockRounded > srcLength)
                             i1 = srcLength - inBlockRounded;
                         Rpp32f f = 0;
                         int i = i0;
