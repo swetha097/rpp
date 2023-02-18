@@ -52,6 +52,7 @@ inline void windowed_sinc(ResamplingWindow &window,
     Rpp32f scale_envelope = 2.0f / coeffs;
     window.coeffs = coeffs;
     window.lobes = lobes;
+    window.lookup.clear();
     window.lookup.resize(coeffs + 5);
     window.lookup_size = window.lookup.size();
     window.pxLookupMax = _mm_set1_epi32(window.lookup_size - 2);
@@ -100,7 +101,7 @@ RppStatus resample_host_tensor(Rpp32f *srcPtr,
             int64_t outEnd = std::ceil(srcLength * outRate / inRate);
             int64_t inPos = 0;
             int64_t block = 1 << 8;
-            double scale = inRate / outRate;
+            double scale = (double)inRate / outRate;
             Rpp32f fscale = scale;
 
             if(numChannels == 1) {
@@ -109,7 +110,7 @@ RppStatus resample_host_tensor(Rpp32f *srcPtr,
                     double inBlockRaw = outBlock * scale;
                     int64_t inBlockRounded = std::floor(inBlockRaw);
                     Rpp32f inPos = inBlockRaw - inBlockRounded;
-                    const Rpp32f *inBlockPtr = srcPtrTemp + inBlockRounded;
+                    const Rpp32f * __restrict__ inBlockPtr = srcPtrTemp + inBlockRounded;
 
                     for (int64_t outPos = outBlock; outPos < blockEnd; outPos++, inPos += fscale) {
                         int i0, i1;
@@ -118,7 +119,7 @@ RppStatus resample_host_tensor(Rpp32f *srcPtr,
                             i0 = -inBlockRounded;
                         if (i1 + inBlockRounded > srcLength)
                             i1 = srcLength - inBlockRounded;
-                        Rpp32f f = 0;
+                        Rpp32f f = 0.0f;
                         int i = i0;
 
                         __m128 f4 = _mm_setzero_ps();
@@ -153,14 +154,14 @@ RppStatus resample_host_tensor(Rpp32f *srcPtr,
                     int64_t inBlockRounded = std::floor(inBlockRaw);
 
                     Rpp32f inPos = inBlockRaw - inBlockRounded;
-                    const Rpp32f *inBlockPtr = srcPtrTemp + inBlockRounded * numChannels;
+                    const Rpp32f * __restrict__ inBlockPtr = srcPtrTemp + inBlockRounded * numChannels;
                     for (int64_t outPos = outBlock; outPos < blockEnd; outPos++, inPos += fscale) {
                         int i0, i1;
                         std::tie(i0, i1) = window.input_range(inPos);
                         if (i0 + inBlockRounded < 0)
                             i0 = -inBlockRounded;
-                        if (i1 + inBlockRounded >= srcLength)
-                            i1 = srcLength - 1 - inBlockRounded;
+                        if (i1 + inBlockRounded > srcLength)
+                            i1 = srcLength - inBlockRounded;
 
                         for (int c = 0; c < numChannels; c++)
                             tmp[c] = 0;
