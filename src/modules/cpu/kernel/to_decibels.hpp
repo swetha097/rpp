@@ -78,7 +78,7 @@ RppStatus to_decibels_host_tensor(Rpp32f *srcPtr,
                 srcPtrCurrent += vectorIncrement;
                 dstPtrCurrent += vectorIncrement;
             }
-            for(; vectorLoopCount < width; vectorLoopCount++)
+            for(; vectorLoopCount < height; vectorLoopCount++)
             {
                 *dstPtrCurrent = multiplier * std::log(std::max(minRatio, (*srcPtrCurrent) * invReferenceMagnitude));
                 srcPtrCurrent++;
