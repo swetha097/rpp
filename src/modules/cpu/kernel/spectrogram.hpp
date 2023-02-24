@@ -1,54 +1,54 @@
 #include "rppdefs.h"
 #include "rpp_cpu_simd.hpp"
 #include "rpp_cpu_common.hpp"
-#include <chrono>
-#include <complex>
+#include "../../../../third_party/ffts/include/ffts.h"
+#include "../../../..//third_party/ffts/include/ffts_attributes.h"
 
-Rpp32f reduce_add_ps1(__m256 src)
+inline void hann_window(Rpp32f *output, Rpp32s windowSize)
 {
-    __m256 src_add = _mm256_add_ps(src, _mm256_permute2f128_ps(src, src, 1));
-    src_add = _mm256_add_ps(src_add, _mm256_shuffle_ps(src_add, src_add, _MM_SHUFFLE(1, 0, 3, 2)));
-    src_add = _mm256_add_ps(src_add, _mm256_shuffle_ps(src_add, src_add, _MM_SHUFFLE(2, 3, 0, 1)));
-    Rpp32f *addResult = (Rpp32f *)&src_add;
-    return addResult[0];
-}
-
-void HannWindow(float *output, int N)
-{
-    double a = (2 * M_PI / N);
-    for (int t = 0; t < N; t++)
+    Rpp64f a = (2.0 * M_PI) / windowSize;
+    for (Rpp32s t = 0; t < windowSize; t++)
     {
-        double phase = a * (t + 0.5);
+        Rpp64f phase = a * (t + 0.5);
         output[t] = (0.5 * (1.0 - std::cos(phase)));
     }
 }
 
-int getOutputSize(int length, int windowLength, int windowStep, bool centerWindows)
+bool is_pow2(int64_t n) { return (n & (n-1)) == 0; }
+
+inline bool can_use_real_impl(int64_t n) { return is_pow2(n); }
+
+inline int64_t size_in_buf(int64_t n) {
+  // Real impl input needs:    N real numbers    -> N floats
+  // Complex impl input needs: N complex numbers -> 2*N floats
+  return can_use_real_impl(n) ? n : 2*n;
+}
+
+inline int64_t size_out_buf(int64_t n) {
+  // Real impl output needs:    (N/2)+1 complex numbers -> N+2 floats
+  // Complex impl output needs: N complex numbers       -> 2*N floats
+  return can_use_real_impl(n) ? n+2 : 2*n;
+}
+
+inline Rpp32s get_num_windows(Rpp32s length, Rpp32s windowLength, Rpp32s windowStep, bool centerWindows)
 {
     if (!centerWindows)
         length -= windowLength;
-
     return ((length / windowStep) + 1);
 }
 
-int getIdxReflect(int idx, int lo, int hi)
+inline Rpp32s get_idx_reflect(Rpp32s idx, Rpp32s lo, Rpp32s hi)
 {
     if (hi - lo < 2)
         return hi - 1;
     for (;;)
     {
         if (idx < lo)
-        {
             idx = 2 * lo - idx;
-        }
         else if (idx >= hi)
-        {
             idx = 2 * hi - 2 - idx;
-        }
         else
-        {
             break;
-        }
     }
     return idx;
 }
@@ -69,326 +69,152 @@ RppStatus spectrogram_host_tensor(Rpp32f *srcPtr,
 {
     Rpp32s windowCenterOffset = 0;
     bool vertical = (layout == RpptSpectrogramLayout::FT);
-
     if (centerWindows)
         windowCenterOffset = windowLength / 2;
-
-    if (nfft == 0.0f)
+    if (nfft == 0)
         nfft = windowLength;
-
     Rpp32s numBins = nfft / 2 + 1;
-
-    // Generate hanning window
-    std::vector<float> windowFn;
-    windowFn.resize(windowLength);
-    HannWindow(windowFn.data(), windowLength);
-
-    const Rpp32f mul_factor = (2.0f * M_PI) / nfft;
-
-    Rpp32f *cosf = (float *)malloc(sizeof(float) * numBins * nfft);
-    Rpp32f *sinf = (float *)malloc(sizeof(float) * numBins * nfft);
-
-    for (int k = 0; k < numBins; k++)
-    {
-        for (int i = 0; i < nfft; i++)
-        {
-            cosf[k * nfft + i] = std::cos(k * i * mul_factor);
-            sinf[k * nfft + i] = std::sin(k * i * mul_factor);
-        }
-    }
-
+    const Rpp32f mulFactor = (2.0 * M_PI) / nfft;
     Rpp32u hStride = dstDescPtr->strides.hStride;
-    Rpp32s alignednfftLength = nfft & ~7;
-    Rpp32s alignednbinsLength = numBins & ~7;
-    Rpp32s alignedwindowLength = windowLength & ~7;
+    Rpp32s alignedNfftLength = nfft & ~7;
+    Rpp32s alignedNbinsLength = numBins & ~7;
+    Rpp32s alignedWindowLength = windowLength & ~7;
 
-    if (vertical)
-    {
-        omp_set_dynamic(0);
-#pragma omp parallel for num_threads(8)
-        for (int batchCount = 0; batchCount < srcDescPtr->n; batchCount++)
-        {
-            Rpp32f *srcPtrTemp = srcPtr + batchCount * srcDescPtr->strides.nStride;
-            Rpp32f *dstPtrTemp = dstPtr + batchCount * dstDescPtr->strides.nStride;
-            Rpp32s bufferLength = srcLengthTensor[batchCount];
-
-            Rpp32s numWindows = getOutputSize(bufferLength, windowLength, windowStep, centerWindows);
-
-            Rpp32f *windowOutput = (float *)calloc(numWindows * nfft, sizeof(float));
-
-            for (int64_t w = 0; w < numWindows; w++)
-            {
-                int64_t windowStart = w * windowStep - windowCenterOffset;
-                Rpp32f *windowOutputTemp = windowOutput + (w * nfft);
-                if (windowStart < 0 || (windowStart + windowLength) > bufferLength)
-                {
-                    for (int t = 0; t < windowLength; t++)
-                    {
-                        int64_t inIdx = windowStart + t;
-                        if (reflectPadding)
-                        {
-                            inIdx = getIdxReflect(inIdx, 0, bufferLength);
-                            *windowOutputTemp++ = windowFn[t] * srcPtrTemp[inIdx];
-                        }
-                        else
-                        {
-                            if (inIdx >= 0 && inIdx < bufferLength)
-                                *windowOutputTemp++ = windowFn[t] * srcPtrTemp[inIdx];
-                            else
-                                *windowOutputTemp++ = 0;
-                        }
-                    }
-                }
-                else
-                {
-                    Rpp32f *srcPtrWindowTemp = srcPtrTemp + windowStart;
-                    Rpp32f *windowFnTemp = windowFn.data();
-                    int t = 0;
-                    for (; t < alignedwindowLength; t += 8)
-                    {
-                        __m256 pSrc, pWindowFn;
-                        pSrc = _mm256_loadu_ps(srcPtrWindowTemp);
-                        pWindowFn = _mm256_loadu_ps(windowFnTemp);
-                        pSrc = _mm256_mul_ps(pSrc, pWindowFn);
-                        _mm256_storeu_ps(windowOutputTemp, pSrc);
-                        srcPtrWindowTemp += 8;
-                        windowFnTemp += 8;
-                        windowOutputTemp += 8;
-                    }
-
-                    for (; t < windowLength; t++)
-                    {
-                        *windowOutputTemp++ = (*windowFnTemp++) * (*srcPtrWindowTemp++);
-                    }
-                }
-            }
-
-            float *fftReal = (float *)calloc(numBins, sizeof(float));
-            float *fftImag = (float *)calloc(numBins, sizeof(float));
-
-            for (int64_t w = 0; w < numWindows; w++)
-            {
-                // Compute FFT
-                for (int k = 0; k < numBins; k++)
-                {
-                    float *windowOutputTemp = windowOutput + (w * nfft);
-                    float *cosfTemp = cosf + (k * nfft);
-                    float *sinfTemp = sinf + (k * nfft);
-                    float real = 0.0f;
-                    float imag = 0.0f;
-                    __m256 pReal, pImag;
-                    pReal = avx_p0;
-                    pImag = avx_p0;
-                    int i = 0;
-                    for (; i < alignednfftLength; i += 8)
-                    {
-                        __m256 pSrc, pSin, pCos;
-                        pSrc = _mm256_loadu_ps(windowOutputTemp);
-                        pCos = _mm256_loadu_ps(cosfTemp);
-                        pSin = _mm256_loadu_ps(sinfTemp);
-                        pReal = _mm256_add_ps(pReal, _mm256_mul_ps(pSrc, pCos));
-                        pImag = _mm256_add_ps(pImag, _mm256_mul_ps(_mm256_mul_ps(pSrc, avx_pm1), pSin));
-                        windowOutputTemp += 8;
-                        cosfTemp += 8;
-                        sinfTemp += 8;
-                    }
-                    real = reduce_add_ps1(pReal);
-                    imag = reduce_add_ps1(pImag);
-                    for (; i < nfft; i++)
-                    {
-                        float x = *windowOutputTemp++;
-                        real += x * *cosfTemp++;
-                        imag += -x * *sinfTemp++;
-                    }
-                    fftReal[k] = real;
-                    fftImag[k] = imag;
-                }
-
-                Rpp32f *fftRealTemp = fftReal;
-                Rpp32f *fftImagTemp = fftImag;
-                int i = 0;
-                for (; i < alignednbinsLength; i += 8)
-                {
-                    __m256 pReal, pImag, pTotal;
-                    pReal = _mm256_loadu_ps(fftRealTemp);
-                    pImag = _mm256_loadu_ps(fftImagTemp);
-                    pReal = _mm256_mul_ps(pReal, pReal);
-                    pImag = _mm256_mul_ps(pImag, pImag);
-                    pTotal = _mm256_add_ps(pReal, pImag);
-                    if (power == 1)
-                    {
-                        pTotal = _mm256_sqrt_ps(pTotal);
-                    }
-                    float *pTotalPtr = (float *)&pTotal;
-                    for (Rpp32s j = i; j < (i + 8); j++)
-                    {
-                        dstPtrTemp[j * hStride + w] = pTotalPtr[j - i];
-                    }
-                    fftRealTemp += 8;
-                    fftImagTemp += 8;
-                }
-                for (; i < numBins; i++)
-                {
-                    float real = *fftRealTemp++;
-                    float imag = *fftImagTemp++;
-                    float total = (real * real) + (imag * imag);
-                    int64_t outIdx = (i * hStride + w);
-                    if (power == 1)
-                    {
-                        total = std::sqrt(total);
-                    }
-                    dstPtrTemp[outIdx] = total;
-                }
-            }
-            free(fftReal);
-            free(fftImag);
-            free(windowOutput);
-        }
-    }
+    std::vector<Rpp32f> windowFn;
+    windowFn.resize(windowLength);
+    // Generate hanning window
+    if (windowFunction == NULL)
+        hann_window(windowFn.data(), windowLength);
     else
-    {
-        float *fftReal = (float *)calloc(srcDescPtr->n * numBins, sizeof(float));
-        float *fftImag = (float *)calloc(srcDescPtr->n * numBins, sizeof(float));
+        memcpy(windowFn.data(), windowFunction, windowLength * sizeof(Rpp32f));
 
-        omp_set_dynamic(0);
+    // Get windows output
+    omp_set_dynamic(0);
 #pragma omp parallel for num_threads(8)
-        for (int batchCount = 0; batchCount < srcDescPtr->n; batchCount++)
+    for (Rpp32s batchCount = 0; batchCount < srcDescPtr->n; batchCount++)
+    {
+        Rpp32f *srcPtrTemp = srcPtr + batchCount * srcDescPtr->strides.nStride;
+        Rpp32f *dstPtrTemp = dstPtr + batchCount * dstDescPtr->strides.nStride;
+        Rpp32s bufferLength = srcLengthTensor[batchCount];
+        Rpp32s numWindows = get_num_windows(bufferLength, windowLength, windowStep, centerWindows);
+        Rpp32f windowOutput[numWindows * nfft];
+        std::fill_n (windowOutput, numWindows * nfft, 0);
+        for (Rpp64s w = 0; w < numWindows; w++)
         {
-            Rpp32f *srcPtrTemp = srcPtr + batchCount * srcDescPtr->strides.nStride;
-            Rpp32f *dstPtrTemp = dstPtr + batchCount * dstDescPtr->strides.nStride;
-            Rpp32s bufferLength = srcLengthTensor[batchCount];
-
-            Rpp32s numWindows = getOutputSize(bufferLength, windowLength, windowStep, centerWindows);
-
-            Rpp32f *windowOutput = (float *)calloc(numWindows * nfft, sizeof(float));
-
-            for (int64_t w = 0; w < numWindows; w++)
+            Rpp64s windowStart = w * windowStep - windowCenterOffset;
+            Rpp32f *windowOutputTemp = windowOutput + (w * nfft);
+            if (windowStart < 0 || (windowStart + windowLength) > bufferLength)
             {
-                int64_t windowStart = w * windowStep - windowCenterOffset;
-                Rpp32f *windowOutputTemp = windowOutput + (w * nfft);
-
-                if (windowStart < 0 || (windowStart + windowLength) > bufferLength)
+                for (Rpp32s t = 0; t < windowLength; t++)
                 {
-                    for (int t = 0; t < windowLength; t++)
+                    Rpp64s inIdx = windowStart + t;
+                    if (reflectPadding)
                     {
-                        int64_t inIdx = windowStart + t;
-                        if (reflectPadding)
-                        {
-                            inIdx = getIdxReflect(inIdx, 0, bufferLength);
-                            *windowOutputTemp++ = windowFn[t] * srcPtrTemp[inIdx];
-                        }
-                        else
-                        {
-                            if (inIdx >= 0 && inIdx < bufferLength)
-                                *windowOutputTemp++ = windowFn[t] * srcPtrTemp[inIdx];
-                            else
-                                *windowOutputTemp++ = 0;
-                        }
+                        inIdx = get_idx_reflect(inIdx, 0, bufferLength);
+                        *windowOutputTemp++ = windowFn[t] * srcPtrTemp[inIdx];
                     }
+                    else
+                    {
+                        if (inIdx >= 0 && inIdx < bufferLength)
+                            *windowOutputTemp++ = windowFn[t] * srcPtrTemp[inIdx];
+                        else
+                            *windowOutputTemp++ = 0;
+                    }
+                }
+            }
+            else
+            {
+                Rpp32f *srcPtrWindowTemp = srcPtrTemp + windowStart;
+                Rpp32f *windowFnTemp = windowFn.data();
+                Rpp32s t = 0;
+                for (; t < alignedWindowLength; t += 8)
+                {
+                    __m256 pSrc, pWindowFn;
+                    pSrc = _mm256_loadu_ps(srcPtrWindowTemp);
+                    pWindowFn = _mm256_loadu_ps(windowFnTemp);
+                    pSrc = _mm256_mul_ps(pSrc, pWindowFn);
+                    _mm256_storeu_ps(windowOutputTemp, pSrc);
+                    srcPtrWindowTemp += 8;
+                    windowFnTemp += 8;
+                    windowOutputTemp += 8;
+                }
+                for (; t < windowLength; t++)
+                    *windowOutputTemp++ = (*windowFnTemp++) * (*srcPtrWindowTemp++);
+            }
+        }
+
+        // Generate FFT output
+        ffts_plan_t *p;
+        bool useRealImpl = can_use_real_impl(nfft);
+        if(useRealImpl)
+            p = ffts_init_1d_real(nfft, FFTS_FORWARD);
+        else
+            p = ffts_init_1d(nfft, FFTS_FORWARD);
+
+        if (!p) {
+            printf("FFT Plan is unsupported. Exiting the code\n");
+            exit(0);
+        }
+
+        auto fftInSize = size_in_buf(nfft);
+        auto fftOutSize = size_out_buf(nfft);
+
+        // Set temporary buffers to 0
+        Rpp32f FFTS_ALIGN(32) *fftInBuf = (Rpp32f *)_mm_malloc(fftInSize * sizeof(Rpp32f), 32); // ffts requires 32-byte aligned memory
+        Rpp32f FFTS_ALIGN(32) *fftOutBuf = (Rpp32f *)_mm_malloc(fftOutSize * sizeof(Rpp32f), 32); // ffts requires 32-byte aligned memory
+
+        for (Rpp64s w = 0; w < numWindows; w++)
+        {
+            Rpp32f *dstPtrBinTemp = dstPtrTemp + (w * hStride);
+            Rpp32f *windowOutputTemp = windowOutput + (w * nfft);
+            memset(fftInBuf, 0, fftInSize * sizeof(Rpp32f));
+            memset(fftOutBuf, 0, fftOutSize * sizeof(Rpp32f));
+            Rpp32s inWindowStart = windowLength < nfft ? (nfft - windowLength) / 2 : 0;
+
+            // Copy the window input to fftInBuf
+            Rpp32s inIdx = 0;
+            if (useRealImpl)
+            {
+                for (int i = 0; i < windowLength; i++)
+                {
+                    fftInBuf[inWindowStart + i] = windowOutputTemp[inIdx];
+                    inIdx++;
+                }
+            }
+            else
+            {
+                for (int i = 0; i < windowLength; i++)
+                {
+                    int64_t off = 2 * (inWindowStart + i);
+                    fftInBuf[off] = windowOutputTemp[inIdx];
+                    fftInBuf[off + 1] = 0.0f;
+                    inIdx++;
+                }
+            }
+
+            ffts_execute(p, fftInBuf, fftOutBuf);
+            auto *complexFft = reinterpret_cast<std::complex<Rpp32f> *>(fftOutBuf);
+            for (int i = 0; i < numBins; i++)
+            {
+                if (vertical)
+                {
+                    Rpp64s outIdx = (i * hStride + w);
+                    if (power == 1)
+                        dstPtrTemp[outIdx] = std::abs(complexFft[i]);
+                    else
+                        dstPtrTemp[outIdx] = std::norm(complexFft[i]);
                 }
                 else
                 {
-                    Rpp32f *srcPtrWindowTemp = srcPtrTemp + windowStart;
-                    Rpp32f *windowFnTemp = windowFn.data();
-                    int t = 0;
-                    for (; t < alignedwindowLength; t += 8)
-                    {
-                        __m256 pSrc, pWindowFn;
-                        pSrc = _mm256_loadu_ps(srcPtrWindowTemp);
-                        pWindowFn = _mm256_loadu_ps(windowFnTemp);
-                        pSrc = _mm256_mul_ps(pSrc, pWindowFn);
-                        _mm256_storeu_ps(windowOutputTemp, pSrc);
-                        srcPtrWindowTemp += 8;
-                        windowFnTemp += 8;
-                        windowOutputTemp += 8;
-                    }
-
-                    for (; t < windowLength; t++)
-                    {
-                        *windowOutputTemp++ = (*windowFnTemp++) * (*srcPtrWindowTemp++);
-                    }
-                }
-
-                Rpp32f *fftRealTemp = fftReal + batchCount * numBins;
-                Rpp32f *fftImagTemp = fftImag + batchCount * numBins;
-
-                // Compute FFT
-                for (int k = 0; k < numBins; k++)
-                {
-                    windowOutputTemp = windowOutput + (w * nfft);
-                    float *cosfTemp = cosf + (k * nfft);
-                    float *sinfTemp = sinf + (k * nfft);
-                    float real = 0.0f;
-                    float imag = 0.0f;
-                    __m256 pReal, pImag;
-                    pReal = avx_p0;
-                    pImag = avx_p0;
-                    int i = 0;
-                    for (; i < alignednfftLength; i += 8)
-                    {
-                        __m256 pSrc, pSin, pCos;
-                        pSrc = _mm256_loadu_ps(windowOutputTemp);
-                        pCos = _mm256_loadu_ps(cosfTemp);
-                        pSin = _mm256_loadu_ps(sinfTemp);
-                        pReal = _mm256_add_ps(pReal, _mm256_mul_ps(pSrc, pCos));
-                        pImag = _mm256_add_ps(pImag, _mm256_mul_ps(_mm256_mul_ps(pSrc, avx_pm1), pSin));
-                        windowOutputTemp += 8;
-                        cosfTemp += 8;
-                        sinfTemp += 8;
-                    }
-                    real = reduce_add_ps1(pReal);
-                    imag = reduce_add_ps1(pImag);
-                    for (; i < nfft; i++)
-                    {
-                        float x = *windowOutputTemp++;
-                        real += x * *cosfTemp++;
-                        imag += -x * *sinfTemp++;
-                    }
-                    *fftRealTemp++ = real;
-                    *fftImagTemp++ = imag;
-                }
-
-                fftRealTemp = fftReal + batchCount * numBins;
-                fftImagTemp = fftImag + batchCount * numBins;
-
-                Rpp32f *dstPtrBinTemp = dstPtrTemp + (w * hStride);
-                int i = 0;
-                for (; i < alignednbinsLength; i += 8)
-                {
-                    __m256 pReal, pImag, pTotal;
-                    pReal = _mm256_loadu_ps(fftRealTemp);
-                    pImag = _mm256_loadu_ps(fftImagTemp);
-                    pReal = _mm256_mul_ps(pReal, pReal);
-                    pImag = _mm256_mul_ps(pImag, pImag);
-                    pTotal = _mm256_add_ps(pReal, pImag);
                     if (power == 1)
-                    {
-                        pTotal = _mm256_sqrt_ps(pTotal);
-                    }
-                    _mm256_storeu_ps(dstPtrBinTemp, pTotal);
-                    fftRealTemp += 8;
-                    fftImagTemp += 8;
-                    dstPtrBinTemp += 8;
-                }
-                for (; i < numBins; i++)
-                {
-                    float real = *fftRealTemp++;
-                    float imag = *fftImagTemp++;
-                    float total = (real * real) + (imag * imag);
-                    if (power == 1)
-                    {
-                        total = std::sqrt(total);
-                    }
-                    *dstPtrBinTemp++ = total;
+                        *dstPtrBinTemp++ = std::abs(complexFft[i]);
+                    else
+                        *dstPtrBinTemp++ = std::norm(complexFft[i]);
                 }
             }
-            free(windowOutput);
         }
-        free(fftReal);
-        free(fftImag);
+        _mm_free(fftInBuf);
+        _mm_free(fftOutBuf);
     }
-    free(sinf);
-    free(cosf);
-
     return RPP_SUCCESS;
 }

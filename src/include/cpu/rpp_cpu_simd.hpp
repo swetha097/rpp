@@ -3126,4 +3126,13 @@ inline void rpp_store12_f32pkd3_to_f32pkd3(Rpp32f* dstPtr, __m128 *p)
     _mm_storeu_ps(dstPtr + 9, p[3]); /* Store RGB set 4 */
 }
 
+inline Rpp32f rpp_horizontal_add_avx(__m256 pSrc)
+{
+    __m256 pSrcAdd = _mm256_add_ps(pSrc, _mm256_permute2f128_ps(pSrc, pSrc, 1));
+    pSrcAdd = _mm256_add_ps(pSrcAdd, _mm256_shuffle_ps(pSrcAdd, pSrcAdd, _MM_SHUFFLE(1, 0, 3, 2)));
+    pSrcAdd = _mm256_add_ps(pSrcAdd, _mm256_shuffle_ps(pSrcAdd, pSrcAdd, _MM_SHUFFLE(2, 3, 0, 1)));
+    Rpp32f *addResult = (Rpp32f *)&pSrcAdd;
+    return addResult[0];
+}
+
 #endif //AMD_RPP_RPP_CPU_SIMD_HPP
