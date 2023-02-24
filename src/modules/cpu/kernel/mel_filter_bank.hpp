@@ -125,12 +125,12 @@ RppStatus mel_filter_bank_host_tensor(Rpp32f *srcPtr,
         }
 
         // Set all values in dst buffer to 0.0
-        memset(dstPtrTemp, 0.0f, (size_t)(numFilter * numFrames * sizeof(Rpp32f)));
+        memset(dstPtrTemp, 0.0f, (size_t)(dstDescPtr->strides.nStride * sizeof(Rpp32f)));
 
         Rpp32u vectorIncrement = 8;
         Rpp32u alignedLength = (numFrames / 8) * 8;
         __m256 pSrc, pDst;
-        Rpp32f *srcRowPtr = srcPtrTemp + fftBinStart * numFrames;
+        Rpp32f *srcRowPtr = srcPtrTemp + fftBinStart * srcDescPtr->strides.nStride;
         for (int64_t fftBin = fftBinStart; fftBin <= fftBinEnd; fftBin++) {
             auto filterUp = intervals[fftBin];
             auto weightUp = 1.0f - weightsDown[fftBin];

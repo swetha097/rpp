@@ -32,31 +32,32 @@ RppStatus to_decibels_host_tensor(Rpp32f *srcPtr,
         Rpp32f *dstPtrCurrent = dstPtr + batchCount * dstDescPtr->strides.nStride;
         Rpp32u height = srcDims[batchCount].height;
         Rpp32u width = srcDims[batchCount].width;
+        Rpp32f refMag = referenceMagnitude;
 
         // Compute maximum value in the input buffer
         if(!referenceMax)
         {
-            referenceMagnitude = -std::numeric_limits<float>::max();
+            refMag = -std::numeric_limits<float>::max();
             Rpp32f *srcPtrTemp = srcPtrCurrent;
             if(width == 1)
             {
-                referenceMagnitude = std::max(referenceMagnitude, *(std::max_element(srcPtrTemp, srcPtrTemp + height)));
+                refMag = std::max(refMag, *(std::max_element(srcPtrTemp, srcPtrTemp + height)));
             }
             else
             {
                 for(int i = 0; i < height; i++)
                 {
-                    referenceMagnitude = std::max(referenceMagnitude, *(std::max_element(srcPtrTemp, srcPtrTemp + width)));
+                    refMag = std::max(refMag, *(std::max_element(srcPtrTemp, srcPtrTemp + width)));
                     srcPtrTemp += srcDescPtr->strides.hStride;
                 }
             }
         }
 
         // Avoid division by zero
-        if(referenceMagnitude == 0.0)
-            referenceMagnitude = 1.0;
+        if(refMag == 0.0f)
+            refMag = 1.0f;
 
-        Rpp32f invReferenceMagnitude = 1.f / referenceMagnitude;
+        Rpp32f invReferenceMagnitude = 1.f / refMag;
         __m256 pinvMag = _mm256_set1_ps(invReferenceMagnitude);
 
         // Interpret as 1D array
