@@ -167,28 +167,29 @@ RppStatus spectrogram_host_tensor(Rpp32f *srcPtr,
         {
             Rpp32f *dstPtrBinTemp = dstPtrTemp + (w * hStride);
             Rpp32f *windowOutputTemp = windowOutput + (w * nfft);
-            memset(fftInBuf, 0, fftInSize * sizeof(Rpp32f));
-            memset(fftOutBuf, 0, fftOutSize * sizeof(Rpp32f));
+            for(int k = 0; k < fftInSize; k++)
+                fftInBuf[k] = 0.0f;
+
+            for(int k = 0; k < fftOutSize; k++)
+                fftOutBuf[k] = 0.0f;
+
+            // memset(fftInBuf, 0, fftInSize * sizeof(Rpp32f));
+            // memset(fftOutBuf, 0, fftOutSize * sizeof(Rpp32f));
             Rpp32s inWindowStart = windowLength < nfft ? (nfft - windowLength) / 2 : 0;
 
             // Copy the window input to fftInBuf
-            Rpp32s inIdx = 0;
             if (useRealImpl)
             {
                 for (int i = 0; i < windowLength; i++)
-                {
-                    fftInBuf[inWindowStart + i] = windowOutputTemp[inIdx];
-                    inIdx++;
-                }
+                    fftInBuf[inWindowStart + i] = windowOutputTemp[i];
             }
             else
             {
                 for (int i = 0; i < windowLength; i++)
                 {
                     int64_t off = 2 * (inWindowStart + i);
-                    fftInBuf[off] = windowOutputTemp[inIdx];
+                    fftInBuf[off] = windowOutputTemp[i];
                     fftInBuf[off + 1] = 0.0f;
-                    inIdx++;
                 }
             }
 
