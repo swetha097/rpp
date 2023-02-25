@@ -54,8 +54,8 @@ RppStatus mel_filter_bank_host_tensor(Rpp32f *srcPtr,
                                       Rpp32f *dstPtr,
                                       RpptDescPtr dstDescPtr,
                                       RpptImagePatchPtr srcDims,
-                                      Rpp32f maxFreq,
-                                      Rpp32f minFreq,
+                                      Rpp32f maxFreqVal,
+                                      Rpp32f minFreqVal,
                                       RpptMelScaleFormula melFormula,
                                       Rpp32s numFilter,
                                       Rpp32f sampleRate,
@@ -73,7 +73,7 @@ RppStatus mel_filter_bank_host_tensor(Rpp32f *srcPtr,
     }
 
     omp_set_dynamic(0);
-#pragma omp parallel for num_threads(srcDescPtr->n)
+#pragma omp parallel for num_threads(8)
     for(int batchCount = 0; batchCount < srcDescPtr->n; batchCount++)
     {
         Rpp32f *srcPtrTemp = srcPtr + batchCount * srcDescPtr->strides.nStride;
@@ -84,8 +84,10 @@ RppStatus mel_filter_bank_host_tensor(Rpp32f *srcPtr,
         Rpp32s numBins = nfft / 2 + 1;
         Rpp32s numFrames = srcDims[batchCount].width;
 
-        if(maxFreq == 0.0f)
-            maxFreq = sampleRate / 2;
+        Rpp32f maxFreq = maxFreqVal;
+        Rpp32f minFreq = minFreqVal;
+        // if(maxFreq == 0.0f)
+        maxFreq = sampleRate / 2;
 
         // Convert lower, higher freqeuncies to mel scale
         Rpp64f melLow = melScalePtr->hz_to_mel(minFreq);
@@ -125,12 +127,14 @@ RppStatus mel_filter_bank_host_tensor(Rpp32f *srcPtr,
         }
 
         // Set all values in dst buffer to 0.0
-        memset(dstPtrTemp, 0.0f, (size_t)(dstDescPtr->strides.nStride * sizeof(Rpp32f)));
+        for(int i = 0; i < dstDescPtr->strides.nStride; i++)
+            dstPtrTemp[i] = 0.0f;
+        // memset(dstPtrTemp, 0.0f, (size_t)(dstDescPtr->strides.nStride * sizeof(Rpp32f)));
 
         Rpp32u vectorIncrement = 8;
         Rpp32u alignedLength = (numFrames / 8) * 8;
         __m256 pSrc, pDst;
-        Rpp32f *srcRowPtr = srcPtrTemp + fftBinStart * srcDescPtr->strides.nStride;
+        Rpp32f *srcRowPtr = srcPtrTemp + fftBinStart * srcDescPtr->strides.hStride;
         for (int64_t fftBin = fftBinStart; fftBin <= fftBinEnd; fftBin++) {
             auto filterUp = intervals[fftBin];
             auto weightUp = 1.0f - weightsDown[fftBin];

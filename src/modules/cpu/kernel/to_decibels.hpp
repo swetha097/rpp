@@ -14,7 +14,7 @@ RppStatus to_decibels_host_tensor(Rpp32f *srcPtr,
     bool referenceMax = (referenceMagnitude == 0.0) ? false : true;
 
     // Calculate the intermediate values needed for DB conversion
-    Rpp32f minRatio = std::pow(10, cutOffDB / multiplier);
+    Rpp32f minRatio = std::pow(10.0f, cutOffDB / multiplier);
     if(minRatio == 0.0f)
         minRatio = std::nextafter(0.0f, 1.0f);
 
@@ -25,7 +25,7 @@ RppStatus to_decibels_host_tensor(Rpp32f *srcPtr,
     __m256 pMinRatio = _mm256_set1_ps(minRatio);
 
     omp_set_dynamic(0);
-#pragma omp parallel for num_threads(srcDescPtr->n)
+#pragma omp parallel for num_threads(8)
     for(int batchCount = 0; batchCount < srcDescPtr->n; batchCount++)
     {
         Rpp32f *srcPtrCurrent = srcPtr + batchCount * srcDescPtr->strides.nStride;
