@@ -214,6 +214,7 @@ RppStatus spectrogram_host_tensor(Rpp32f *srcPtr,
                 }
             }
         }
+        ffts_free(p);
         _mm_free(fftInBuf);
         _mm_free(fftOutBuf);
     }
