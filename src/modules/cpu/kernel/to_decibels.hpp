@@ -14,11 +14,11 @@ RppStatus to_decibels_host_tensor(Rpp32f *srcPtr,
     bool referenceMax = (referenceMagnitude == 0.0) ? false : true;
 
     // Calculate the intermediate values needed for DB conversion
-    Rpp32f minRatio = std::pow(10.0f, cutOffDB / multiplier);
+    Rpp32f minRatio = std::pow(10, cutOffDB / multiplier);
     if(minRatio == 0.0f)
         minRatio = std::nextafter(0.0f, 1.0f);
-
-    Rpp32f log10Factor = 1 / std::log(10);
+    
+    Rpp32f log10Factor = 0.3010299956639812;//1 / std::log(10);
     multiplier *= log10Factor;
 
     __m256 pMultiplier = _mm256_set1_ps(multiplier);
@@ -67,21 +67,21 @@ RppStatus to_decibels_host_tensor(Rpp32f *srcPtr,
             int alignedLength = (height / 8) * 8;
             int vectorLoopCount = 0;
 
-            for(; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
-            {
-                __m256 pSrc;
-                pSrc = _mm256_loadu_ps(srcPtrCurrent);
-                pSrc = _mm256_mul_ps(pSrc, pinvMag);
-                pSrc = _mm256_max_ps(pMinRatio, pSrc);
-                pSrc = log_ps(pSrc);
-                pSrc = _mm256_mul_ps(pSrc, pMultiplier);
-                _mm256_storeu_ps(dstPtrCurrent, pSrc);
-                srcPtrCurrent += vectorIncrement;
-                dstPtrCurrent += vectorIncrement;
-            }
+            // for(; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
+            // {
+            //     __m256 pSrc;
+            //     pSrc = _mm256_loadu_ps(srcPtrCurrent);
+            //     pSrc = _mm256_mul_ps(pSrc, pinvMag);
+            //     pSrc = _mm256_max_ps(pMinRatio, pSrc);
+            //     pSrc = log_ps(pSrc);
+            //     pSrc = _mm256_mul_ps(pSrc, pMultiplier);
+            //     _mm256_storeu_ps(dstPtrCurrent, pSrc);
+            //     srcPtrCurrent += vectorIncrement;
+            //     dstPtrCurrent += vectorIncrement;
+            // }
             for(; vectorLoopCount < height; vectorLoopCount++)
             {
-                *dstPtrCurrent = multiplier * std::log(std::max(minRatio, (*srcPtrCurrent) * invReferenceMagnitude));
+                *dstPtrCurrent = multiplier * std::log2(std::max(minRatio, (*srcPtrCurrent) * invReferenceMagnitude));
                 srcPtrCurrent++;
                 dstPtrCurrent++;
             }
@@ -100,21 +100,22 @@ RppStatus to_decibels_host_tensor(Rpp32f *srcPtr,
                 srcPtrTemp = srcPtrRow;
                 dstPtrTemp = dstPtrRow;
                 int vectorLoopCount = 0;
-                for(; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
-                {
-                    __m256 pSrc;
-                    pSrc = _mm256_loadu_ps(srcPtrTemp);
-                    pSrc = _mm256_mul_ps(pSrc, pinvMag);
-                    pSrc = _mm256_max_ps(pMinRatio, pSrc);
-                    pSrc = log_ps(pSrc);
-                    pSrc = _mm256_mul_ps(pSrc, pMultiplier);
-                    _mm256_storeu_ps(dstPtrTemp, pSrc);
-                    srcPtrTemp += vectorIncrement;
-                    dstPtrTemp += vectorIncrement;
-                }
+                // for(; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
+                // {
+                //     __m256 pSrc;
+                //     pSrc = _mm256_loadu_ps(srcPtrTemp);
+                //     pSrc = _mm256_mul_ps(pSrc, pinvMag);
+                //     pSrc = _mm256_max_ps(pMinRatio, pSrc);
+                //     pSrc = log_ps(pSrc);
+                //     pSrc = _mm256_mul_ps(pSrc, pMultiplier);
+                //     _mm256_storeu_ps(dstPtrTemp, pSrc);
+                //     srcPtrTemp += vectorIncrement;
+                //     dstPtrTemp += vectorIncrement;
+                // }
+                
                 for(; vectorLoopCount < width; vectorLoopCount++)
                 {
-                    *dstPtrTemp = multiplier * std::log(std::max(minRatio, (*srcPtrTemp) * invReferenceMagnitude));
+                    *dstPtrTemp = multiplier * std::log2(std::max(minRatio, (*srcPtrTemp) * invReferenceMagnitude));
                     srcPtrTemp++;
                     dstPtrTemp++;
                 }

@@ -97,8 +97,8 @@ RppStatus mel_filter_bank_host_tensor(Rpp32f *srcPtr,
         Rpp64f invHzStep = 1.0 / hzStep;
 
         Rpp32s fftBinStart = std::ceil(minFreq * invHzStep);
-        Rpp32s fftBinEnd = std::floor(maxFreq * invHzStep);
-        fftBinEnd = std::min(fftBinEnd, numBins - 1);
+        Rpp32s fftBinEnd = std::ceil(maxFreq * invHzStep);
+        fftBinEnd = std::min(fftBinEnd, numBins);
 
         std::vector<Rpp32f> weightsDown, normFactors;
         weightsDown.resize(numBins);
@@ -120,7 +120,7 @@ RppStatus mel_filter_bank_host_tensor(Rpp32f *srcPtr,
                 normFactors[interval] = 2.0 / (f2 - f0);
             }
 
-            for (; fftBin <= fftBinEnd && f < f1; fftBin++, f = fftBin * hzStep) {
+            for (; fftBin < fftBinEnd && f < f1; fftBin++, f = fftBin * hzStep) {
                 weightsDown[fftBin] = (f1 - f) * slope;
                 intervals[fftBin] = interval;
             }
@@ -135,7 +135,7 @@ RppStatus mel_filter_bank_host_tensor(Rpp32f *srcPtr,
         Rpp32u alignedLength = (numFrames / 8) * 8;
         __m256 pSrc, pDst;
         Rpp32f *srcRowPtr = srcPtrTemp + fftBinStart * srcDescPtr->strides.hStride;
-        for (int64_t fftBin = fftBinStart; fftBin <= fftBinEnd; fftBin++) {
+        for (int64_t fftBin = fftBinStart; fftBin < fftBinEnd; fftBin++) {
             auto filterUp = intervals[fftBin];
             auto weightUp = 1.0f - weightsDown[fftBin];
             auto filterDown = filterUp - 1;

@@ -22,10 +22,16 @@ RppStatus pre_emphasis_filter_host_tensor(Rpp32f *srcPtr,
         if(borderType == RpptAudioBorderType::ZERO)
             dstPtrTemp[0] = srcPtrTemp[0];
         else if(borderType == RpptAudioBorderType::CLAMP)
-            dstPtrTemp[0] = srcPtrTemp[0] * (1 - coeff);
+        {
+            Rpp32f border = srcPtrTemp[0];
+            dstPtrTemp[0] = srcPtrTemp[0] - coeff * border;
+        }
         else if(borderType == RpptAudioBorderType::REFLECT)
-            dstPtrTemp[0] = srcPtrTemp[0] - coeff * srcPtrTemp[1];
-
+        {
+            Rpp32f border = srcPtrTemp[1];
+            dstPtrTemp[0] = srcPtrTemp[0] - coeff * border;
+        }
+        
         int vectorIncrement = 8;
         int alignedLength = (bufferLength / 8) * 8;
         __m256 pCoeff = _mm256_set1_ps(coeff);
@@ -43,7 +49,7 @@ RppStatus pre_emphasis_filter_host_tensor(Rpp32f *srcPtr,
             srcPtrTemp += vectorIncrement;
             dstPtrTemp += vectorIncrement;
         }
-
+        
         for(; vectorLoopCount < bufferLength; vectorLoopCount++)
         {
             *dstPtrTemp = *srcPtrTemp - coeff * (*(srcPtrTemp - 1));
