@@ -239,9 +239,13 @@ RppStatus normalize_audio_host_tensor(Rpp32f* srcPtr,
 	{
         Rpp32f *srcPtrTemp = srcPtr + batchCount * srcDescPtr->strides.nStride;
 		Rpp32f *dstPtrTemp = dstPtr + batchCount * dstDescPtr->strides.nStride;
+
+        // Set all values in dst buffer to 0.0
+        for(int cnt = 0; cnt < dstDescPtr->strides.nStride; cnt++)
+            dstPtrTemp[cnt] = 0.0f;
+
         Rpp32u srcAudioDims[numOfDims], srcReductionDims[numOfDims], srcStride[numOfDims], paramStride[numOfDims];
         srcAudioDims[0] = srcLengthTensor[batchCount];
-
         srcAudioDims[1] = channelsTensor[batchCount];
         if (axis_mask == 3) {
             srcStride[0] = srcStride[1] = srcDescPtr->strides.cStride;

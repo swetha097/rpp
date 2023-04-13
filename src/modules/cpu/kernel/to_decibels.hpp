@@ -17,7 +17,7 @@ RppStatus to_decibels_host_tensor(Rpp32f *srcPtr,
     Rpp32f minRatio = std::pow(10, cutOffDB / multiplier);
     if(minRatio == 0.0f)
         minRatio = std::nextafter(0.0f, 1.0f);
-    
+
     Rpp32f log10Factor = 0.3010299956639812;//1 / std::log(10);
     multiplier *= log10Factor;
 
@@ -30,6 +30,11 @@ RppStatus to_decibels_host_tensor(Rpp32f *srcPtr,
     {
         Rpp32f *srcPtrCurrent = srcPtr + batchCount * srcDescPtr->strides.nStride;
         Rpp32f *dstPtrCurrent = dstPtr + batchCount * dstDescPtr->strides.nStride;
+
+        // Set all values in dst buffer to 0.0
+        for(int cnt = 0; cnt < dstDescPtr->strides.nStride; cnt++)
+            dstPtrCurrent[cnt] = 0.0f;
+
         Rpp32u height = srcDims[batchCount].height;
         Rpp32u width = srcDims[batchCount].width;
         Rpp32f refMag = referenceMagnitude;
@@ -112,7 +117,7 @@ RppStatus to_decibels_host_tensor(Rpp32f *srcPtr,
                 //     srcPtrTemp += vectorIncrement;
                 //     dstPtrTemp += vectorIncrement;
                 // }
-                
+
                 for(; vectorLoopCount < width; vectorLoopCount++)
                 {
                     *dstPtrTemp = multiplier * std::log2(std::max(minRatio, (*srcPtrTemp) * invReferenceMagnitude));
