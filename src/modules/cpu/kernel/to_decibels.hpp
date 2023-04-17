@@ -31,9 +31,9 @@ RppStatus to_decibels_host_tensor(Rpp32f *srcPtr,
         Rpp32f *srcPtrCurrent = srcPtr + batchCount * srcDescPtr->strides.nStride;
         Rpp32f *dstPtrCurrent = dstPtr + batchCount * dstDescPtr->strides.nStride;
 
-        // Set all values in dst buffer to 0.0
-        for(int cnt = 0; cnt < dstDescPtr->strides.nStride; cnt++)
-            dstPtrCurrent[cnt] = 0.0f;
+        // // Set all values in dst buffer to 0.0
+        // for(int cnt = 0; cnt < dstDescPtr->strides.nStride; cnt++)
+        //     dstPtrCurrent[cnt] = 0.0f;
 
         Rpp32u height = srcDims[batchCount].height;
         Rpp32u width = srcDims[batchCount].width;

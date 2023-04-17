@@ -128,51 +128,6 @@ static void rpp_rsqrt_sse(Rpp32f *input, Rpp64s numElements, Rpp32f eps, Rpp32f 
     }
 }
 
-// template <typename Out, typename In, typename Param>
-// void normalize_outer(Out *out, const In *in, Rpp64s nouter, Rpp64s ninner,
-//                      const Param *mean, const Param *scale, Param shift) {
-//   std::cout << "normalize_outer:" << nouter << "\t" << ninner << std::endl;
-//   Out norm_factor = 1.0 / ninner;
-//   for (Rpp64s i = 0, k = 0; i < nouter; i++, k += ninner) {
-//     Param currElements = mean[i], d = scale[i];
-//     //std::cout << "Mean val:" << std::setprecision(20) << mean[i] << "\t" << scale[i] << std::endl;
-//     //std::cout << "Out val" << std::endl;
-//     double val = 0.0;
-//     Rpp32f temp_mean = 0;
-//     Rpp32f temp_std_dev = 0;
-//     Rpp32f dummy_mean = 0;
-//     Rpp32f new_std = 0;
-
-//     compute_diff_square_sum(temp_mean, &in[k], 1, ninner, false, dummy_mean);
-//     temp_mean *= norm_factor;
-//     compute_diff_square_sum(temp_std_dev, &in[k], 1, ninner, true, temp_mean);
-//     Rpp32f norm_new = static_cast<Rpp32f>(1.0 / ninner);
-//     temp_std_dev = temp_std_dev;
-//     temp_std_dev = rpp_rsqrt_sse(temp_std_dev, norm_new);
-//     bool mean_pass = (currElements - temp_mean) < 1e-20;
-//     bool std_pass = (d - temp_std_dev) < 1e-20;
-//     if (mean_pass)
-//         std::cout<<"Mean PASSED! Index: "<<i<<std::endl;
-//     else
-//         std::cout<<"Mean Failed! Index: "<<i<<std::endl;
-
-//     if (std_pass)
-//         std::cout<<"std_dev PASSED! Index: "<<i<<std::endl;
-//     else
-//         std::cout<<"std_dev Failed! Index: "<<i<<std::endl;
-//     // std::cout<<std::setprecision(20)<<"dali mean, test_mean: "<<currElements<<", "<<temp_mean<<std::endl;
-//     // std::cout<<std::setprecision(20)<<"dali std, new_std: "<<d<<", "<<temp_std_dev<<std::endl;
-//     // std::cout<<std::setprecision(20)<<"dali std, test_std: "<<d<<", "<<temp_std_dev<<std::endl;
-//     // std::cout<<std::setprecision(20)<<"shift: "<<shift<<std::endl;
-//     #pragma omp simd
-//     for (Rpp64s j = 0; j < ninner; j++) {
-//       out[k + j] = ConvertSat<Out>((in[k + j] - currElements) * d + shift);
-
-//     }
-
-//   }
-// }
-
 void compute_2D_mean(Rpp32f *srcPtr, Rpp32f *meanPtr, Rpp32u *dims, Rpp32u *stride)
 {
     Rpp32f *srcPtrTemp = srcPtr;
@@ -240,9 +195,9 @@ RppStatus normalize_audio_host_tensor(Rpp32f* srcPtr,
         Rpp32f *srcPtrTemp = srcPtr + batchCount * srcDescPtr->strides.nStride;
 		Rpp32f *dstPtrTemp = dstPtr + batchCount * dstDescPtr->strides.nStride;
 
-        // Set all values in dst buffer to 0.0
-        for(int cnt = 0; cnt < dstDescPtr->strides.nStride; cnt++)
-            dstPtrTemp[cnt] = 0.0f;
+        // // Set all values in dst buffer to 0.0
+        // for(int cnt = 0; cnt < dstDescPtr->strides.nStride; cnt++)
+        //     dstPtrTemp[cnt] = 0.0f;
 
         Rpp32u srcAudioDims[numOfDims], srcReductionDims[numOfDims], srcStride[numOfDims], paramStride[numOfDims];
         srcAudioDims[0] = srcLengthTensor[batchCount];
