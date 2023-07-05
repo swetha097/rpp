@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2022 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -39,6 +39,7 @@ THE SOFTWARE.
 
 const float ONE_OVER_6 = 1.0f / 6;
 const float ONE_OVER_3 = 1.0f / 3;
+const float ONE_OVER_255 = 1.0f / 255;
 
 /******************** RPP typedefs ********************/
 
@@ -61,12 +62,14 @@ typedef enum
     RPP_ERROR                           = -1,
     RPP_ERROR_INVALID_ARGUMENTS         = -2,
     RPP_ERROR_LOW_OFFSET                = -3,
+    RPP_ERROR_ZERO_DIVISION             = -4,
     RPP_ERROR_HIGH_SRC_DIMENSION        = -5,
     RPP_ERROR_NOT_IMPLEMENTED           = -6,
     RPP_ERROR_INVALID_SRC_CHANNELS      = -7,
     RPP_ERROR_INVALID_DST_CHANNELS      = -8,
     RPP_ERROR_INVALID_SRC_LAYOUT        = -9,
-    RPP_ERROR_INVALID_DST_LAYOUT        = -10
+    RPP_ERROR_INVALID_DST_LAYOUT        = -10,
+    RPP_ERROR_INVALID_SRC_DATATYPE      = -11
 } RppStatus;
 
 typedef enum
