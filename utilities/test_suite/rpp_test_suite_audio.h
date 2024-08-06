@@ -157,10 +157,10 @@ void read_audio_batch_and_fill_dims(RpptDescPtr descPtr, Rpp32f *inputf32, vecto
     }
 }
 
-void read_from_bin_file(Rpp32f *srcPtr, RpptDescPtr srcDescPtr, Rpp32s *srcDims, string testCase, string scriptPath)
+void read_from_bin_file(Rpp32f *srcPtr, RpptDescPtr srcDescPtr, Rpp32s *srcDims, string testCase, string scriptPath, int numSamples)
 {
     // read data from golden outputs
-    Rpp64u oBufferSize = srcDescPtr->n * srcDescPtr->strides.nStride;
+    Rpp64u oBufferSize = numSamples * srcDescPtr->strides.nStride;
     Rpp32f *refInput = static_cast<Rpp32f *>(malloc(oBufferSize * sizeof(float)));
     string outFile = scriptPath + "/../REFERENCE_OUTPUTS_AUDIO/" + testCase + "/" + testCase + ".bin";
     std::fstream fin(outFile, std::ios::in | std::ios::binary);
@@ -182,7 +182,7 @@ void read_from_bin_file(Rpp32f *srcPtr, RpptDescPtr srcDescPtr, Rpp32s *srcDims,
         std::cout<<"\nCould not open the reference output. Please check the path specified\n";
         return;
     }
-    for (int batchCount = 0; batchCount < srcDescPtr->n; batchCount++)
+    for (int batchCount = 0; batchCount < numSamples; batchCount++)
     {
         Rpp32f *srcPtrCurrent = srcPtr + batchCount * srcDescPtr->strides.nStride;
         Rpp32f *refPtrCurrent = refInput + batchCount * srcDescPtr->strides.nStride;
@@ -199,6 +199,33 @@ void read_from_bin_file(Rpp32f *srcPtr, RpptDescPtr srcDescPtr, Rpp32s *srcDims,
         }
     }
     free(refInput);
+}
+
+//replicate the last sample buffer for the remaining samples
+void replicate_last_sample_mel_filter_bank(Rpp32f *srcPtr, int numSamples, unsigned long sampleSize, int batchSize)
+{
+    if (batchSize <= numSamples)
+        return;
+
+    Rpp32f *lastSample = srcPtr + (numSamples - 1) * sampleSize;
+    for (int i = numSamples; i < batchSize; i++)
+    {
+        Rpp32f *sample = srcPtr + i * sampleSize;
+        std::memcpy(sample, lastSample, sampleSize * sizeof(Rpp32f));
+    }
+}
+
+// Replicate the dimensions of the last sample to fill the remaining batch samples.
+void replicate_src_dims_to_fill_batch(Rpp32s *srcDimsTensor, int numSamples, int batchSize)
+{
+    if (batchSize <= numSamples)
+        return;
+
+    for (int i = numSamples; i < batchSize; i++)
+    {
+        srcDimsTensor[i * 2] = srcDimsTensor[(numSamples - 1) * 2];
+        srcDimsTensor[i * 2 + 1] = srcDimsTensor[(numSamples - 1) * 2 + 1];
+    }
 }
 
 void verify_output(Rpp32f *dstPtr, RpptDescPtr dstDescPtr, RpptImagePatchPtr dstDims, string testCase, string dst, string scriptPath, string backend)

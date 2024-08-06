@@ -787,6 +787,67 @@ inline void windowed_sinc(RpptResamplingWindow &window, Rpp32s coeffs, Rpp32s lo
     window.pScale = _mm_set1_ps(window.scale);
 }
 
+/*! \brief Base class for Mel scale conversions.
+ * \ingroup group_rppdefs
+ */
+struct BaseMelScale
+{
+    public:
+        inline RPP_HOST_DEVICE virtual Rpp32f hz_to_mel(Rpp32f hz) = 0;
+        inline RPP_HOST_DEVICE virtual Rpp32f mel_to_hz(Rpp32f mel) = 0;
+        virtual ~BaseMelScale() = default;
+};
+
+/*! \brief Derived class for HTK Mel scale conversions.
+ * \ingroup group_rppdefs
+ */
+struct HtkMelScale : public BaseMelScale
+{
+    inline RPP_HOST_DEVICE Rpp32f hz_to_mel(Rpp32f hz) { return 1127.0f * std::log(1.0f + (hz / 700.0f)); }
+    inline RPP_HOST_DEVICE Rpp32f mel_to_hz(Rpp32f mel) { return 700.0f * (std::exp(mel / 1127.0f) - 1.0f); }
+    public:
+        ~HtkMelScale() {};
+};
+
+/*! \brief Derived class for Slaney Mel scale conversions.
+ * \ingroup group_rppdefs
+ */
+struct SlaneyMelScale : public BaseMelScale
+{
+    const Rpp32f freqLow = 0;
+    const Rpp32f fsp = 66.666667f;
+    const Rpp32f minLogHz = 1000.0;
+    const Rpp32f minLogMel = (minLogHz - freqLow) / fsp;
+    const Rpp32f stepLog = 0.068751777;  // Equivalent to std::log(6.4) / 27.0;
+
+    const Rpp32f invMinLogHz = 0.001f;
+    const Rpp32f invStepLog = 1.0f / stepLog;
+    const Rpp32f invFsp = 1.0f / fsp;
+
+    inline RPP_HOST_DEVICE Rpp32f hz_to_mel(Rpp32f hz)
+    {
+        Rpp32f mel = 0.0f;
+        if (hz >= minLogHz)
+            mel = minLogMel + std::log(hz * invMinLogHz) * invStepLog;
+        else
+            mel = (hz - freqLow) * invFsp;
+
+        return mel;
+    }
+
+    inline RPP_HOST_DEVICE Rpp32f mel_to_hz(Rpp32f mel)
+    {
+        Rpp32f hz = 0.0f;
+        if (mel >= minLogMel)
+            hz = minLogHz * std::exp(stepLog * (mel - minLogMel));
+        else
+            hz = freqLow + mel * fsp;
+        return hz;
+    }
+    public:
+        ~SlaneyMelScale() {};
+};
+
 /******************** HOST memory typedefs ********************/
 
 /*! \brief RPP HOST 32-bit float memory
