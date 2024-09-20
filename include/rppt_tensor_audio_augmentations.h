@@ -49,7 +49,7 @@ extern "C" {
             \n Finds the starting index and length of non silent region in the audio buffer by comparing the
             calculated short-term power with cutoff value passed
  * \param [in] srcPtr source tensor in HOST memory
- * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 3, offsetInBytes >= 0, dataType = F32)
+ * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 2, offsetInBytes >= 0, dataType = F32)
  * \param [in] srcLengthTensor source audio buffer length (1D tensor in HOST memory, of size batchSize)
  * \param [out] detectedIndexTensor beginning index of non silent region (1D tensor in HOST memory, of size batchSize)
  * \param [out] detectionLengthTensor length of non silent region  (1D tensor in HOST memory, of size batchSize)
@@ -70,7 +70,7 @@ RppStatus rppt_non_silent_region_detection_host(RppPtr_t srcPtr, RpptDescPtr src
             \n Finds the starting index and length of non silent region in the audio buffer by comparing the
             calculated short-term power with cutoff value passed
  * \param [in] srcPtr source tensor in HIP memory
- * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 3, offsetInBytes >= 0, dataType = F32)
+ * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 2, offsetInBytes >= 0, dataType = F32)
  * \param [in] srcLengthTensor source audio buffer length (1D tensor in Pinned/HIP memory, of size batchSize)
  * \param [out] detectedIndexTensor beginning index of non silent region (1D tensor in Pinned/HIP memory, of size batchSize)
  * \param [out] detectionLengthTensor length of non silent region  (1D tensor in Pinned/HIP memory, of size batchSize)
@@ -197,7 +197,7 @@ RppStatus rppt_down_mixing_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t
  * \param [in] srcLengthTensor source audio buffer length (1D tensor in HOST memory, of size batchSize)
  * \param [in] centerWindows indicates whether extracted windows should be padded so that the window function is centered at multiples of window_step
  * \param [in] reflectPadding indicates the padding policy when sampling outside the bounds of the signal
- * \param [in] windowFunction samples of the window function that will be multiplied to each extracted window when calculating the Short Time Fourier Transform (STFT)
+ * \param [in] windowFunction samples of the window function that will be multiplied to each extracted window when calculating the Short Time Fourier Transform (STFT).<br> if windowFunction is a nullptr, then required windowFunction values will be generated inside the kernel
  * \param [in] nfft size of the FFT
  * \param [in] power exponent of the magnitude of the spectrum
  * \param [in] windowLength window size in number of samples
@@ -219,7 +219,7 @@ RppStatus rppt_spectrogram_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_
  * \param [in] srcLengthTensor source audio buffer length (1D tensor in Pinned memory, of size batchSize)
  * \param [in] centerWindows indicates whether extracted windows should be padded so that the window function is centered at multiples of window_step
  * \param [in] reflectPadding indicates the padding policy when sampling outside the bounds of the signal
- * \param [in] windowFunction samples of the window function that will be multiplied to each extracted window when calculating the Short Time Fourier Transform (STFT)
+ * \param [in] windowFunction samples of the window function that will be multiplied to each extracted window when calculating the Short Time Fourier Transform (STFT).<br> if windowFunction is a nullptr, then required windowFunction values will be generated inside the kernel
  * \param [in] nfft size of the FFT
  * \param [in] power exponent of the magnitude of the spectrum
  * \param [in] windowLength window size in number of samples

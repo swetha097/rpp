@@ -23,6 +23,19 @@ Input<br>(nifti1 .nii medical image) | fused_multiply_add_scalar<br>(brightened 
 :-------------------------:|:-------------------------:
 ![](docs/data/niftiInput.gif)  |  ![](docs/data/niftiOutputBrightened.gif)
 
+## Supported audio functionalities and variants
+* Below are the list of audio functions supported
+  * Non Silent Region Detection (HOST and HIP)
+  * To Decibels (HOST and HIP)
+  * Downmixing (HOST and HIP)
+  * Preemphasis Filter (HOST and HIP)
+  * Resample (HOST and HIP)
+  * Mel Filter Bank (HOST and HIP)
+  * Spectrogram (HOST and HIP)
+
+Spectrogram kernel output represented as a image <br><br>
+![](docs/data/spectrogramOutput.png)
+  
 ## Prerequisites
 
 * Linux
@@ -150,7 +163,7 @@ The installer will copy
 * Documents folder into `/opt/rocm/share/doc/rpp`
 
 >[!NOTE]
-> [Test suite prerequisites](utilities/test_suite/README.md) install is required to run tests
+> [Test suite prerequisites](utilities/test_suite#prerequisites) install is required to run tests
 
 ### Verify with rpp-test package
 
@@ -206,5 +219,8 @@ All notable changes for each release are added to our [changelog](CHANGELOG.md).
   * Ubuntu - `20.04` / `22.04`
   * RedHat - `8` / `9`
   * SLES - `15-SP5`
-* ROCm: rocm-core - `6.1.0.60100-64`
+* ROCm: rocm-core - `6.3.0.60300`
+* CMake - Version `3.16.3`+
+* Clang - Version `5.0.1`+
+* half - IEEE 754-based half-precision floating-point library - Version `1.12.0` / package V`1.12.0.60200`
 * OpenCV - [4.6.0](https://github.com/opencv/opencv/releases/tag/4.6.0)

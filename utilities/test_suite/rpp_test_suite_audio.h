@@ -28,6 +28,7 @@ SOFTWARE.
 
 // Include this header file to use functions from libsndfile
 #include <sndfile.h>
+using namespace std;
 
 std::map<int, string> audioAugmentationMap =
 {
@@ -228,6 +229,36 @@ void replicate_src_dims_to_fill_batch(Rpp32s *srcDimsTensor, int numSamples, int
     }
 }
 
+// Spectrogram initializer for QA and performance testing
+void init_spectrogram(RpptDescPtr srcDescPtr, RpptDescPtr dstDescPtr, RpptImagePatchPtr dstDims, Rpp32s *srcLengthTensor, 
+                      Rpp32s &windowLength, Rpp32s &windowStep, Rpp32s &windowOffset, Rpp32s &nfft,
+                      Rpp32s &maxDstHeight, Rpp32s &maxDstWidth)
+{
+    if(dstDescPtr->layout == RpptLayout::NFT)
+    {
+        for(int i = 0; i < dstDescPtr->n; i++)
+        {
+            dstDims[i].height = nfft / 2 + 1;
+            dstDims[i].width = ((srcLengthTensor[i] - windowOffset) / windowStep) + 1;
+            maxDstHeight = std::max(maxDstHeight, static_cast<int>(dstDims[i].height));
+            maxDstWidth = std::max(maxDstWidth, static_cast<int>(dstDims[i].width));
+        }
+    }
+    else
+    {
+        for(int i = 0; i < dstDescPtr->n; i++)
+        {
+            dstDims[i].height = ((srcLengthTensor[i] - windowOffset) / windowStep) + 1;
+            dstDims[i].width = nfft / 2 + 1;
+            maxDstHeight = std::max(maxDstHeight, static_cast<int>(dstDims[i].height));
+            maxDstWidth = std::max(maxDstWidth, static_cast<int>(dstDims[i].width));
+        }
+    }
+
+    set_audio_descriptor_dims_and_strides_nostriding(dstDescPtr, dstDescPtr->n, maxDstHeight, maxDstWidth, 1, 0);
+    dstDescPtr->numDims = 3;
+}
+
 void verify_output(Rpp32f *dstPtr, RpptDescPtr dstDescPtr, RpptImagePatchPtr dstDims, string testCase, string dst, string scriptPath, string backend)
 {
     fstream refFile;
@@ -354,4 +385,46 @@ void verify_non_silent_region_detection(int *detectedIndex, int *detectionLength
         qaResults << status << std::endl;
         qaResults.close();
     }
+}
+
+inline Rpp32f sinc(Rpp32f x)
+{
+    x *= M_PI;
+    return (std::abs(x) < 1e-5f) ? (1.f - (x * x * 0.16666667)) : std::sin(x) / x;
+}
+
+inline Rpp64f hann(Rpp64f x)
+{
+    return 0.5 * (1 + std::cos(x * M_PI));
+}
+
+// initialization function used for filling the values in Resampling window (RpptResamplingWindow)
+// using the coeffs and lobes value this function generates a LUT (look up table) which is further used in Resample audio augmentation
+inline void windowed_sinc(RpptResamplingWindow &window, Rpp32s coeffs, Rpp32s lobes)
+{
+    Rpp32f scale = 2.0f * lobes / (coeffs - 1);
+    Rpp32f scale_envelope = 2.0f / coeffs;
+    window.coeffs = coeffs;
+    window.lobes = lobes;
+    window.lookupSize = coeffs + 5;
+    Rpp32s center = (coeffs - 1) * 0.5f;
+    Rpp32f *lookupPtr = nullptr;
+#ifdef GPU_SUPPORT
+    CHECK_RETURN_STATUS(hipHostMalloc(&(window.lookupPinned), window.lookupSize * sizeof(Rpp32f)));
+    lookupPtr = window.lookupPinned;
+#else
+    window.lookup.clear();
+    window.lookup.resize(window.lookupSize);
+    lookupPtr = window.lookup.data();
+#endif
+    for (int i = 0; i < coeffs; i++) {
+        Rpp32f x = (i - center) * scale;
+        Rpp32f y = (i - center) * scale_envelope;
+        Rpp32f w = sinc(x) * hann(y);
+        lookupPtr[i + 1] = w;
+    }
+    window.center = center + 1;
+    window.scale = 1 / scale;
+    window.pCenter = _mm_set1_ps(window.center);
+    window.pScale = _mm_set1_ps(window.scale);  
 }
