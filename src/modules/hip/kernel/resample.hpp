@@ -17,8 +17,7 @@ __device__ __forceinline__ float resample_hip_compute(float &x, float &scale, fl
 __device__ __forceinline__ void resample_hip_compute(float4 *src_f4, float4 *dst_f4, const float4 *scale_f4, const float4 *center_f4, float *lookup)
 {
     float4 locRaw_f4 = (*src_f4) * (*scale_f4) + (*center_f4);
-    int4 locFloor_i4;
-    FLOOR4(locRaw_f4, locFloor_i4);
+    int4 locFloor_i4 = make_int4(std::floor(locRaw_f4.x), std::floor(locRaw_f4.y), std::floor(locRaw_f4.z), std::floor(locRaw_f4.w));
     float4 weight_f4 = make_float4(locRaw_f4.x - locFloor_i4.x, locRaw_f4.y - locFloor_i4.y, locRaw_f4.z - locFloor_i4.z, locRaw_f4.w - locFloor_i4.w);
     float4 current_f4 = make_float4(lookup[locFloor_i4.x], lookup[locFloor_i4.y], lookup[locFloor_i4.z], lookup[locFloor_i4.w]);
     float4 next_f4 = make_float4(lookup[locFloor_i4.x + 1], lookup[locFloor_i4.y + 1], lookup[locFloor_i4.z + 1], lookup[locFloor_i4.w + 1]);
@@ -66,7 +65,7 @@ __global__ void resample_single_channel_hip_tensor(float *srcPtr,
 
         // copy all values from window lookup table to shared memory lookup table
         for (int k = hipThreadIdx_x; k < window->lookupSize; k += hipBlockDim_x)
-            lookup_smem[k] = window->lookupPinned[k];
+            lookup_smem[k] = window->lookup[k];
         __syncthreads();
 
         if (outBlock >= dstLength)
@@ -177,7 +176,7 @@ __global__ void resample_multi_channel_hip_tensor(float *srcPtr,
 
         // copy all values from window lookup table to shared memory lookup table
         for (int k = hipThreadIdx_x; k < window->lookupSize; k += hipBlockDim_x)
-            lookup_smem[k] = window->lookupPinned[k];
+            lookup_smem[k] = window->lookup[k];
         __syncthreads();
 
         if (outBlock >= dstLength)
