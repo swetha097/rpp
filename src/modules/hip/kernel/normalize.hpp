@@ -1836,7 +1836,8 @@ RppStatus hip_exec_normalize_tensor(T *srcPtr,
         hip_exec_compute_mean_stddev_tensor(srcPtr, srcGenericDescPtr, meanTensor, stdDevTensor, false,
                                             roiTensor, axisMask, tensorDims, maxParamVolume,
                                             paramShape, paramStrides, handle);
-
+    
+    hipMemsetAsync(dstPtr, 0, dstGenericDescPtr->dims[0] * dstGenericDescPtr->strides[0] * sizeof(T), handle.GetStream());
     // based on number of dimensions call the corresponding kernel
     if (tensorDims == 2)
     {
